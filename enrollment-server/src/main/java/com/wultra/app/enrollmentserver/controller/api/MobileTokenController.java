@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.enrollmentserver.logging.StructuredLogging.*;
 
 /**
  * Controller that publishes the default mobile token services.
@@ -108,7 +108,7 @@ public class MobileTokenController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
-        logger.info("", kv("action", "operationList"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)));
+        logger.info("", action("operationList"), stateInitiated(), kv("activationId", extractActivationId(auth)));
         validateApiAuthentication(auth);
 
         try {
@@ -117,22 +117,22 @@ public class MobileTokenController {
             final String activationId = auth.getActivationContext().getActivationId();
             final String language = locale.getLanguage();
             final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, true);
-            logger.info("", kv("action", "operationList"), kv("state", "succeeded"));
+            logger.info("", action("operationList"), stateSucceeded());
             final Date currentTimestamp = new Date();
             return new MobileTokenResponse<>(listResponse, currentTimestamp);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case APPLICATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "operationList"), kv("state", "failed"), kv("reason", "applicationNotFound"));
+                    logger.warn("", action("operationList"), stateFailed(), kv("reason", "applicationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier.", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "operationList"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("operationList"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "operationList"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("operationList"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
@@ -160,14 +160,14 @@ public class MobileTokenController {
             @Parameter(hidden = true) final Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
 
         final String operationId = request.getRequestObject().getId();
-        logger.info("", kv("action", "fetchOperationDetail"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
+        logger.info("", action("fetchOperationDetail"), stateInitiated(), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
         validateApiAuthentication(auth);
 
         try {
             final String language = locale.getLanguage();
                 final String userId = auth.getUserId();
                 final Operation response = mobileTokenService.fetchOperationDetail(operationId, language, userId);
-                logger.info("", kv("action", "fetchOperationDetail"), kv("state", "succeeded"));
+                logger.info("", action("fetchOperationDetail"), stateSucceeded());
                 final Date currentTimestamp = new Date();
                 return new MobileTokenResponse<>(response, currentTimestamp);
 
@@ -175,15 +175,15 @@ public class MobileTokenController {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case OPERATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "fetchOperationDetail"), kv("state", "failed"), kv("reason", "operationNotFound"));
+                    logger.warn("", action("fetchOperationDetail"), stateFailed(), kv("reason", "operationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "No operation was found with the provided identifier.", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "fetchOperationDetail"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("fetchOperationDetail"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "fetchOperationDetail"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("fetchOperationDetail"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
@@ -211,14 +211,14 @@ public class MobileTokenController {
             @Parameter(hidden = true) final Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
 
         final String operationId = request.getRequestObject().getId();
-        logger.info("", kv("action", "claimOperation"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
+        logger.info("", action("claimOperation"), stateInitiated(), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
         validateApiAuthentication(auth);
 
         try {
             final String language = locale.getLanguage();
                 final String userId = auth.getUserId();
                 final Operation response = mobileTokenService.claimOperation(operationId, language, userId);
-                logger.info("", kv("action", "claimOperation"), kv("state", "succeeded"));
+                logger.info("", action("claimOperation"), stateSucceeded());
                 final Date currentTimestamp = new Date();
                 return new MobileTokenResponse<>(response, currentTimestamp);
 
@@ -226,15 +226,15 @@ public class MobileTokenController {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case OPERATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "claimOperation"), kv("state", "failed"), kv("reason", "operationNotFound"));
+                    logger.warn("", action("claimOperation"), stateFailed(), kv("reason", "operationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "No operation was found with the provided identifier.", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "claimOperation"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("claimOperation"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "claimOperation"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("claimOperation"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
@@ -256,7 +256,7 @@ public class MobileTokenController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
-        logger.info("", kv("action", "operationListAll"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)));
+        logger.info("", action("operationListAll"), stateInitiated(), kv("activationId", extractActivationId(auth)));
         validateApiAuthentication(auth);
 
         try {
@@ -265,21 +265,21 @@ public class MobileTokenController {
             final String activationId = auth.getActivationContext().getActivationId();
             final String language = locale.getLanguage();
             final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, false);
-            logger.info("", kv("action", "operationListAll"), kv("state", "succeeded"));
+            logger.info("", action("operationListAll"), stateSucceeded());
             return new ObjectResponse<>(listResponse);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case APPLICATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "operationListAll"), kv("state", "failed"), kv("reason", "applicationNotFound"));
+                    logger.warn("", action("operationListAll"), stateFailed(), kv("reason", "applicationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier.", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "operationListAll"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("operationListAll"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "operationListAll"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("operationListAll"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
@@ -308,7 +308,7 @@ public class MobileTokenController {
 
         final OperationApproveRequest requestObject = request.getRequestObject();
         final String operationId = requestObject.getId();
-        logger.info("", kv("action", "operationApprove"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
+        logger.info("", action("operationApprove"), stateInitiated(), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
 
         try {
             final String data = requestObject.getData();
@@ -339,7 +339,7 @@ public class MobileTokenController {
                         .build();
 
                 final Response response = mobileTokenService.operationApprove(serviceRequest);
-                logger.info("", kv("action", "operationApprove"), kv("state", "succeeded"));
+                logger.info("", action("operationApprove"), stateSucceeded());
                 return response;
             } else {
                 // make sure to fail operation as well, to increase the failed number
@@ -351,19 +351,19 @@ public class MobileTokenController {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case APPLICATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "operationApprove"), kv("state", "failed"), kv("reason", "applicationNotFound"));
+                    logger.warn("", action("operationApprove"), stateFailed(), kv("reason", "applicationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier.", e);
                 }
                 case OPERATION_NOT_FOUND, OPERATION_APPROVE_FAILURE, OPERATION_INVALID_STATE -> {
-                    logger.warn("", kv("action", "operationApprove"), kv("state", "failed"), kv("reason", "operationNotFoundOrInvalidState"));
+                    logger.warn("", action("operationApprove"), stateFailed(), kv("reason", "operationNotFoundOrInvalidState"));
                     throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "Operation not found or is in an unexpected state.", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "operationApprove"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("operationApprove"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "operationApprove"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("operationApprove"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
@@ -399,7 +399,7 @@ public class MobileTokenController {
 
         final OperationRejectRequest requestObject = request.getRequestObject();
         final String operationId = requestObject.getId();
-        logger.info("", kv("action", "operationReject"), kv("state", "initiated"), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
+        logger.info("", action("operationReject"), stateInitiated(), kv("activationId", extractActivationId(auth)), kv("operationId", operationId));
 
         try {
             if (auth != null && auth.getUserId() != null) {
@@ -413,7 +413,7 @@ public class MobileTokenController {
                         .requestContext(RequestContextConverter.convert(servletRequest))
                         .mobileTokenData(requestObject.getMobileTokenData())
                         .build());
-                logger.info("", kv("action", "operationReject"), kv("state", "succeeded"));
+                logger.info("", action("operationReject"), stateSucceeded());
                 return result;
             } else {
                 throw new MobileTokenAuthException();
@@ -422,19 +422,19 @@ public class MobileTokenController {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case APPLICATION_NOT_FOUND -> {
-                    logger.warn("", kv("action", "operationReject"), kv("state", "failed"), kv("reason", "applicationNotFound"));
+                    logger.warn("", action("operationReject"), stateFailed(), kv("reason", "applicationNotFound"));
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier: %s".formatted(auth.getApplicationId()), e);
                 }
                 case OPERATION_NOT_FOUND, OPERATION_REJECT_FAILURE -> {
-                    logger.warn("", kv("action", "operationReject"), kv("state", "failed"), kv("reason", "operationNotFoundOrInvalidState"));
+                    logger.warn("", action("operationReject"), stateFailed(), kv("reason", "operationNotFoundOrInvalidState"));
                     throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "Operation not found or is in an unexpected state", e);
                 }
                 case INVALID_REQUEST -> {
-                    logger.warn("", kv("action", "operationReject"), kv("state", "failed"), kv("reason", "validation"));
+                    logger.warn("", action("operationReject"), stateFailed(), kv("reason", "validation"));
                     throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Request validation error: %s".formatted(e.getMessage()), e);
                 }
                 default -> {
-                    logger.warn("", kv("action", "operationReject"), kv("state", "failed"), kv("reason", "powerAuthConnection"));
+                    logger.warn("", action("operationReject"), stateFailed(), kv("reason", "powerAuthConnection"));
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }

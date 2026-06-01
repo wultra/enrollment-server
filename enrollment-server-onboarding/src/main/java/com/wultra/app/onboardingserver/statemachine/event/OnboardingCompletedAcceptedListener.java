@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * Listener for {@link OnboardingCompletedAcceptedEvent}.
@@ -49,15 +49,15 @@ public class OnboardingCompletedAcceptedListener {
     public void onOnboardingCompletedAccepted(final OnboardingCompletedAcceptedEvent event) {
         final var processId = event.getProcessId();
 
-        logger.info("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "initiated"), kv("processId", processId), kv("userId", event.getOwnerId().getUserId()), kv("activationId", event.getOwnerId().getActivationId()));
+        logger.info("", action("onOnboardingCompletedAccepted"), stateInitiated(), kv("processId", processId), kv("userId", event.getOwnerId().getUserId()), kv("activationId", event.getOwnerId().getActivationId()));
 
         try {
             final var documentData = userDataStoreService.collectDocumentData(processId);
             userDataStoreService.storeDocumentData(documentData);
 
-            logger.info("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "succeeded"), kv("storedDocumentCount", documentData.size()));
+            logger.info("", action("onOnboardingCompletedAccepted"), stateSucceeded(), kv("storedDocumentCount", documentData.size()));
         } catch (final UserDataStoreClientException | RuntimeException e) {
-            logger.warn("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "failed"), e);
+            logger.warn("", action("onOnboardingCompletedAccepted"), stateFailed(), e);
         }
     }
 }

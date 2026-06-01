@@ -44,7 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toSet;
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * Service for client evaluation features.
@@ -161,14 +161,14 @@ public class ClientEvaluationService {
         final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
         final int attempt = attemptCounter.incrementAndGet();
 
-        logger.info("", kv("action", "callEvaluateClient"), kv("state", "initiated"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+        logger.info("", action("callEvaluateClient"), stateInitiated(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 
         try {
             final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
-            logger.info("", kv("action", "callEvaluateClient"), kv("state", "succeeded"), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
+            logger.info("", action("callEvaluateClient"), stateSucceeded(), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
             return response;
         } catch (final Exception e) {
-            logger.warn("", kv("action", "callEvaluateClient"), kv("state", "failed"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+            logger.warn("", action("callEvaluateClient"), stateFailed(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
             throw e;
         }
     }

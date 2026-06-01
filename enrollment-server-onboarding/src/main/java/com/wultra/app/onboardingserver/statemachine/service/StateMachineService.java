@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * State machine service
@@ -90,7 +90,7 @@ public class StateMachineService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
         final var processId = identityVerification.getProcessId();
-        logger.info("", kv("action", "changeMachineState"), kv("state", "initiated"), kv("processId", processId));
+        logger.info("", action("changeMachineState"), stateInitiated(), kv("processId", processId));
 
         final var ownerId = new OwnerId();
         ownerId.setActivationId(identityVerification.getActivationId());
@@ -99,14 +99,14 @@ public class StateMachineService {
         try {
             lockAndVerifyProcess(processId);
             processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-            logger.info("", kv("action", "changeMachineState"), kv("state", "succeeded"));
+            logger.info("", action("changeMachineState"), stateSucceeded());
             return true;
         } catch (IdentityVerificationException e) {
-            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Unable to change state for process"), e);
+            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Unable to change state for process"), e);
         } catch (final OnboardingProcessException e) {
-            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Process not found"), e);
+            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Process not found"), e);
         } catch (final RuntimeException e) {
-            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Exception when changing state of process"), e);
+            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Exception when changing state of process"), e);
         }
 
         return false;
