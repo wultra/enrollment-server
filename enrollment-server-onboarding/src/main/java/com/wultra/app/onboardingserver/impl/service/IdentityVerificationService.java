@@ -318,27 +318,25 @@ public class IdentityVerificationService {
             logger.debug("All required document types are present for identity verification ID: {}", identityVerificationId);
         }
 
-        // TODO (racansky, 2026-05-15, #1783) right now all documents must be accepted to move forward, failed must be resumbitted
-        if (docVerificationsToProcess.stream()
-                .map(DocumentVerificationEntity::getStatus)
-                .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
-            // The timestampFinished parameter is not set yet, there may be other steps ahead
-            if (allRequiredDocumentsChecked) {
-                logger.debug("All required documents are accepted");
-                return VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED;
-            } else {
-                logger.debug("Not all required documents are accepted, allow submission of additional documents");
-                return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT;
-            }
-        } else {
-            logger.debug("Some documents are not accepted, allow re-submission of failed documents");
-            handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.FAILED, ownerId);
-            handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.REJECTED, ownerId);
-            return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT;
+        // Account for failed and rejected documents from the current batch toward the process error score.
+        // A document transitions to a terminal status and enters a processing batch exactly once, so every
+        // failed or rejected document is counted at most once.
+        incrementErrorScoreForFailures(idVerification, docVerificationsToProcess, ownerId);
+
+        // If the required number of accepted documents is met, the process may proceed to the next stage even
+        // when some documents in the current batch failed.
+        if (allRequiredDocumentsChecked) {
+            logger.debug("Required documents are accepted, proceeding for identity verification ID: {}", identityVerificationId);
+            return VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED;
         }
+
+        logger.debug("Not enough accepted documents, allow submission of additional documents for identity verification ID: {}", identityVerificationId);
+        markIdentityVerificationError(docVerificationsToProcess, idVerification, DocumentStatus.FAILED, ownerId);
+        markIdentityVerificationError(docVerificationsToProcess, idVerification, DocumentStatus.REJECTED, ownerId);
+        return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT;
     }
 
-    private void handleDocumentStatus(
+    private void markIdentityVerificationError(
             final List<DocumentVerificationEntity> docVerifications,
             final IdentityVerificationEntity idVerification,
             final DocumentStatus status,
@@ -351,7 +349,6 @@ public class IdentityVerificationService {
                     logger.debug("At least one document is {}, ID: {}, {}", status, docVerification.getId(), ownerId);
                     idVerification.setErrorDetail(fetchErrorDetail(docVerification.getStatus()));
                     idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-                    handleLimitsForRejectOrFail(idVerification, status, ownerId);
                 });
     }
 
@@ -367,30 +364,45 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Update process error score in case of a rejected or a failed verification and check process error limits.
+     * Increment the process error score for each failed or rejected document in the given batch and check process
+     * error limits. Each document is counted at most once over its lifetime, because a document transitions to a
+     * terminal status and enters a processing batch exactly once.
      *
      * @param idVerification Identity verification entity.
-     * @param status Identity verification status.
+     * @param docVerifications Documents from the current processing batch.
      * @param ownerId Owner identifier.
      */
-    private void handleLimitsForRejectOrFail(IdentityVerificationEntity idVerification, DocumentStatus status, OwnerId ownerId) {
-        if (status == DocumentStatus.FAILED || status == DocumentStatus.REJECTED) {
-            final OnboardingProcessEntity process;
-            try {
-                process = processService.findProcess(idVerification.getProcessId());
-            } catch (OnboardingProcessException e) {
-                logger.warn("Onboarding process not found, {}", ownerId, e);
-                return;
-            }
+    private void incrementErrorScoreForFailures(
+            final IdentityVerificationEntity idVerification,
+            final List<DocumentVerificationEntity> docVerifications,
+            final OwnerId ownerId) {
 
-            if (status == DocumentStatus.FAILED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
-            }
-            if (status == DocumentStatus.REJECTED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
-            }
-            processLimitService.checkOnboardingProcessErrorLimits(process);
+        final long failedCount = docVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.FAILED)
+                .count();
+        final long rejectedCount = docVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.REJECTED)
+                .count();
+
+        if (failedCount == 0 && rejectedCount == 0) {
+            return;
         }
+
+        final OnboardingProcessEntity process;
+        try {
+            process = processService.findProcess(idVerification.getProcessId());
+        } catch (OnboardingProcessException e) {
+            logger.warn("Onboarding process not found, {}", ownerId, e);
+            return;
+        }
+
+        for (long i = 0; i < failedCount; i++) {
+            processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
+        }
+        for (long i = 0; i < rejectedCount; i++) {
+            processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
+        }
+        processLimitService.checkOnboardingProcessErrorLimits(process);
     }
 
     /**
