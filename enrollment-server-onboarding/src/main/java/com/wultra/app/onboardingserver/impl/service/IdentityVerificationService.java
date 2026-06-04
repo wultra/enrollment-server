@@ -337,13 +337,8 @@ public class IdentityVerificationService {
             logger.debug("All required document types are present for identity verification ID: {}", identityVerificationId);
         }
 
-        // Account for failed and rejected documents from the current batch toward the process error score.
-        // A document transitions to a terminal status and enters a processing batch exactly once, so every
-        // failed or rejected document is counted at most once.
         incrementErrorScoreForFailures(idVerification, docVerificationsToProcess, ownerId);
 
-        // If the required number of accepted documents is met, the process may proceed to the next stage even
-        // when some documents in the current batch failed.
         if (allRequiredDocumentsChecked) {
             logger.debug("Required documents are accepted, proceeding for identity verification ID: {}", identityVerificationId);
             return VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED;
