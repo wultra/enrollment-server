@@ -219,7 +219,7 @@ public class IdentityVerificationService {
         auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
         verificationProcessingService.processVerificationResult(ownerId, docVerifications, result);
 
-        final var documentEvaluationResult = evaluateDocuments(identityVerification, docVerifications, ownerId);
+        final var documentEvaluationResult = evaluateRequiredDocuments(identityVerification, docVerifications, ownerId);
 
         if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
             logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
@@ -272,7 +272,7 @@ public class IdentityVerificationService {
             return;
         }
 
-        evaluateDocuments(idVerification, allDocVerifications, ownerId);
+        evaluateRequiredDocuments(idVerification, allDocVerifications, ownerId);
     }
 
     /**
@@ -301,14 +301,33 @@ public class IdentityVerificationService {
         return result.isSuccessful() ? FinalVerificationResult.OK : FinalVerificationResult.FAILED;
     }
 
-    private VerificationDocumentActionResult evaluateDocuments(
+    /**
+     * Evaluate whether the required documents are satisfied and decide whether the identity verification may proceed
+     * to the next stage.
+     * <p>
+     * The process proceeds to the next stage ({@link VerificationDocumentActionResult#REQUIRED_DOCUMENTS_VERIFIED})
+     * as soon as the required number of accepted documents is met, even when some documents in the current batch
+     * failed. Otherwise it stays in the current stage
+     * ({@link VerificationDocumentActionResult#INSUFFICIENT_DOCUMENT_COUNT}) to allow submission or resubmission of
+     * additional documents.
+     * <p>
+     * Regardless of the outcome, every failed or rejected document from the current batch is counted toward the
+     * process error score (each document at most once over its lifetime).
+     *
+     * @param idVerification Identity verification entity.
+     * @param docVerificationsToProcess Documents from the current processing batch, with their statuses already updated
+     *                                  by the verification provider.
+     * @param ownerId Owner identification.
+     * @return action result indicating whether the process may proceed to the next stage
+     */
+    private VerificationDocumentActionResult evaluateRequiredDocuments(
             final IdentityVerificationEntity idVerification,
             final List<DocumentVerificationEntity> docVerificationsToProcess,
             final OwnerId ownerId) {
 
         final String identityVerificationId = idVerification.getId();
         final var processId = idVerification.getProcessId();
-        // docVerificationsToProcess have been modified, so idVerification.getDocumentVerifications() must be reloaded to reflect these modifications
+        // docVerificationsToProcess contains only documents from the current batch, but the check of required documents needs to account for all documents related to the identity verification
         final List<DocumentVerificationEntity> allDocumentVerifications = documentVerificationRepository.findAllUsedForVerification(idVerification);
 
         final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, processId);
