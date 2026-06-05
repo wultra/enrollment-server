@@ -330,15 +330,10 @@ public class IdentityVerificationService {
         // docVerificationsToProcess contains only documents from the current batch, but the check of required documents needs to account for all documents related to the identity verification
         final List<DocumentVerificationEntity> allDocumentVerifications = documentVerificationRepository.findAllUsedForVerification(idVerification);
 
-        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, processId);
-        if (!allRequiredDocumentsChecked) {
-            logger.debug("Not all required document types are present yet for identity verification ID: {}", identityVerificationId);
-        } else {
-            logger.debug("All required document types are present for identity verification ID: {}", identityVerificationId);
-        }
 
         incrementErrorScoreForFailures(idVerification, docVerificationsToProcess, ownerId);
 
+        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, processId);
         if (allRequiredDocumentsChecked) {
             logger.debug("Required documents are accepted, proceeding for identity verification ID: {}", identityVerificationId);
             return VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED;
