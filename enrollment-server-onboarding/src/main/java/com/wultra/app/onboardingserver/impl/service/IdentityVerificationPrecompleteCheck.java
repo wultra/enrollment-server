@@ -55,7 +55,6 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @AllArgsConstructor
 class IdentityVerificationPrecompleteCheck {
 
-    private static final String SOME_DOCUMENTS_NOT_ACCEPTED = "Some documents not accepted";
     private static final String REQUIRED_DOCUMENTS_NOT_PRESENT = "Required documents not present";
     private static final String NOT_VALID_PHASE_AND_STATE = "Not valid phase and state";
     private static final String NOT_VALID_USER_VERIFICATION_OTP = "Not valid user verification OTP";
@@ -94,13 +93,6 @@ class IdentityVerificationPrecompleteCheck {
 
         final String processId = idVerification.getProcessId();
         final String identityVerificationId = idVerification.getId();
-
-        if (!documentVerifications.stream()
-                .map(DocumentVerificationEntity::getStatus)
-                .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
-            logger.debug("Some documents are not accepted for identity verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed(SOME_DOCUMENTS_NOT_ACCEPTED);
-        }
 
         if (!requiredDocumentTypesCheck.evaluate(documentVerifications, processId)) {
             logger.debug("Not all required documents are present for verification ID: {}, process ID: {}", identityVerificationId, processId);
