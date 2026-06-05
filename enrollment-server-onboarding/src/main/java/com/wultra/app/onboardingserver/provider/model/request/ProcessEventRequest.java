@@ -46,8 +46,8 @@ public final class ProcessEventRequest {
     /**
      * User ID in the external system, which is used by the provider.
      * It can be the same as {@code userId} or different, depending on the provider implementation.
+     * It is {@code null} at the early phases of the process.
      */
-    @NonNull
     private String externalUserId;
 
     @NonNull
