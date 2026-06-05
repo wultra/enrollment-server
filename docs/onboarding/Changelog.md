@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Proceed with identity verification to the next stage once the required number of accepted documents is met, even if some documents failed. [(1783)](https://github.com/wultra/enrollment-server/issues/1783)
 - Use `StructuredLogging` instead of `StructuredArguments` directly. [(1795)](https://github.com/wultra/enrollment-server/issues/1795)
 - Change iProov `resource` attribute value [(1791)](https://github.com/wultra/enrollment-server/issues/1791)
 - Publishing event types of `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED` [(1751)](https://github.com/wultra/enrollment-server/issues/1751)

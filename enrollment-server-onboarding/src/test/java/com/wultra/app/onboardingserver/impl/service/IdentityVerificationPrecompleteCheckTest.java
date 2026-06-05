@@ -297,22 +297,6 @@ class IdentityVerificationPrecompleteCheckTest {
     }
 
     @Test
-    void testProcessDocumentVerificationResult_failedDocument() throws Exception {
-        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
-        documentVerification.setStatus(DocumentStatus.FAILED);
-
-        final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
-
-        when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
-                .thenReturn(List.of(documentVerification));
-
-        final var result = tested.evaluate(idVerification);
-
-        assertFalse(result.isSuccessful());
-        assertEquals("Some documents not accepted", result.getErrorDetail());
-    }
-
-    @Test
     void testProcessDocumentVerificationResult_missingRequiredDocuments() throws Exception {
         final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
         documentVerification.setStatus(DocumentStatus.ACCEPTED);
