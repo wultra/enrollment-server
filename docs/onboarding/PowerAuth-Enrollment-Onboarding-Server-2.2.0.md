@@ -97,3 +97,17 @@ Remove this property from your configuration.
 A new property `enrollment-server-onboarding.onboarding-process.process-event.types` has been added to the configuration.
 It contains a list of event types that are supported to be published.
 The default value is `PROCESS_FINISHED`, `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, and `PRESENCE_CHECK_FINISHED`.
+
+
+## Dependency Updates
+
+
+### Docker Base Image Upgrade
+
+The Docker base image has been upgraded from `ibm-semeru-runtimes:open-21.0.9_10-jre-noble` (OpenJDK 21) to `ibm-semeru-runtimes:open-jdk-25.0.3.0-jre-noble` (OpenJDK 25).
+No action is required.
+
+
+### Spring Boot 4 and Jackson 3
+
+PowerAuth Enrollment Onboarding Server has been migrated to Spring Boot 4 and Jackson 3.
