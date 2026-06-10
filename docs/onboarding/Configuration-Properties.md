@@ -122,7 +122,7 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 |---------------------------------------------------------------------------------------------------|---------------------------|-------------------------------------------------------------------------------|
 | `enrollment-server-onboarding.presence-check.iproov.apiKey`                                       |                           | iProov REST API key.                                                          |
 | `enrollment-server-onboarding.presence-check.iproov.apiSecret`                                    |                           | iProov REST API secret.                                                       |
-| `enrollment-server-onboarding.presence-check.iproov.assuranceType`                                | `genuine_presence`        | iProov assurance type.                                                        |
+| `enrollment-server-onboarding.presence-check.iproov.assuranceType`                                | `genuine_presence`        | iProov assurance type, possible values: `genuine_presence`, and `liveness`.   |
 | `enrollment-server-onboarding.presence-check.iproov.ensureUserIdValueEnabled`                     | `false`                   | Whether iProov user ID value should be validated and trimmed.                 |
 | `enrollment-server-onboarding.presence-check.iproov.riskProfile`                                  |                           | iProov risk profile.                                                          |
 | `enrollment-server-onboarding.presence-check.iproov.serviceBaseUrl`                               |                           | Base REST service URL for iProov.                                             |

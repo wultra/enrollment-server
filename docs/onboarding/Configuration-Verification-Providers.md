@@ -133,3 +133,11 @@ has to be requested from the iProov's [support team](https://iproov.freshdesk.co
 - failure reason
     - a more detailed description of the presence check failure
     - requires enabling of the `reason` response feature for [/api/v2/claim/verify/validate](https://secure.iproov.me/docs.html#operation/userVerifyValidate)
+
+Liveness detection is a fundamental capability that helps determine whether you’re interacting with a real person.
+There are two assurance types available:
+
+- `liveness` - Express Liveness verifies it’s a real person in front of a camera, not a bad actor attempting to spoof the system. Individuals simply align their face in the oval on the screen for a near-instant face capture.
+- `genuine_presence` - Dynamic Liveness verifies it’s a real person and they’re authenticating in real time, delivering the highest level of identity assurance and mission-critical deepfake defense.
+
+See [configuration properties](./Configuration-Properties.md#iproov-configuration).
