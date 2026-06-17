@@ -1,4 +1,5 @@
 {
+  "priority": 10,
   "request": {
     "method": "POST",
     "url": "/process/event"
@@ -8,6 +9,6 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "body-process-event.json"
+    "transformers": ["process-event-proxy-transformer"]
   }
 }

@@ -18,4 +18,4 @@ FROM wiremock/wiremock:latest
 COPY enrollment-server-onboarding-adapter-mock/src/test/wiremock /home/wiremock
 COPY --from=build /tmp/*.jar /var/wiremock/extensions
 
-ENTRYPOINT ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose", "--extensions", "com.wultra.app.enrollmentserver.mockutils.OtpStoreTransformer"]
+ENTRYPOINT ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose", "--extensions", "com.wultra.app.enrollmentserver.mockutils.OtpStoreTransformer,com.wultra.app.enrollmentserver.mockutils.ProcessEventProxyTransformer"]
