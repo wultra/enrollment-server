@@ -22,6 +22,8 @@ import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 /**
  * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
  *
@@ -33,6 +35,18 @@ import lombok.*;
 @PublicApi
 @EqualsAndHashCode
 public final class ProcessEventRequest {
+
+    /**
+     * Unique identifier of the event.
+     */
+    @NonNull
+    private String id;
+
+    /**
+     * Timestamp when the event was created.
+     */
+    @NonNull
+    private LocalDateTime timestamp;
 
     @NonNull
     private String processId;

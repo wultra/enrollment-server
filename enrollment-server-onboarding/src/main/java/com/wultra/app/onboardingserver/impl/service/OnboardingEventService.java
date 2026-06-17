@@ -39,10 +39,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
@@ -192,6 +190,8 @@ public class OnboardingEventService {
         return ProcessEventRequest.builder()
                 .processId(process.getId())
                 .processType(process.getProcessConfiguration().getProcessType())
+                .id(UUID.randomUUID().toString())
+                .timestamp(LocalDateTime.now())
                 .userId(identityVerification.getUserId())
                 .externalUserId(process.getExternalUserId())
                 .identityVerificationId(identityVerification.getId());
