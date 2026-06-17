@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.provider.rest;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * Request object for processing event.
  *
@@ -26,6 +28,10 @@ import lombok.Data;
  */
 @Data
 class ProcessEventRequestDto {
+
+    private String id;
+
+    private LocalDateTime timestamp;
 
     private String processId;
 

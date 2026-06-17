@@ -20,3 +20,9 @@
 
 - Removed `Serializable` from JPA entities. [(1425)](https://github.com/wultra/enrollment-server/issues/1425)
 - Remove property `enrollment-server-onboarding.identity-verification.enabledenrollment-server-onboarding.identity-verification.enabled` [(1788)](https://github.com/wultra/enrollment-server/issues/1788)
+
+
+### Fixed
+
+- Include `id` and `timestamp` in the outgoing process event request. [(1751)](https://github.com/wultra/enrollment-server/issues/1751)
+

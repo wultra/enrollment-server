@@ -40,6 +40,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -125,6 +126,8 @@ class RestOnboardingProviderTest {
     @Test
     void testProcessEvent_processFinished_correctRequestBody() throws OnboardingProviderException, RestClientException {
         final var request = ProcessEventRequest.builder()
+                .id("dummyId")
+                .timestamp(LocalDateTime.parse("2026-06-17T10:46:15"))
                 .processId("dummyProcessId")
                 .processType("dummyProcessType")
                 .userId("dummyUserId")
@@ -155,6 +158,8 @@ class RestOnboardingProviderTest {
         final ProcessEventRequestDto requestDto = processEventRequestDtoArgumentCaptor.getValue();
         assertEquals("dummyProcessId", requestDto.getProcessId());
         assertEquals("dummyProcessType", requestDto.getProcessType());
+        assertEquals("dummyId", requestDto.getId());
+        assertEquals(LocalDateTime.parse("2026-06-17T10:46:15"), requestDto.getTimestamp());
         assertEquals("dummyUserId", requestDto.getUserId());
         assertEquals("dummyExternalUserId", requestDto.getExternalUserId());
         assertEquals("dummyIdentityVerificationId", requestDto.getIdentityVerificationId());
