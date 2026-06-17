@@ -33,7 +33,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -233,8 +232,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
     private static ProcessEventRequestDto convert(final ProcessEventRequest source) {
         final ProcessEventRequestDto target = new ProcessEventRequestDto();
-        target.setId(UUID.randomUUID().toString());
-        target.setTimestamp(LocalDateTime.now());
+        target.setId(source.getId());
+        target.setTimestamp(source.getTimestamp());
         target.setProcessId(source.getProcessId());
         target.setProcessType(source.getProcessType());
         target.setIdentityVerificationId(source.getIdentityVerificationId());
