@@ -90,7 +90,7 @@ public class StateMachineService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
         final var processId = identityVerification.getProcessId();
-        logger.info("", action("changeMachineState"), stateInitiated(), kv("processId", processId));
+        logger.info("Change machine state initiated", action("changeMachineState"), stateInitiated(), kv("processId", processId));
 
         final var ownerId = new OwnerId();
         ownerId.setActivationId(identityVerification.getActivationId());
@@ -99,14 +99,14 @@ public class StateMachineService {
         try {
             lockAndVerifyProcess(processId);
             processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-            logger.info("", action("changeMachineState"), stateSucceeded());
+            logger.info("Change machine state succeeded", action("changeMachineState"), stateSucceeded());
             return true;
         } catch (IdentityVerificationException e) {
-            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Unable to change state for process"), e);
+            logger.warn("Change machine state failed", action("changeMachineState"), stateFailed(), kv("errorMessage", "Unable to change state for process"), e);
         } catch (final OnboardingProcessException e) {
-            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Process not found"), e);
+            logger.warn("Change machine state failed", action("changeMachineState"), stateFailed(), kv("errorMessage", "Process not found"), e);
         } catch (final RuntimeException e) {
-            logger.warn("", action("changeMachineState"), stateFailed(), kv("errorMessage", "Exception when changing state of process"), e);
+            logger.warn("Change machine state failed", action("changeMachineState"), stateFailed(), kv("errorMessage", "Exception when changing state of process"), e);
         }
 
         return false;

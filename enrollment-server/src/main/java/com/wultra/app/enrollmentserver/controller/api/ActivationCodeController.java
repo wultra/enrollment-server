@@ -101,7 +101,7 @@ public class ActivationCodeController {
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
 
         final ActivationCodeRequest requestObject = request.getRequestObject();
-        logger.info("", action("requestActivationCode"), stateInitiated(), kv("applicationId", requestObject.getApplicationId()));
+        logger.info("Request activation code initiated", action("requestActivationCode"), stateInitiated(), kv("applicationId", requestObject.getApplicationId()));
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
@@ -115,7 +115,7 @@ public class ActivationCodeController {
         }
 
         final ActivationCodeResponse response = activationCodeService.requestActivationCode(requestObject, apiAuthentication);
-        logger.info("", action("requestActivationCode"), stateSucceeded());
+        logger.info("Request activation code succeeded", action("requestActivationCode"), stateSucceeded());
         return new ObjectResponse<>(response);
     }
 }

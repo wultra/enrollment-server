@@ -161,14 +161,14 @@ public class ClientEvaluationService {
         final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
         final int attempt = attemptCounter.incrementAndGet();
 
-        logger.info("", action("callEvaluateClient"), stateInitiated(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+        logger.info("Call evaluate client initiated", action("callEvaluateClient"), stateInitiated(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 
         try {
             final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
-            logger.info("", action("callEvaluateClient"), stateSucceeded(), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
+            logger.info("Call evaluate client succeeded", action("callEvaluateClient"), stateSucceeded(), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
             return response;
         } catch (final Exception e) {
-            logger.warn("", action("callEvaluateClient"), stateFailed(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+            logger.warn("Call evaluate client failed", action("callEvaluateClient"), stateFailed(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
             throw e;
         }
     }

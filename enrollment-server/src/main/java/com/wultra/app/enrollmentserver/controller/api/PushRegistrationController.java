@@ -71,9 +71,9 @@ public class PushRegistrationController {
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("", action("registerDeviceDefault"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
+        logger.info("Register device default initiated", action("registerDeviceDefault"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("", action("registerDeviceDefault"), stateSucceeded());
+        logger.info("Register device default succeeded", action("registerDeviceDefault"), stateSucceeded());
         return response;
     }
 
@@ -96,9 +96,9 @@ public class PushRegistrationController {
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("", action("registerDeviceToken"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
+        logger.info("Register device token initiated", action("registerDeviceToken"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("", action("registerDeviceToken"), stateSucceeded());
+        logger.info("Register device token succeeded", action("registerDeviceToken"), stateSucceeded());
         return response;
     }
 

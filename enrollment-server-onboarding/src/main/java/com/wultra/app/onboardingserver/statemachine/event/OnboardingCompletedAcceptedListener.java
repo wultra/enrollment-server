@@ -49,15 +49,15 @@ public class OnboardingCompletedAcceptedListener {
     public void onOnboardingCompletedAccepted(final OnboardingCompletedAcceptedEvent event) {
         final var processId = event.getProcessId();
 
-        logger.info("", action("onOnboardingCompletedAccepted"), stateInitiated(), kv("processId", processId), kv("userId", event.getOwnerId().getUserId()), kv("activationId", event.getOwnerId().getActivationId()));
+        logger.info("On onboarding completed accepted initiated", action("onOnboardingCompletedAccepted"), stateInitiated(), kv("processId", processId), kv("userId", event.getOwnerId().getUserId()), kv("activationId", event.getOwnerId().getActivationId()));
 
         try {
             final var documentData = userDataStoreService.collectDocumentData(processId);
             userDataStoreService.storeDocumentData(documentData);
 
-            logger.info("", action("onOnboardingCompletedAccepted"), stateSucceeded(), kv("storedDocumentCount", documentData.size()));
+            logger.info("On onboarding completed accepted succeeded", action("onOnboardingCompletedAccepted"), stateSucceeded(), kv("storedDocumentCount", documentData.size()));
         } catch (final UserDataStoreClientException | RuntimeException e) {
-            logger.warn("", action("onOnboardingCompletedAccepted"), stateFailed(), e);
+            logger.warn("On onboarding completed accepted failed", action("onOnboardingCompletedAccepted"), stateFailed(), e);
         }
     }
 }

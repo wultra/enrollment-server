@@ -52,10 +52,10 @@ class PrivateClientController {
      */
     @PostMapping("approve")
     public AcknowledgeApproveClientResponse acknowledgeApproveClient(final @Valid @RequestBody AcknowledgeApproveClientRequest request) {
-        logger.info("", action("acknowledgeApproveClient"), stateInitiated(), kv("processId", request.processId()));
+        logger.info("Acknowledge approve client initiated", action("acknowledgeApproveClient"), stateInitiated(), kv("processId", request.processId()));
 
         if (request.approvalResult() == AcknowledgeApproveClientRequest.ApprovalResult.WAIT) {
-            logger.info("", action("acknowledgeApproveClient"), state("skipped"), kv("reason", "approvalResult is WAIT"));
+            logger.info("Acknowledge approve client skipped: approvalResult is WAIT", action("acknowledgeApproveClient"), state("skipped"), kv("reason", "approvalResult is WAIT"));
             return AcknowledgeApproveClientResponse.builder()
                     .result(AcknowledgeApproveClientResponse.Result.OK)
                     .build();
@@ -64,9 +64,9 @@ class PrivateClientController {
         final AcknowledgeApproveClientResponse response = acknowledgeService.acknowledgeApproveClient(request);
 
         if (response.result() == AcknowledgeApproveClientResponse.Result.OK) {
-            logger.info("", action("acknowledgeApproveClient"), stateSucceeded());
+            logger.info("Acknowledge approve client succeeded", action("acknowledgeApproveClient"), stateSucceeded());
         } else {
-            logger.info("", action("acknowledgeApproveClient"), stateFailed(), kv("reason", response.resultReason()));
+            logger.info("Acknowledge approve client failed", action("acknowledgeApproveClient"), stateFailed(), kv("reason", response.resultReason()));
         }
 
         return response;
@@ -74,10 +74,10 @@ class PrivateClientController {
 
     @PostMapping("evaluate")
     public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final @Valid @RequestBody AcknowledgeEvaluationClientRequest request) {
-        logger.info("", action("acknowledgeEvaluationClient"), stateInitiated(), kv("processId", request.processId()));
+        logger.info("Acknowledge evaluation client initiated", action("acknowledgeEvaluationClient"), stateInitiated(), kv("processId", request.processId()));
 
         if (request.evaluationResult() == AcknowledgeEvaluationClientRequest.EvaluationResult.WAIT) {
-            logger.info("", action("acknowledgeEvaluationClient"), state("skipped"), kv("reason", "evaluationResult is WAIT"));
+            logger.info("Acknowledge evaluation client skipped: evaluationResult is WAIT", action("acknowledgeEvaluationClient"), state("skipped"), kv("reason", "evaluationResult is WAIT"));
             return AcknowledgeEvaluationClientResponse.builder()
                     .result(AcknowledgeEvaluationClientResponse.Result.OK)
                     .build();
@@ -86,9 +86,9 @@ class PrivateClientController {
         final AcknowledgeEvaluationClientResponse response = acknowledgeService.acknowledgeEvaluationClient(request);
 
         if (response.result() == AcknowledgeEvaluationClientResponse.Result.OK) {
-            logger.info("", action("acknowledgeEvaluationClient"), stateSucceeded());
+            logger.info("Acknowledge evaluation client succeeded", action("acknowledgeEvaluationClient"), stateSucceeded());
         } else {
-            logger.info("", action("acknowledgeEvaluationClient"), stateFailed(), kv("reason", response.resultReason()));
+            logger.info("Acknowledge evaluation client failed", action("acknowledgeEvaluationClient"), stateFailed(), kv("reason", response.resultReason()));
         }
 
         return response;

@@ -45,10 +45,10 @@ public class PersonalDataCleaningTask {
 	@Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
 	@SchedulerLock(name = SchedulerLockNames.CLEANUP_SELFIES_LOCK, lockAtMostFor = "5m")
 	public void cleanupSelfies() {
-		logger.info("", action("cleanupSelfies"), stateInitiated());
+		logger.info("Cleanup selfies initiated", action("cleanupSelfies"), stateInitiated());
 		LockAssert.assertLocked();
 		final int count = cleaningService.cleanSelfies();
-		logger.info("", action("cleanupSelfies"), stateSucceeded(), kv("count", count));
+		logger.info("Cleanup selfies succeeded", action("cleanupSelfies"), stateSucceeded(), kv("count", count));
 	}
 
 	/**
@@ -58,9 +58,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupDocumentData() {
 		LockAssert.assertLocked();
-		logger.debug("", action("cleanupDocumentData"), stateInitiated());
+		logger.debug("Cleanup document data initiated", action("cleanupDocumentData"), stateInitiated());
 		final var count = cleaningService.cleanupDocumentData();
-		logger.debug("", action("cleanupDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
+		logger.debug("Cleanup document data succeeded", action("cleanupDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 
 	/**
@@ -70,9 +70,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.DOCUMENT_RESULT_PERSONAL_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupDocumentResultPersonalData() {
 		LockAssert.assertLocked();
-		logger.debug("", action("cleanupDocumentResultPersonalData"), stateInitiated());
+		logger.debug("Cleanup document result personal data initiated", action("cleanupDocumentResultPersonalData"), stateInitiated());
 		final var count = cleaningService.cleanupDocumentResultPersonalData();
-		logger.debug("", action("cleanupDocumentResultPersonalData"), stateSucceeded(), kv("cleanedRecords", count));
+		logger.debug("Cleanup document result personal data succeeded", action("cleanupDocumentResultPersonalData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 
 	/**
@@ -82,9 +82,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.PROCESSED_DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupProcessedDocumentData() {
 		LockAssert.assertLocked();
-		logger.debug("", action("cleanupProcessedDocumentData"), stateInitiated());
+		logger.debug("Cleanup processed document data initiated", action("cleanupProcessedDocumentData"), stateInitiated());
 		final var count = cleaningService.cleanupProcessedDocumentData();
-		logger.debug("", action("cleanupProcessedDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
+		logger.debug("Cleanup processed document data succeeded", action("cleanupProcessedDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 }
 

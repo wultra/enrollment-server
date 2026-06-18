@@ -34,6 +34,6 @@ class NoOpUserDataStoreService implements UserDataStoreService {
 
     @Override
     public void storeDocumentData(final List<DocumentCreateRequest> documentRequests) {
-        logger.info("", action("storeDocumentData"), state("skipped"));
+        logger.info("Store document data skipped", action("storeDocumentData"), state("skipped"));
     }
 }
