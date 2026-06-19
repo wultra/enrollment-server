@@ -106,23 +106,23 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     @Transactional(readOnly = true)
     @Override
     public List<DocumentCreateRequest> collectDocumentData(final String processId) {
-        logger.info("", action("collectDocumentData"), stateInitiated(), kv("processId", processId));
+        logger.info("Collect document data initiated", action("collectDocumentData"), stateInitiated(), kv("processId", processId));
 
         final var process = onboardingProcessRepository.findById(processId).orElse(null);
         if (process == null) {
-            logger.warn("", action("collectDocumentData"), stateFailed(), kv("reason", "process_not_found"), kv("processId", processId));
+            logger.warn("Collect document data failed: process_not_found", action("collectDocumentData"), stateFailed(), kv("reason", "process_not_found"), kv("processId", processId));
             return List.of();
         }
 
         final var identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId()).orElse(null);
         if (identityVerification == null) {
-            logger.warn("", action("collectDocumentData"), stateFailed(), kv("reason", "identity_not_found"), kv("processId", processId));
+            logger.warn("Collect document data failed: identity_not_found", action("collectDocumentData"), stateFailed(), kv("reason", "identity_not_found"), kv("processId", processId));
             return List.of();
         }
 
         final var documentVerifications = fetchDocumentVerifications(identityVerification, config.getDocumentType());
         if (documentVerifications.primaryDocuments() == null) {
-            logger.info("", action("collectDocumentData"), state("skipped"), kv("reason", "no_document_verification"), kv("processId", processId));
+            logger.info("Collect document data skipped: no_document_verification", action("collectDocumentData"), state("skipped"), kv("reason", "no_document_verification"), kv("processId", processId));
             return List.of();
         }
 
@@ -133,13 +133,13 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             documentRequests.add(createDocumentRequest(process, entry));
         }
 
-        logger.info("", action("collectDocumentData"), kv("state", "finished"), kv("processId", processId), kv("count", documentRequests.size()));
+        logger.info("Collect document data finished", action("collectDocumentData"), kv("state", "finished"), kv("processId", processId), kv("count", documentRequests.size()));
         return documentRequests;
     }
 
     @Override
     public void storeDocumentData(final List<DocumentCreateRequest> requests) throws UserDataStoreClientException {
-        logger.info("", action("storeDocumentData"), stateInitiated(), kv("count", requests.size()));
+        logger.info("Store document data initiated", action("storeDocumentData"), stateInitiated(), kv("count", requests.size()));
 
         for (final var request : requests) {
             final AtomicInteger attemptCounter = new AtomicInteger();
@@ -149,7 +149,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 throw new UserDataStoreClientException("Too many attempts to create document", e);
             }
         }
-        logger.info("", action("storeDocumentData"), kv("state", "finished"));
+        logger.info("Store document data finished", action("storeDocumentData"), kv("state", "finished"));
     }
 
     private List<ProcessedDocumentDataEntity> fetchProcessedDocumentData(final Collection<DocumentVerificationEntity> documentVerifications) {
@@ -224,14 +224,14 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     Void callCreateDocument(final DocumentCreateRequest request, final AtomicInteger attemptCounter) throws UserDataStoreClientException {
         final int maxAttempts = config.getMaxAttempts();
         final int attempt = attemptCounter.incrementAndGet();
-        logger.info("", action("callCreateDocument"), stateInitiated(), kv("userId", request.userId()), kv("externalId", request.externalId()), kv("documentType", request.documentType()), kv("dataType", request.dataType()), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+        logger.info("Call create document initiated", action("callCreateDocument"), stateInitiated(), kv("userId", request.userId()), kv("externalId", request.externalId()), kv("documentType", request.documentType()), kv("dataType", request.dataType()), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 
         try {
             final var response = userDataStoreClient.createDocument(request);
-            logger.info("", action("callCreateDocument"), stateSucceeded(), kv("documentId", response.id()), kv("photoIds", collectPhotoIds(response)));
+            logger.info("Call create document succeeded", action("callCreateDocument"), stateSucceeded(), kv("documentId", response.id()), kv("photoIds", collectPhotoIds(response)));
             return null;
         } catch (final UserDataStoreClientException e) {
-            logger.warn("", action("callCreateDocument"), stateFailed(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
+            logger.warn("Call create document failed", action("callCreateDocument"), stateFailed(), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
             throw e;
         }
     }

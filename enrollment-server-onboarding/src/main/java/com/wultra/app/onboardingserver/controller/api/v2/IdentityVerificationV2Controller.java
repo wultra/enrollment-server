@@ -99,15 +99,15 @@ class IdentityVerificationV2Controller {
     ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
 
         final DocumentSubmitV2Request requestObject = request.getRequestObject();
-        logger.info("", action("submitDocumentsV2"), stateInitiated(), kv("processId", requestObject.processId()));
+        logger.info("Submit documents v2 initiated", action("submitDocumentsV2"), stateInitiated(), kv("processId", requestObject.processId()));
 
         try {
             final var response = identityVerificationRestService.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
 
-            logger.info("", action("submitDocumentsV2"), stateSucceeded());
+            logger.info("Submit documents v2 succeeded", action("submitDocumentsV2"), stateSucceeded());
             return response;
         } catch (final Exception e) {
-            logger.error("", action("submitDocumentsV2"), stateFailed());
+            logger.error("Submit documents v2 failed", action("submitDocumentsV2"), stateFailed());
             throw e;
         }
     }

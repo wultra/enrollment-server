@@ -106,17 +106,17 @@ public class OnboardingApprovalService {
                     .image(loadImage(identityVerification))
                     .build();
 
-            logger.info("", action("callApproveClient"), stateInitiated());
+            logger.info("Call approve client initiated", action("callApproveClient"), stateInitiated());
             final ApproveClientResponse response = onboardingProvider.approveClient(request);
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             final String resultReason = response.resultReason();
-            logger.info("", action("callApproveClient"), stateSucceeded(), kv("approvalResult", approvalResult), kv("resultReason", resultReason));
+            logger.info("Call approve client succeeded", action("callApproveClient"), stateSucceeded(), kv("approvalResult", approvalResult), kv("resultReason", resultReason));
             persistRejectReason(response, identityVerification);
 
             auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
             return convert(approvalResult);
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            logger.warn("", action("callApproveClient"), stateFailed(), e);
+            logger.warn("Call approve client failed", action("callApproveClient"), stateFailed(), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return ApprovalResult.FAILED;
         }

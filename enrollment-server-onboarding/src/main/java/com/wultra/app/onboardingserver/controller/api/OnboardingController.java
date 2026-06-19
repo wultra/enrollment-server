@@ -85,7 +85,7 @@ public class OnboardingController {
             final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         final OnboardingStartRequest requestObject = request.getRequestObject();
-        logger.info("", action("start"), stateInitiated(), kv("processType", requestObject.processType()));
+        logger.info("Start initiated", action("start"), stateInitiated(), kv("processType", requestObject.processType()));
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
@@ -94,7 +94,7 @@ public class OnboardingController {
         final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
         final OnboardingStartResponse response = onboardingService.startOnboarding(requestObject, requestContext, encryptionContext);
-        logger.info("", action("start"), stateSucceeded());
+        logger.info("Start succeeded", action("start"), stateSucceeded());
         return new ObjectResponse<>(response);
     }
 
@@ -116,14 +116,14 @@ public class OnboardingController {
             throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
 
         final OnboardingOtpResendRequest requestObject = request.getRequestObject();
-        logger.info("", action("resendOtp"), stateInitiated(), kv("processId", requestObject.getProcessId()));
+        logger.info("Resend otp initiated", action("resendOtp"), stateInitiated(), kv("processId", requestObject.getProcessId()));
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while resending OTP code");
         }
 
         final Response response = onboardingService.resendOtp(requestObject);
-        logger.info("", action("resendOtp"), stateSucceeded());
+        logger.info("Resend otp succeeded", action("resendOtp"), stateSucceeded());
         return response;
     }
 
@@ -143,7 +143,7 @@ public class OnboardingController {
             @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
 
         final OnboardingStatusRequest requestObject = request.getRequestObject();
-        logger.info("", action("status"), stateInitiated(), kv("processId", requestObject.getProcessId()));
+        logger.info("Status initiated", action("status"), stateInitiated(), kv("processId", requestObject.getProcessId()));
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while getting status");
@@ -151,7 +151,7 @@ public class OnboardingController {
 
         logger.debug("Onboarding process will not be locked, {}", requestObject.getProcessId(), kv("processId", requestObject.getProcessId()));
         final OnboardingStatusResponse response = onboardingService.getStatus(requestObject);
-        logger.info("", action("status"), stateSucceeded());
+        logger.info("Status succeeded", action("status"), stateSucceeded());
         return new ObjectResponse<>(response);
     }
 
@@ -171,14 +171,14 @@ public class OnboardingController {
             @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
 
         final OnboardingCleanupRequest requestObject = request.getRequestObject();
-        logger.info("", action("cleanup"), stateInitiated(), kv("processId", requestObject.getProcessId()));
+        logger.info("Cleanup initiated", action("cleanup"), stateInitiated(), kv("processId", requestObject.getProcessId()));
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during cleanup");
         }
 
         final Response response = onboardingService.performCleanup(requestObject);
-        logger.info("", action("cleanup"), stateSucceeded());
+        logger.info("Cleanup succeeded", action("cleanup"), stateSucceeded());
         return response;
     }
 }

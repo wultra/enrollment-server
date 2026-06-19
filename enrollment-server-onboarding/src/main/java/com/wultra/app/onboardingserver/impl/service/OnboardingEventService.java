@@ -218,13 +218,13 @@ public class OnboardingEventService {
 
     private void sendEvent(final ProcessEventRequest request) {
         try {
-            logger.info("", action("sendEvent"), stateInitiated(), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
+            logger.info("Send event initiated", action("sendEvent"), stateInitiated(), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
             logger.debug("Got {} for processId={}", response, request.getProcessId());
-            logger.info("", action("sendEvent"), stateSucceeded(), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
+            logger.info("Send event succeeded", action("sendEvent"), stateSucceeded(), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
-            logger.warn("", action("sendEvent"), stateFailed(), kv("exceptionMessage", e.getMessage()), e);
+            logger.warn("Send event failed", action("sendEvent"), stateFailed(), kv("exceptionMessage", e.getMessage()), e);
         }
     }
 
