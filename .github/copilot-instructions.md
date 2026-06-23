@@ -218,36 +218,7 @@ Follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/):
 ### Logging
 
 - Use `StructuredLogging` for structured key-value pairs. Available convenience methods: `action(value)`, `state(value)`, `stateInitiated()`, `stateFailed()`, `stateSucceeded()`, `kv(key, value)`.
+- The log message should never be an empty string. Otherwise, it appears in Elastic, but the message is `null`, and we lose even the associated parameter values.
 - Dev/test logback configs: use `logging-support` module from `java-core` with `%msg%sa%n` pattern (no literal space before `%sa` — the converter prepends its own leading space).
 - Production configs: use `LogstashEncoder` for JSON output.
 
----
-
-
-## RTK — Token-Optimized CLI
-
-**rtk** is a CLI proxy that filters and compresses command outputs, saving 60-90% tokens.
-
-
-### Rule
-
-Always prefix shell commands with `rtk`:
-
-```bash
-# Instead of:              Use:
-git status                 rtk git status
-git log -10                rtk git log -10
-cargo test                 rtk cargo test
-docker ps                  rtk docker ps
-kubectl get pods           rtk kubectl pods
-```
-
-
-### Meta commands (use directly)
-
-```bash
-rtk gain              # Token savings dashboard
-rtk gain --history    # Per-command savings history
-rtk discover          # Find missed rtk opportunities
-rtk proxy <cmd>       # Run raw (no filtering) but track usage
-```
