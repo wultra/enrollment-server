@@ -53,7 +53,7 @@ public record DocumentVerificationFinishedEventData(
             String type,
             String country,
             DocumentData data,
-            List<Image> images,
+            List<DocumentImage> images,
             Object rawData
     ) {}
 
@@ -75,7 +75,7 @@ public record DocumentVerificationFinishedEventData(
 
     @Builder
     @PublicApi
-    public record Image(
+    public record DocumentImage(
             @NonNull String type,
             @NonNull String data
     ) {}

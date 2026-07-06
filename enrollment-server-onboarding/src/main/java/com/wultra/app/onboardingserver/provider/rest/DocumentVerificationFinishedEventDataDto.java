@@ -46,7 +46,7 @@ record DocumentVerificationFinishedEventDataDto(DocumentVerification documentVer
             String type,
             String country,
             DocumentData data,
-            List<Image> images,
+            List<DocumentImage> images,
             Object rawData
     ) {}
 
@@ -66,7 +66,7 @@ record DocumentVerificationFinishedEventDataDto(DocumentVerification documentVer
     ) {}
 
     @Builder
-    public record Image(
+    public record DocumentImage(
             String type,
             String data
     ) {}
