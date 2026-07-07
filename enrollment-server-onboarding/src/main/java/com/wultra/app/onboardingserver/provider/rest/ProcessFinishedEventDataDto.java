@@ -27,10 +27,10 @@ import java.util.Map;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-record ProcessFinishedEventDataDto(Process process) implements EventDataDto {
+record ProcessFinishedEventDataDto(ProcessInfo process) implements EventDataDto {
 
     @Builder
-    public record Process(
+    public record ProcessInfo(
             String status,
             String errorDetail,
             DeviceData deviceData

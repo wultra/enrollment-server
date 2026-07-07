@@ -166,7 +166,7 @@ class RestOnboardingProviderTest {
         assertEquals(EventTypeDto.PROCESS_FINISHED, requestDto.getType());
 
         final var expected = ProcessFinishedEventDataDto.builder()
-                .process(ProcessFinishedEventDataDto.Process.builder()
+                .process(ProcessFinishedEventDataDto.ProcessInfo.builder()
                         .status("FINISHED")
                         .errorDetail(null)
                         .deviceData(ProcessFinishedEventDataDto.DeviceData.builder()

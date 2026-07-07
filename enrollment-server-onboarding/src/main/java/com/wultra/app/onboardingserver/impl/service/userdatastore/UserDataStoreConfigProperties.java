@@ -45,7 +45,7 @@ class UserDataStoreConfigProperties {
      * Type of documents to store.
      */
     @NotNull
-    private DocumentType documentType;
+    private DocumentTypeFilter documentType;
 
     /**
      * Whether to store extracted data from documents.
@@ -65,7 +65,7 @@ class UserDataStoreConfigProperties {
     /**
      * Document type filtering.
      */
-    enum DocumentType {
+    enum DocumentTypeFilter {
 
         /**
          * Store only documents with trusted images.

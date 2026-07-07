@@ -192,7 +192,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .build();
     }
 
-    private DocumentsWrapper fetchDocumentVerifications(final IdentityVerificationEntity idVerification, UserDataStoreConfigProperties.DocumentType documentType) {
+    private DocumentsWrapper fetchDocumentVerifications(final IdentityVerificationEntity idVerification, UserDataStoreConfigProperties.DocumentTypeFilter documentType) {
         final Map<DocumentType, List<DocumentVerificationEntity>> documentVerifications = documentVerificationRepository.findAcceptedWithPhoto(idVerification).stream()
                 .collect(Collectors.groupingBy(
                         DocumentVerificationEntity::getType,

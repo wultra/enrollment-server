@@ -422,7 +422,7 @@ public class IdentityVerificationRestService {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
 
         @SuppressWarnings("unchecked")
-        final Class<ObjectResponse<PresenceCheckInitResponse>> presenceCheckInitResponseClass = (Class<ObjectResponse<PresenceCheckInitResponse>>) new ObjectResponse<PresenceCheckInitResponse>().getClass();
+        final Class<ObjectResponse<PresenceCheckInitResponse>> presenceCheckInitResponseClass = (Class<ObjectResponse<PresenceCheckInitResponse>>) (Class<?>) ObjectResponse.class;
         return createResponseEntity(stateMachine, presenceCheckInitResponseClass);
     }
 

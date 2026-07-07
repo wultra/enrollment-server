@@ -315,14 +315,14 @@ public class OnboardingEventService {
                 .build();
     }
 
-    private List<DocumentVerificationFinishedEventData.Image> buildImages(final DocumentVerificationEntity doc) {
+    private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final DocumentVerificationEntity doc) {
         final List<ProcessedDocumentDataEntity> entities =
                 processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
         if (entities.isEmpty()) {
             return List.of();
         }
         return entities.stream()
-                .map(it -> DocumentVerificationFinishedEventData.Image.builder()
+                .map(it -> DocumentVerificationFinishedEventData.DocumentImage.builder()
                         .type(it.getDataType().name())
                         .data(Base64.getEncoder().encodeToString(it.getData()))
                         .build())

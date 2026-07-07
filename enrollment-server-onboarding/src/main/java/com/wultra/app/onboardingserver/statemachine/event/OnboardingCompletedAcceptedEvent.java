@@ -29,7 +29,7 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class OnboardingCompletedAcceptedEvent extends ApplicationEvent {
 
-    private final OwnerId ownerId;
+    private final transient OwnerId ownerId;
     private final String processId;
 
     /**

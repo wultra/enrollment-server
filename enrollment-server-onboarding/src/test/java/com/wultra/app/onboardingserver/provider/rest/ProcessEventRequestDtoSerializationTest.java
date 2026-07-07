@@ -49,7 +49,7 @@ class ProcessEventRequestDtoSerializationTest {
         dto.setExternalUserId("629199e8-aa0d-4fc0-911c-089d53e0f608");
         dto.setType(EventTypeDto.PROCESS_FINISHED);
         dto.setEventData(ProcessFinishedEventDataDto.builder()
-                .process(ProcessFinishedEventDataDto.Process.builder()
+                .process(ProcessFinishedEventDataDto.ProcessInfo.builder()
                         .status("FINISHED")
                         .errorDetail(null)
                         .deviceData(ProcessFinishedEventDataDto.DeviceData.builder()
@@ -116,7 +116,7 @@ class ProcessEventRequestDtoSerializationTest {
                                         .dateOfBirth("1980-01-01")
                                         .documentNumber("AB123456")
                                         .build())
-                                .images(List.of(DocumentVerificationFinishedEventDataDto.Image.builder()
+                                .images(List.of(DocumentVerificationFinishedEventDataDto.DocumentImage.builder()
                                         .type("FACE")
                                         .data("base64data")
                                         .build()))
