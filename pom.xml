@@ -100,7 +100,7 @@
         <central.publishing.plugin.version>0.11.0</central.publishing.plugin.version>
 
         <wultra-core.version>2.2.0-SNAPSHOT</wultra-core.version>
-        <powerauth-crypto.version>2.2.0-SNAPSHOT</powerauth-crypto.version>
+        <powerauth-crypto.version>2.2.0</powerauth-crypto.version>
         <powerauth-restful-integration.version>2.2.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>2.2.0-SNAPSHOT</powerauth-push.version>
         <user-data-store.version>1.6.0-SNAPSHOT</user-data-store.version>
