@@ -39,3 +39,73 @@ BEGIN EXECUTE IMMEDIATE 'CREATE TABLE shedlock (
     PRIMARY KEY (name))';
 EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
 /
+
+-- Create audit log table - https://github.com/wultra/java-core#wultra-auditing-library
+BEGIN EXECUTE IMMEDIATE 'CREATE TABLE audit_log (
+    audit_log_id       VARCHAR2(36 CHAR) PRIMARY KEY,
+    application_name   VARCHAR2(256 CHAR) NOT NULL,
+    audit_level        VARCHAR2(32 CHAR) NOT NULL,
+    audit_type         VARCHAR2(256 CHAR),
+    timestamp_created  TIMESTAMP,
+    message            CLOB NOT NULL,
+    exception_message  CLOB,
+    stack_trace        CLOB,
+    param              CLOB,
+    calling_class      VARCHAR2(256 CHAR) NOT NULL,
+    thread_name        VARCHAR2(256 CHAR) NOT NULL,
+    version            VARCHAR2(256 CHAR),
+    build_time         TIMESTAMP)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE TABLE audit_param (
+    audit_log_id       VARCHAR2(36 CHAR),
+    timestamp_created  TIMESTAMP,
+    param_key          VARCHAR2(256 CHAR),
+    param_value        VARCHAR2(4000 CHAR))';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_timestamp ON audit_log (timestamp_created)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_application ON audit_log (application_name)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_level ON audit_log (audit_level)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_type ON audit_log (audit_type)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_log ON audit_param (audit_log_id)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_timestamp ON audit_param (timestamp_created)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_key ON audit_param (param_key)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_value ON audit_param (param_value)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+-- Changeset enrollment-server/1.8.x/20240620-add-resultTexts.xml::1::Lubos Racansky
+-- Add result_texts column
+ALTER TABLE es_operation_template ADD result_texts CLOB;
+
+-- Changeset enrollment-server/2.1.x/20260330-audit-subject-id.xml::1::Pavel Sindelar
+-- Add subject_id column to audit_log table
+ALTER TABLE audit_log ADD subject_id VARCHAR2(256);
+
+-- Changeset enrollment-server/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
+-- Create a new index on audit_log(subject_id)
+CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);

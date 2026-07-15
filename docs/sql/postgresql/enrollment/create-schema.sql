@@ -42,3 +42,48 @@ CREATE TABLE IF NOT EXISTS shedlock (
     locked_by VARCHAR(255) NOT NULL,
     PRIMARY KEY (name)
 );
+
+-- Create audit log table - https://github.com/wultra/java-core#wultra-auditing-library
+CREATE TABLE IF NOT EXISTS audit_log (
+    audit_log_id       VARCHAR(36) PRIMARY KEY,
+    application_name   VARCHAR(256) NOT NULL,
+    audit_level        VARCHAR(32) NOT NULL,
+    audit_type         VARCHAR(256),
+    timestamp_created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    message            TEXT NOT NULL,
+    exception_message  TEXT,
+    stack_trace        TEXT,
+    param              TEXT,
+    calling_class      VARCHAR(256) NOT NULL,
+    thread_name        VARCHAR(256) NOT NULL,
+    version            VARCHAR(256),
+    build_time         TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS audit_param (
+    audit_log_id       VARCHAR(36),
+    timestamp_created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    param_key          VARCHAR(256),
+    param_value        VARCHAR(4000)
+);
+
+CREATE INDEX IF NOT EXISTS audit_log_timestamp ON audit_log (timestamp_created);
+CREATE INDEX IF NOT EXISTS audit_log_application ON audit_log (application_name);
+CREATE INDEX IF NOT EXISTS audit_log_level ON audit_log (audit_level);
+CREATE INDEX IF NOT EXISTS audit_log_type ON audit_log (audit_type);
+CREATE INDEX IF NOT EXISTS audit_param_log ON audit_param (audit_log_id);
+CREATE INDEX IF NOT EXISTS audit_param_timestamp ON audit_param (timestamp_created);
+CREATE INDEX IF NOT EXISTS audit_param_key ON audit_param (param_key);
+CREATE INDEX IF NOT EXISTS audit_param_value ON audit_param (param_value);
+
+-- Changeset enrollment-server/1.8.x/20240620-add-resultTexts.xml::1::Lubos Racansky
+-- Add result_texts column
+ALTER TABLE es_operation_template ADD result_texts TEXT;
+
+-- Changeset enrollment-server/2.1.x/20260330-audit-subject-id.xml::1::Pavel Sindelar
+-- Add subject_id column to audit_log table
+ALTER TABLE audit_log ADD subject_id VARCHAR(256);
+
+-- Changeset enrollment-server/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
+-- Create a new index on audit_log(subject_id)
+CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
