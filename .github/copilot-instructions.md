@@ -102,7 +102,7 @@ Error responses are handled centrally by `DefaultExceptionHandler` (`@Controller
 
 Changelog files:
 - `../CHANGELOG.md` at the repository root (enrollment-server module)
-- `docs/onboarding/Changelog.md` (onboarding module)
+- `../docs/onboarding/CHANGELOG.md` (onboarding module)
 
 Update the relevant file as part of every PR — before creating the PR, not after merge.
 
