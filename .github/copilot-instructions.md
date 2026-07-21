@@ -100,45 +100,57 @@ Error responses are handled centrally by `DefaultExceptionHandler` (`@Controller
 
 ## Changelog
 
-Changelog files:
-- `../CHANGELOG.md` at the repository root (enrollment-server module)
-- `../enrollment-server-onboarding/CHANGELOG.md` (onboarding module)
+This repository ships **multiple independently versioned products**, so it keeps one
+`CHANGELOG.md` per product, all at the **repository root** (kept out of the
+portal-published `docs/` path):
 
-Update the relevant file as part of every PR — before creating the PR, not after merge.
+- `CHANGELOG.md` — root **index** (Keep a Changelog header + links to each product changelog)
+- `CHANGELOG-enrollment-server.md` — Enrollment Server product
+- `CHANGELOG-onboarding.md` — Onboarding Server product
+
+Update the changelog of the affected product as part of every PR — before creating the
+PR, not after merge. If a change touches both products, update both files.
+
+> The per-release migration notes under `docs/onboarding/PowerAuth-*-X.Y.Z.md` are portal
+> documentation, **not** the changelog. Do not put changelog entries there.
 
 
 ### Format
 
-Follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/):
+Each product changelog **strictly** follows
+[Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 ```markdown
 # Changelog
 
+All notable changes to this project will be documented in this file.
 
-## X.Y.Z (TBA)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
 
 ### Added
 
 - New feature description [(#N)](https://github.com/wultra/enrollment-server/issues/N)
 
-
 ### Changed
 
-- Changed behaviour description [(#N)](...)
-
+- Changed behaviour description [(#N)](https://github.com/wultra/enrollment-server/issues/N)
 
 ### Fixed
 
-- Bug fix description [(#N)](...)
+- Bug fix description [(#N)](https://github.com/wultra/enrollment-server/issues/N)
 
-
-## 1.2.3 - 2025-03-01
-
+## [1.2.3] - 2025-03-01
 
 ### Added
 
 - ...
+
+[unreleased]: https://github.com/wultra/enrollment-server/compare/1.2.3...HEAD
+[1.2.3]: https://github.com/wultra/enrollment-server/compare/1.2.2...1.2.3
 ```
 
 **Change type subsections** (use only those that apply):
@@ -150,11 +162,26 @@ Follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/):
 - `Security` — security vulnerability fixes
 
 **Rules:**
-- Always add new entries under `## X.Y.Z (TBA)` (the unreleased section at the top).
-- On release, rename `## X.Y.Z (TBA)` to `## x.y.z - YYYY-MM-DD` (ISO 8601 date).
-- Each entry: `- <Description starting with verb> [(#N)](url)` — link to the issue, not the PR.
+- The header must mention both [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- Always add new entries under the `## [Unreleased]` section at the top.
+- On release: rename `## [Unreleased]` to `## [x.y.z] - YYYY-MM-DD` (ISO 8601 date), add a fresh empty `## [Unreleased]` above it, update the `[unreleased]` reference link, and add the new version's compare link.
+- Versions and sections must be linkable via reference-style links at the bottom of the file.
+- Each entry: `- <Description starting with a verb> [(#N)](url)` — link to the **issue**, not the PR.
 - Descriptions should be human-readable, not raw commit messages (e.g. "Fixed NPE when application list is empty" not "fix #811: add missing import").
-- Skip the Changelog update only for changes with no user-visible impact (e.g. pure CI/tooling changes).
+- Products version independently: use per-product prefixed git tags and set the Conventional Commits `scope` to the affected component.
+
+
+### Non-functional and documentation-only changes
+
+| Documentation change | Changelog entry? |
+|---|---|
+| New/changed **user-facing** docs (API reference, configuration properties, deployment/migration guide, README feature section) | **Yes** — under `Added` or `Changed` |
+| Fixing/clarifying existing public docs (typos, broken links, wording) | **No** (unless it corrects a materially wrong instruction) |
+| Internal docs (`docs-private/`, ADRs, contributor notes, code comments, Javadoc) | **No** |
+| Work-in-progress / **partial** docs not yet usable | **No** — log once the feature/doc is complete |
+
+Skip the changelog update only for changes with no user-visible impact (e.g. pure
+CI/tooling changes).
 
 ---
 
