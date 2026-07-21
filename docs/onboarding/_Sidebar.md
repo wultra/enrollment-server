@@ -3,7 +3,6 @@
 - [Deploying Onboarding Server](./Deploying-Onboarding-Server.md)
 - [Deploying Enrollment Server on JBoss/Wildfly](./Deploying-Wildfly.md)
 - [Migration Instructions](./Migration-Instructions.md)
-- [Changelog](CHANGELOG.md)
 - [Installation](./Installation.md)
 - [Configuration Properties](./Configuration-Properties.md)
 - [Configuration of Verification Providers](./Configuration-Verification-Providers.md)
