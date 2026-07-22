@@ -103,7 +103,7 @@
         <powerauth-crypto.version>2.3.0-SNAPSHOT</powerauth-crypto.version>
         <powerauth-restful-integration.version>2.3.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>2.3.0-SNAPSHOT</powerauth-push.version>
-        <user-data-store.version>1.6.0</user-data-store.version>
+        <user-data-store.version>1.7.0-SNAPSHOT</user-data-store.version>
 
         <logstash.version>9.0</logstash.version>
         <cyclonedx-maven-plugin.version>2.9.2</cyclonedx-maven-plugin.version>
