@@ -59,6 +59,8 @@ import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -153,19 +155,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     /**
      * Start an onboarding process, optionally using the activation authenticated by PowerAuth.
      *
-     * @param request Onboarding start request.
-     * @param requestContext Request context.
-     * @param encryptionContext Encryption context.
-     * @param apiAuthentication PowerAuth authentication for an existing activation process.
+     * @param context Start context containing the request, request context, encryption context,
+     *                and optional PowerAuth authentication for an existing activation process.
      * @return Onboarding start response.
      */
-    // TODO Lubos - introduce parameter object with a builder for this method, because it has too many parameters
     @Transactional
-    public OnboardingStartResponse startOnboarding(
-            final OnboardingStartRequest request,
-            final RequestContext requestContext,
-            final EncryptionContext encryptionContext,
-            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+    public OnboardingStartResponse startOnboarding(final StartOnboardingContext context) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+
+        final OnboardingStartRequest request = context.request();
+        final RequestContext requestContext = context.requestContext();
+        final EncryptionContext encryptionContext = context.encryptionContext();
+        final PowerAuthApiAuthentication apiAuthentication = context.apiAuthentication();
 
         final OnboardingProcessConfigurationEntity processConfiguration = fetchProcessConfiguration(request.processType());
         if (processConfiguration.getConfiguration().existingActivation()) {
@@ -767,5 +767,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         auditService.auditOnboardingProvider(process, "Resent activation OTP for user: {}", userId);
+    }
+
+    /**
+     * Context for {@link #startOnboarding(StartOnboardingContext)}.
+     *
+     * @author Lubos Racansky, lubos.racansky@wultra.com
+     */
+    @Builder
+    public record StartOnboardingContext(
+            @NonNull OnboardingStartRequest request,
+            @NonNull RequestContext requestContext,
+            @NonNull EncryptionContext encryptionContext,
+            PowerAuthApiAuthentication apiAuthentication) {
     }
 }

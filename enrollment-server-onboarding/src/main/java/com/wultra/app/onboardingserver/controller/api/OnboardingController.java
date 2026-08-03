@@ -119,7 +119,12 @@ public class OnboardingController {
 
         final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
-        final OnboardingStartResponse response = onboardingService.startOnboarding(requestObject, requestContext, encryptionContext, apiAuthentication);
+        final OnboardingStartResponse response = onboardingService.startOnboarding(OnboardingServiceImpl.StartOnboardingContext.builder()
+                .request(requestObject)
+                .requestContext(requestContext)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(apiAuthentication)
+                .build());
         logger.info("Start succeeded", action("start"), stateSucceeded());
         return new ObjectResponse<>(response);
     }
