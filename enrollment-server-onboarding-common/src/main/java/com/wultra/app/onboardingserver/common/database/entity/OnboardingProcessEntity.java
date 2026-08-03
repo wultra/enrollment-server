@@ -98,7 +98,7 @@ public class OnboardingProcessEntity {
     private OnboardingStatus status;
 
     /**
-     * When the status is {@link OnboardingStatus#FAILED}, the activation specified be {@link #activationId} should be cleaned up.
+     * When the status is {@link OnboardingStatus#FAILED}, the activation specified by {@link #activationId} should be cleaned up.
      * Usually it is removed at PowerAuth server, but in some cases it can be kept (e.g. when the process reuses an existing activation).
      * This flag indicates that the task has been done.
      * @implNote We should rename the column and/or the field.
