@@ -76,7 +76,7 @@ public class ActivationFlagService {
             final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
             if (!activationFlags.contains(activationFlag)) {
                 activationFlags.add(activationFlag);
-                updateActivationFlags(ownerId, activationFlags);
+                updateActivationFlags(ownerId.getActivationId(), activationFlags);
             }
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
@@ -93,7 +93,7 @@ public class ActivationFlagService {
      */
     public void removeActivationFlag(final OwnerId ownerId, final String activationFlag) throws RemoteCommunicationException {
         try {
-            removeActivationFlags(ownerId, Collections.singletonList(activationFlag));
+            removeActivationFlags(ownerId.getActivationId(), Collections.singletonList(activationFlag));
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
@@ -115,7 +115,7 @@ public class ActivationFlagService {
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
             activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
 
-            updateActivationFlags(ownerId, activationFlags);
+            updateActivationFlags(ownerId.getActivationId(), activationFlags);
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
@@ -139,7 +139,7 @@ public class ActivationFlagService {
                 activationFlags.add(ACTIVATION_FLAG_VERIFICATION_PENDING);
             }
 
-            updateActivationFlags(ownerId, activationFlags);
+            updateActivationFlags(ownerId.getActivationId(), activationFlags);
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
@@ -177,7 +177,7 @@ public class ActivationFlagService {
             }
 
             // Remove flag VERIFICATION_IN_PROGRESS
-            removeActivationFlags(ownerId, Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
+            removeActivationFlags(ownerId.getActivationId(), Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
@@ -220,13 +220,13 @@ public class ActivationFlagService {
 
     /**
      * Update activation flags.
-     * @param ownerId Owner identification.
+     * @param activationId Activation ID.
      * @param activationFlags Activation flags to set.
      * @throws PowerAuthClientException Thrown when activation flags could not be updated.
      */
-    private void updateActivationFlags(OwnerId ownerId, List<String> activationFlags) throws PowerAuthClientException {
+    private void updateActivationFlags(final String activationId, final List<String> activationFlags) throws PowerAuthClientException {
         final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
-        updateRequest.setActivationId(ownerId.getActivationId());
+        updateRequest.setActivationId(activationId);
         updateRequest.getActivationFlags().addAll(activationFlags);
         powerAuthClient.updateActivationFlags(
                 updateRequest,
@@ -237,13 +237,13 @@ public class ActivationFlagService {
 
     /**
      * Remove activation flags.
-     * @param ownerId Owner identification.
+     * @param activationId Activation ID.
      * @param activationFlagsToRemove Activation flags to remove.
      * @throws PowerAuthClientException Thrown when activation flags could not be removed.
      */
-    private void removeActivationFlags(OwnerId ownerId, List<String> activationFlagsToRemove) throws PowerAuthClientException {
+    private void removeActivationFlags(final String activationId, List<String> activationFlagsToRemove) throws PowerAuthClientException {
         final RemoveActivationFlagsRequest removeRequest = new RemoveActivationFlagsRequest();
-        removeRequest.setActivationId(ownerId.getActivationId());
+        removeRequest.setActivationId(activationId);
         removeRequest.getActivationFlags().addAll(activationFlagsToRemove);
         powerAuthClient.removeActivationFlags(
                 removeRequest,
