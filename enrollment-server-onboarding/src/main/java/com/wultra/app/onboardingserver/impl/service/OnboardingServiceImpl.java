@@ -228,7 +228,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OnboardingStartRequest request,
             final RequestContext requestContext,
             final OnboardingProcessConfigurationEntity processConfiguration,
-            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, InvalidRequestObjectException, RemoteCommunicationException {
+            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, InvalidRequestObjectException {
 
         if (apiAuthentication == null || apiAuthentication.getActivationContext() == null) {
             throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
@@ -256,8 +256,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         setProcessCustomData(process, request.fdsData(), requestContext);
         onboardingProcessRepository.save(process);
 
-        // TODO Lubos shouldn't be the flag set in `POST /api/identity/init`?
-        activationFlagService.addActivationFlag(ownerId, processConfiguration.getConfiguration().existingActivationFlag());
         auditService.audit(process, "Existing activation onboarding process started for user: {}", userId);
 
         return OnboardingStartResponse.builder()

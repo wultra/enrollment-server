@@ -37,7 +37,6 @@ import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
-import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,9 +184,6 @@ class OnboardingServiceImplTest {
         when(activation.getUserId()).thenReturn("existing-user");
         when(apiAuthentication.getActivationContext()).thenReturn(activation);
 
-        final ListActivationFlagsResponse flagsResponse = new ListActivationFlagsResponse();
-        when(powerAuthClient.listActivationFlags(any(), any(), any())).thenReturn(flagsResponse);
-
         final RequestContext requestContext = RequestContext.builder().build();
         final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
                 .request(request)
@@ -205,7 +201,7 @@ class OnboardingServiceImplTest {
         assertEquals("existing-activation", process.getActivationId());
         assertEquals("existing-user", process.getUserId());
         assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, process.getStatus());
-        verify(powerAuthClient).updateActivationFlags(any(), any(), any());
+        verifyNoInteractions(powerAuthClient);
     }
 
     @Test

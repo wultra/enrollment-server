@@ -72,8 +72,10 @@ public class IdentityVerificationCreateService {
     }
 
     private void assignActivationFlags(final OwnerId ownerId, final String processId) throws IdentityVerificationException, RemoteCommunicationException {
-        // Existing activation processes initialize their configured flag at process start.
-        if (!onboardingProcessConfigurationService.findConfigByProcessId(processId).existingActivation()) {
+        final var configuration = onboardingProcessConfigurationService.findConfigByProcessId(processId);
+        if (configuration.existingActivation()) {
+            activationFlagService.addActivationFlag(ownerId, configuration.existingActivationFlag());
+        } else {
             activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
         }
     }
