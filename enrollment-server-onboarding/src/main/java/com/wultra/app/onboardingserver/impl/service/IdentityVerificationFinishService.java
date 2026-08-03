@@ -63,8 +63,15 @@ public class IdentityVerificationFinishService {
     public void finishIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException {
         final Date now = ownerId.getTimestamp();
 
-        // Remove flag ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS
-        activationFlagService.updateActivationFlagsForSucceededIdentityVerification(ownerId);
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
+
+        // TODO Lubos what about to move this logic to activationFlagService?
+        if (processEntity.getProcessConfiguration().getConfiguration().existingActivation()) {
+            activationFlagService.removeActivationFlag(ownerId, processEntity.getProcessConfiguration().getConfiguration().existingActivationFlag());
+        } else {
+            // Remove flag ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS
+            activationFlagService.updateActivationFlagsForSucceededIdentityVerification(ownerId);
+        }
 
         // Find the latest identity verification record and set the timestamp when it was finished
         final IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
@@ -73,7 +80,6 @@ public class IdentityVerificationFinishService {
         identityVerificationService.updateIdentityVerification(identityVerification);
 
         // Terminate onboarding process
-        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         processEntity.setStatus(OnboardingStatus.FINISHED);
         processEntity.setTimestampLastUpdated(now);
         processEntity.setTimestampFinished(now);

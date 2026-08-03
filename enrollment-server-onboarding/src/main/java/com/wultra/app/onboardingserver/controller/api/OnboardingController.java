@@ -35,10 +35,14 @@ import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
+import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -66,9 +70,18 @@ public class OnboardingController {
 
     /**
      * Start an onboarding process.
+     * <p>
+     * The request is always encrypted using application-scope ECIES encryption. For a standard onboarding
+     * process, no PowerAuth signature is required and a new activation is initialized according to the process
+     * configuration. A process configured with {@code existingActivation=true} is a re-KYC process: it requires
+     * a valid possession signature from an active activation. The process uses the activation and user ID from
+     * the verified signature, does not create a new activation, and returns
+     * {@code activationType=ACTIVATION_ALREADY_EXIST}.
      *
      * @param request Start onboarding process request.
      * @param encryptionContext Encryption context.
+     * @param apiAuthentication PowerAuth authentication context; required only for a process configured with
+     *                          {@code existingActivation=true}.
      * @param servletRequest HttpServletRequest.
      * @return Start onboarding process response.
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
@@ -78,10 +91,23 @@ public class OnboardingController {
      * @throws InvalidRequestObjectException Thrown in case request is invalid.
      */
     @PostMapping("start")
+    @Operation(
+            summary = "Start an onboarding process",
+            description = """
+                    Starts an application-encrypted onboarding process.
+
+                    A standard process initializes a new activation according to its configuration. A process
+                    configured with `existingActivation=true` starts re-KYC for the active activation identified
+                    by the required `POSSESSION` PowerAuth signature. In this mode no new activation is created,
+                    and the response contains `activationType=ACTIVATION_ALREADY_EXIST`.
+                    """
+    )
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
+    @PowerAuth(resourceId = "/api/onboarding/start", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
             @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStartRequest> request,
             @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication,
             final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         final OnboardingStartRequest requestObject = request.getRequestObject();
@@ -93,7 +119,7 @@ public class OnboardingController {
 
         final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
-        final OnboardingStartResponse response = onboardingService.startOnboarding(requestObject, requestContext, encryptionContext);
+        final OnboardingStartResponse response = onboardingService.startOnboarding(requestObject, requestContext, encryptionContext, apiAuthentication);
         logger.info("Start succeeded", action("start"), stateSucceeded());
         return new ObjectResponse<>(response);
     }

@@ -17,16 +17,20 @@
  */
 package com.wultra.app.onboardingserver.task.cleaning;
 
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.ActivationService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.kv;
 
 /**
  * Service to cleaning activations.
@@ -34,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 class ActivationCleaningService {
 
@@ -41,18 +46,9 @@ class ActivationCleaningService {
 
     private final ActivationService activationService;
 
+    private final ActivationFlagService activationFlagService;
+
     private final AuditService auditService;
-
-    @Autowired
-    public ActivationCleaningService(
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final ActivationService activationService,
-            final AuditService auditService) {
-
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.activationService = activationService;
-        this.auditService = auditService;
-    }
 
     /**
      * Cleanup activations of failed onboarding processes.
@@ -65,9 +61,24 @@ class ActivationCleaningService {
 
     private void cleanupActivation(final OnboardingProcessEntity process) {
         final String activationId = process.getActivationId();
-        logger.info("Removing activation ID: {} of process ID: {}", activationId, process.getId());
 
         try {
+            if (isExistingActivation(process)) {
+                final OwnerId ownerId = new OwnerId();
+                ownerId.setActivationId(activationId);
+                ownerId.setUserId(process.getUserId());
+                activationFlagService.removeActivationFlag(ownerId, process.getProcessConfiguration().getConfiguration().existingActivationFlag());
+                if (!process.getProcessConfiguration().getConfiguration().invalidateExistingActivationOnFailure()) {
+                    logger.info("Keeping existing activation of failed process", kv("activationId", activationId), kv("processId", process.getId()));
+                    // TODO Lubos double-check this, it looks strange
+                    process.setActivationRemoved(true);
+                    onboardingProcessRepository.save(process);
+                    auditService.auditActivation(process, activationId, "Keep activation of failed existing activation process for user: {}", process.getUserId());
+                    return;
+                }
+            }
+
+            logger.info("Removing activation", kv("activationId", activationId), kv("processId", process.getId()));
             removeActivation(activationId);
             process.setActivationRemoved(true);
             onboardingProcessRepository.save(process);
@@ -85,6 +96,10 @@ class ActivationCleaningService {
         }
 
         activationService.removeActivation(activationId);
+    }
+
+    private static boolean isExistingActivation(final OnboardingProcessEntity process) {
+        return process.getProcessConfiguration() != null && process.getProcessConfiguration().getConfiguration().existingActivation();
     }
 
 }

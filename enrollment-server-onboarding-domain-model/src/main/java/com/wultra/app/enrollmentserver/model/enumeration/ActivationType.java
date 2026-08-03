@@ -31,5 +31,10 @@ public enum ActivationType {
     /**
      * Activation is initialized by SDK.
      */
-    IDENTITY
+    IDENTITY,
+
+    /**
+     * The onboarding process uses an existing active activation.
+     */
+    ACTIVATION_ALREADY_EXIST
 }

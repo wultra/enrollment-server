@@ -117,7 +117,7 @@ public class IdentityVerificationLimitService {
             auditService.audit(process, "Max failed attempts reached for identity verification for user: {}", process.getUserId());
 
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
-            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, process.getProcessConfiguration().getConfiguration());
             throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification, " + ownerId);
         }
     }
@@ -181,7 +181,7 @@ public class IdentityVerificationLimitService {
         checkIdentityVerificationLimit(ownerId);
 
         // Update activation flags for reset of identity verification
-        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, process.getProcessConfiguration().getConfiguration());
     }
 
     /**
@@ -193,7 +193,7 @@ public class IdentityVerificationLimitService {
      */
     private void handleFailedProcess(OnboardingProcessEntity process, OwnerId ownerId) throws OnboardingProcessLimitException, RemoteCommunicationException {
         // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
-        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, process.getProcessConfiguration().getConfiguration());
 
         throw new OnboardingProcessLimitException("Max error score reached for onboarding process, process ID: " + process.getId() +", owner ID: " + ownerId);
     }

@@ -20,6 +20,7 @@
 package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -61,6 +62,46 @@ public class ActivationFlagService {
      */
     public List<String> fetchInitialActivationFlags() {
         return List.of(ACTIVATION_FLAG_VERIFICATION_PENDING);
+    }
+
+    /**
+     * Add an activation flag when it is not present yet.
+     *
+     * @param ownerId Owner identification.
+     * @param activationFlag Activation flag to add.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void addActivationFlag(final OwnerId ownerId, final String activationFlag) throws RemoteCommunicationException {
+        try {
+            final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
+            if (!activationFlags.contains(activationFlag)) {
+                activationFlags.add(activationFlag);
+                updateActivationFlags(ownerId, activationFlags);
+            }
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
+        }
+    }
+
+    /**
+     * Remove an activation flag when it is present.
+     *
+     * @param ownerId Owner identification.
+     * @param activationFlag Activation flag to remove.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void removeActivationFlag(final OwnerId ownerId, final String activationFlag) throws RemoteCommunicationException {
+        try {
+            // TODO Lubos too complicated, remove the flat without fetching it from PowerAuth
+            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
+            if (activationFlags.contains(activationFlag)) {
+                removeActivationFlags(ownerId, Collections.singletonList(activationFlag));
+            }
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
+        }
     }
 
     /**
@@ -106,6 +147,23 @@ public class ActivationFlagService {
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
+        }
+    }
+
+    /**
+     * Update activation flags after a failed identity verification according to the process configuration.
+     *
+     * @param ownerId Owner identification.
+     * @param configuration Onboarding process configuration.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void updateActivationFlagsForFailedIdentityVerification(
+            final OwnerId ownerId,
+            final OnboardingProcessConfigurationValue configuration) throws RemoteCommunicationException {
+        if (configuration.existingActivation()) {
+            removeActivationFlag(ownerId, configuration.existingActivationFlag());
+        } else {
+            updateActivationFlagsForFailedIdentityVerification(ownerId);
         }
     }
 
