@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.1.x/20260430-drop-duplicate-document-data-index.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="es_document_data" indexName="es_document_data_timestamp_created_idx"/>
+        </preConditions>
+        <comment>Drop duplicate index es_document_data_timestamp_created_idx (already covered by document_data_timestamp from 1.4.x)</comment>
+        <dropIndex tableName="es_document_data" indexName="es_document_data_timestamp_created_idx"/>
+    </changeSet>
+
+</databaseChangeLog>

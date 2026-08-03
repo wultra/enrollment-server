@@ -363,3 +363,6 @@ ALTER TABLE es_document_result ALTER COLUMN  anonymized SET DEFAULT FALSE;
 -- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::3::Michal Rozehnal
 -- Add index on anonymized column in es_document_result table
 CREATE INDEX es_document_result_anonymized_idx ON es_document_result(anonymized);
+-- Changeset enrollment-server-onboarding/2.1.x/20260430-drop-duplicate-document-data-index.xml::1::Michal Rozehnal
+-- Drop duplicate index es_document_data_timestamp_created_idx (already covered by document_data_timestamp from 1.4.x)
+DROP INDEX IF EXISTS es_document_data_timestamp_created_idx;
