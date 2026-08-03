@@ -123,11 +123,31 @@ public class ActivationFlagService {
     }
 
     /**
-     * Update activation flags for failed identity verification.
+     * Update activation flags for failed identity verification according to the process configuration.
+     *
+     * @param ownerId Owner identification.
+     * @param configuration Onboarding process configuration.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void updateActivationFlagsForFailedIdentityVerification(
+            final OwnerId ownerId,
+            final OnboardingProcessConfigurationValue configuration) throws RemoteCommunicationException {
+
+        if (configuration.existingActivation()) {
+            removeActivationFlag(ownerId, configuration.existingActivationFlag());
+        } else {
+            updateActivationFlagsFromVerificationInProgressToVerificationPending(ownerId);
+        }
+    }
+
+    /**
+     * Update activation flags to restart the identity verification process.
+     * Remove {@code VERIFICATION_IN_PROGRESS} but add {@code VERIFICATION_PENDING}.
+     *
      * @param ownerId Owner identification.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
-    public void updateActivationFlagsForFailedIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
+    private void updateActivationFlagsFromVerificationInProgressToVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
         try {
             final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
 
@@ -147,27 +167,10 @@ public class ActivationFlagService {
     }
 
     /**
-     * Update activation flags after a failed identity verification according to the process configuration.
-     *
-     * @param ownerId Owner identification.
-     * @param configuration Onboarding process configuration.
-     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     */
-    public void updateActivationFlagsForFailedIdentityVerification(
-            final OwnerId ownerId,
-            final OnboardingProcessConfigurationValue configuration) throws RemoteCommunicationException {
-        if (configuration.existingActivation()) {
-            removeActivationFlag(ownerId, configuration.existingActivationFlag());
-        } else {
-            updateActivationFlagsForFailedIdentityVerification(ownerId);
-        }
-    }
-
-    /**
      * Update activation flags for successful completion of identity verification.
      * @param ownerId Owner identification.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     * @throws IdentityVerificationException Thrown when
+     * @throws IdentityVerificationException Thrown when activation flag VERIFICATION_IN_PROGRESS is not found.
      */
     public void updateActivationFlagsForSucceededIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
         try {
