@@ -167,20 +167,41 @@ public class ActivationFlagService {
     }
 
     /**
-     * Update activation flags for successful completion of identity verification.
+     * Update activation flags after a successful identity verification according to the process configuration.
+     *
      * @param ownerId Owner identification.
+     * @param configuration Onboarding process configuration.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     * @throws IdentityVerificationException Thrown when activation flag VERIFICATION_IN_PROGRESS is not found.
+     * @throws IdentityVerificationException Thrown when the legacy verification flag is missing.
      */
-    public void updateActivationFlagsForSucceededIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
+    public void updateActivationFlagsForSucceededIdentityVerification(
+            final OwnerId ownerId,
+            final OnboardingProcessConfigurationValue configuration) throws RemoteCommunicationException, IdentityVerificationException {
+
+        if (configuration.existingActivation()) {
+            removeActivationFlag(ownerId, configuration.existingActivationFlag());
+        } else {
+            removeActivationFlagVerificationInProgress(ownerId.getActivationId());
+        }
+    }
+
+    /**
+     * Remove activation flag {@code VERIFICATION_IN_PROGRESS} after a successful identity verification.
+     *
+     * @param activationId Activation ID.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown when the activation flag VERIFICATION_IN_PROGRESS is not found.
+     */
+    private void removeActivationFlagVerificationInProgress(final String activationId)
+            throws RemoteCommunicationException, IdentityVerificationException {
+
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
+            final List<String> activationFlags = listActivationFlagsInternal(activationId);
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 throw new IdentityVerificationException("Activation flag VERIFICATION_IN_PROGRESS not found when completing identity verification");
             }
 
-            // Remove flag VERIFICATION_IN_PROGRESS
-            removeActivationFlags(ownerId.getActivationId(), Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
+            removeActivationFlags(activationId, Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);

@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.security.powerauth.client.model.request.RemoveActivationFlagsRequest;
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
@@ -68,6 +69,22 @@ class ActivationFlagServiceTest {
         verify(powerAuthClient, never()).listActivationFlags(any(), any(), any());
         assertEquals(ACTIVATION_ID, removeRequestCaptor.getValue().getActivationId());
         assertEquals(1, removeRequestCaptor.getValue().getActivationFlags().size());
+        assertEquals(ACTIVATION_FLAG, removeRequestCaptor.getValue().getActivationFlags().get(0));
+    }
+
+    @Test
+    void testUpdateActivationFlagsForSucceededIdentityVerification_existingActivation() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(ACTIVATION_ID);
+        final var configuration = OnboardingProcessConfigurationValue.builder()
+                .existingActivation(true)
+                .existingActivationFlag(ACTIVATION_FLAG)
+                .build();
+
+        tested.updateActivationFlagsForSucceededIdentityVerification(ownerId, configuration);
+
+        verify(powerAuthClient).removeActivationFlags(removeRequestCaptor.capture(), any(), any());
+        verify(powerAuthClient, never()).listActivationFlags(any(), any(), any());
         assertEquals(ACTIVATION_FLAG, removeRequestCaptor.getValue().getActivationFlags().get(0));
     }
 }
