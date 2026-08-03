@@ -98,10 +98,13 @@ public class OnboardingProcessEntity {
     private OnboardingStatus status;
 
     /**
-     * When the status is {@link OnboardingStatus#FAILED}, the activation specified be {@link #activationId} should be removed at PowerAuth server.
+     * When the status is {@link OnboardingStatus#FAILED}, the activation specified be {@link #activationId} should be cleaned up.
+     * Usually it is removed at PowerAuth server, but in some cases it can be kept (e.g. when the process reuses an existing activation).
      * This flag indicates that the task has been done.
+     * @implNote We should rename the column and/or the field.
      */
     @Column(name = "activation_removed", columnDefinition="boolean default false")
+    // TODO (racansky, 2026-08-03) for re-KWY we do not remove the activation, the better column name would be "activation_cleanup_done" or similar
     private boolean activationRemoved;
 
     @Column(name = "error_detail")

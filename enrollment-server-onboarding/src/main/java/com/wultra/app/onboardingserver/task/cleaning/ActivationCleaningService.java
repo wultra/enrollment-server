@@ -70,7 +70,6 @@ class ActivationCleaningService {
                 activationFlagService.removeActivationFlag(ownerId, process.getProcessConfiguration().getConfiguration().existingActivationFlag());
                 if (!process.getProcessConfiguration().getConfiguration().invalidateExistingActivationOnFailure()) {
                     logger.info("Keeping existing activation of failed process", kv("activationId", activationId), kv("processId", process.getId()));
-                    // TODO Lubos double-check this, it looks strange
                     process.setActivationRemoved(true);
                     onboardingProcessRepository.save(process);
                     auditService.auditActivation(process, activationId, "Keep activation of failed existing activation process for user: {}", process.getUserId());
