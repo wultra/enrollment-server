@@ -160,26 +160,28 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Onboarding start response.
      */
     @Transactional
-    public OnboardingStartResponse startOnboarding(final StartOnboardingContext context) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+    public OnboardingStartResponse startOnboarding(final StartOnboardingContext context)
+            throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
-        final OnboardingStartRequest request = context.request();
-        final RequestContext requestContext = context.requestContext();
-        final EncryptionContext encryptionContext = context.encryptionContext();
-        final PowerAuthApiAuthentication apiAuthentication = context.apiAuthentication();
-
-        final OnboardingProcessConfigurationEntity processConfiguration = fetchProcessConfiguration(request.processType());
+        final OnboardingProcessConfigurationEntity processConfiguration = fetchProcessConfiguration(context.request().processType());
         if (processConfiguration.getConfiguration().existingActivation()) {
-            if (processConfiguration.getConfiguration().activationType() != OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
-                throw new OnboardingProcessException("Existing activation process must use activationType IDENTITY");
-            }
-            return startOnboardingWithExistingActivation(request, requestContext, processConfiguration, apiAuthentication);
+            return startOnboardingWithExistingActivation(context, processConfiguration);
         }
 
+        return startOnboardingWithNewActivation(context);
+    }
+
+    private OnboardingStartResponse startOnboardingWithNewActivation(final StartOnboardingContext context)
+            throws InvalidRequestObjectException, TooManyProcessesException, OnboardingProcessException, OnboardingOtpDeliveryException, RemoteCommunicationException {
+
+
+        final OnboardingStartRequest request = context.request();
         final Map<String, Object> identification = request.identification();
         final String identificationData = parseIdentificationData(identification);
         final Map<String, Object> fdsData = request.fdsData();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
+        final RequestContext requestContext = context.requestContext();
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification, fdsData, requestContext))
                 .orElseGet(() -> createNewProcessAndLookupUser(request, identificationData, requestContext));
@@ -204,6 +206,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final Optional<String> otp = createAndSendOtp(process, userId);
 
+        final EncryptionContext encryptionContext = context.encryptionContext();
         final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
                 .applicationKey(encryptionContext.getApplicationKey())
                 .userId(userId)
@@ -225,11 +228,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     private OnboardingStartResponse startOnboardingWithExistingActivation(
-            final OnboardingStartRequest request,
-            final RequestContext requestContext,
-            final OnboardingProcessConfigurationEntity processConfiguration,
-            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, InvalidRequestObjectException {
+            final StartOnboardingContext context,
+            final OnboardingProcessConfigurationEntity processConfiguration) throws OnboardingProcessException, InvalidRequestObjectException {
 
+        if (processConfiguration.getConfiguration().activationType() != OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
+            throw new OnboardingProcessException("Existing activation process must use activationType IDENTITY");
+        }
+
+        final PowerAuthApiAuthentication apiAuthentication = context.apiAuthentication();
         if (apiAuthentication == null || apiAuthentication.getActivationContext() == null) {
             throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
         }
@@ -246,14 +252,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
-        process.setIdentificationData(parseIdentificationData(request.identification()));
+        process.setIdentificationData(parseIdentificationData(context.request().identification()));
         process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
         process.setProcessConfiguration(processConfiguration);
         process.setConsentAccepted(false);
         process.setUserId(userId);
         process.setActivationId(activationId);
-        setProcessCustomData(process, request.fdsData(), requestContext);
+        setProcessCustomData(process, context.request().fdsData(), context.requestContext());
         onboardingProcessRepository.save(process);
 
         auditService.audit(process, "Existing activation onboarding process started for user: {}", userId);
