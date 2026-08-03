@@ -27,6 +27,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,6 +72,8 @@ class IdentityVerificationCreateServiceTest {
 
         tested.createIdentityVerification(ownerId, PROCESS_ID);
 
+        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId);
+        verify(identityVerificationService).moveToPhaseAndStatus(any(), eq(DOCUMENT_UPLOAD), eq(IN_PROGRESS), eq(ownerId));
         verify(activationFlagService).addActivationFlag(ownerId, ACTIVATION_FLAG);
         verify(activationFlagService, never()).initActivationFlagsForIdentityVerification(ownerId);
     }
@@ -80,6 +86,8 @@ class IdentityVerificationCreateServiceTest {
 
         tested.createIdentityVerification(ownerId, PROCESS_ID);
 
+        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId);
+        verify(identityVerificationService).moveToPhaseAndStatus(any(), eq(DOCUMENT_UPLOAD), eq(IN_PROGRESS), eq(ownerId));
         verify(activationFlagService).initActivationFlagsForIdentityVerification(ownerId);
         verify(activationFlagService, never()).addActivationFlag(ownerId, ACTIVATION_FLAG);
     }
