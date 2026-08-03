@@ -60,10 +60,7 @@ public class IdentityVerificationCreateService {
         // Check limits on identity verifications
         identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
 
-        // Existing activation processes initialize their configured flag at signed process start.
-        if (!onboardingProcessConfigurationService.findConfigByProcessId(processId).existingActivation()) {
-            activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
-        }
+        assignActivationFlags(ownerId, processId);
 
         final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
@@ -72,6 +69,13 @@ public class IdentityVerificationCreateService {
         entity.setProcessId(processId);
 
         return identityVerificationService.moveToPhaseAndStatus(entity, DOCUMENT_UPLOAD, IN_PROGRESS, ownerId);
+    }
+
+    private void assignActivationFlags(final OwnerId ownerId, final String processId) throws IdentityVerificationException, RemoteCommunicationException {
+        // Existing activation processes initialize their configured flag at process start.
+        if (!onboardingProcessConfigurationService.findConfigByProcessId(processId).existingActivation()) {
+            activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
+        }
     }
 
 }
