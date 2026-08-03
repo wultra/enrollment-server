@@ -71,14 +71,14 @@ public class OnboardingController {
     /**
      * Start an onboarding process.
      * <p>
-     * The request is always encrypted using application-scope ECIES encryption. For a standard onboarding
-     * process, no PowerAuth signature is required and a new activation is initialized according to the process
-     * configuration. A process configured with {@code existingActivation=true} is a re-KYC process: it requires
-     * a valid possession signature from an active activation. The process uses the activation and user ID from
-     * the verified signature, does not create a new activation, and returns
-     * {@code activationType=ACTIVATION_ALREADY_EXIST}.
+     * The request is always encrypted using application-scope ECIES encryption.
+     * For a standard onboarding process, no PowerAuth signature is required and a new activation is initialized according to the process
+     * configuration.
+     * A process configured with {@code existingActivation=true} is a re-KYC process.
+     * It requires a valid possession signature from an active activation. The process uses the activation and user ID from
+     * the verified signature, does not create a new activation, and returns {@code activationType=ACTIVATION_ALREADY_EXIST}.
      *
-     * @param request Start onboarding process request.
+     * @param request Start the onboarding process request.
      * @param encryptionContext Encryption context.
      * @param apiAuthentication PowerAuth authentication context; required only for a process configured with
      *                          {@code existingActivation=true}.
