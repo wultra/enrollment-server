@@ -93,11 +93,7 @@ public class ActivationFlagService {
      */
     public void removeActivationFlag(final OwnerId ownerId, final String activationFlag) throws RemoteCommunicationException {
         try {
-            // TODO Lubos too complicated, remove the flat without fetching it from PowerAuth
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
-            if (activationFlags.contains(activationFlag)) {
-                removeActivationFlags(ownerId, Collections.singletonList(activationFlag));
-            }
+            removeActivationFlags(ownerId, Collections.singletonList(activationFlag));
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed");
             throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
