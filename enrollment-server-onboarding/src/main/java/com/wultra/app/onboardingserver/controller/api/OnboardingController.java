@@ -76,7 +76,7 @@ public class OnboardingController {
      * configuration.
      * A process configured with {@code existingActivation=true} is a re-KYC process.
      * It requires a valid possession signature from an active activation. The process uses the activation and user ID from
-     * the verified signature, does not create a new activation, and returns {@code activationType=ACTIVATION_ALREADY_EXIST}.
+     * the verified signature, does not create a new activation, and returns {@code activationType=ACTIVATION_ALREADY_EXISTS}.
      *
      * @param request Start the onboarding process request.
      * @param encryptionContext Encryption context.
@@ -99,7 +99,7 @@ public class OnboardingController {
                     A standard process initializes a new activation according to its configuration. A process
                     configured with `existingActivation=true` starts re-KYC for the active activation identified
                     by the required `POSSESSION` PowerAuth signature. In this mode no new activation is created,
-                    and the response contains `activationType=ACTIVATION_ALREADY_EXIST`.
+                    and the response contains `activationType=ACTIVATION_ALREADY_EXISTS`.
                     """
     )
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)

@@ -56,7 +56,7 @@ public record OnboardingStartResponse(
 
         @Schema(description = """
                 Activation type. When `CODE`, `activationCode` has to be present.
-                `ACTIVATION_ALREADY_EXIST` indicates that the process uses the active activation that signed the start request.""")
+                `ACTIVATION_ALREADY_EXISTS` indicates that the process uses the active activation that signed the start request.""")
         @NotNull
         ActivationType activationType) {
 

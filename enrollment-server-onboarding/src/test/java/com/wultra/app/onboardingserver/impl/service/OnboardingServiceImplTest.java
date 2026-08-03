@@ -194,7 +194,7 @@ class OnboardingServiceImplTest {
 
         assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result.onboardingStatus());
         assertNull(result.activationCode());
-        assertEquals(ActivationType.ACTIVATION_ALREADY_EXIST, result.activationType());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result.activationType());
         verify(powerAuthClient, never()).initActivation(any(), any(), any());
 
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(result.processId()).orElseThrow();

@@ -36,5 +36,5 @@ public enum ActivationType {
     /**
      * The onboarding process uses an existing active activation.
      */
-    ACTIVATION_ALREADY_EXIST
+    ACTIVATION_ALREADY_EXISTS
 }

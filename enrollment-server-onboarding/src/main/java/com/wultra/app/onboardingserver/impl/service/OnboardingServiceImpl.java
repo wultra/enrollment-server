@@ -268,7 +268,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .processId(process.getId())
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
-                .activationType(ActivationType.ACTIVATION_ALREADY_EXIST)
+                .activationType(ActivationType.ACTIVATION_ALREADY_EXISTS)
                 .build();
     }
 
