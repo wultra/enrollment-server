@@ -256,6 +256,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         setProcessCustomData(process, request.fdsData(), requestContext);
         onboardingProcessRepository.save(process);
 
+        // TODO Lubos shouldn't be the flag set in `POST /api/identity/init`?
         activationFlagService.addActivationFlag(ownerId, processConfiguration.getConfiguration().existingActivationFlag());
         auditService.audit(process, "Existing activation onboarding process started for user: {}", userId);
 
