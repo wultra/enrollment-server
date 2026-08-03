@@ -33,7 +33,9 @@ import java.util.Map;
 @Jacksonized
 public record OnboardingStartRequest(
 
-        @Schema(description = "The user identification. The structure of the identification is vendor specific.")
+        @Schema(description = """
+                The user identification. The structure of the identification is vendor specific.
+                For activation type `ACTIVATION_ALREADY_EXIST`, the identification has no effect.""")
         @NotEmpty
         Map<String, Object> identification,
 
