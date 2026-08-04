@@ -45,6 +45,14 @@ the table was never used in production and all these metadata are stored in `es_
 linked to `es_document_data` records via `upload_id` column.
 
 
+### Duplicate Index on `es_document_data`
+
+A duplicate index `es_document_data_timestamp_created_idx` on column `timestamp_created` of table `es_document_data` is dropped.
+This index was mistakenly introduced and is already covered by the existing `document_data_timestamp` index created in version `1.4.x`.
+
+This release version fixes liquibase checksum for changeset `enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml::6` by adding the `<validCheckSum>` declaration
+
+
 ### Selfie
 
 A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
