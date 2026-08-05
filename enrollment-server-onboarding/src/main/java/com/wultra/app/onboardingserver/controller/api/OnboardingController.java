@@ -39,6 +39,7 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
+import com.wultra.security.powerauth.http.PowerAuthAuthorizationHttpHeader;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
@@ -69,45 +70,93 @@ public class OnboardingController {
     private final OnboardingServiceImpl onboardingService;
 
     /**
-     * Start an onboarding process.
+     * Start a standard onboarding process that initializes a new activation.
      * <p>
-     * The request is always encrypted using application-scope ECIES encryption.
-     * For a standard onboarding process, no PowerAuth signature is required and a new activation is initialized according to the process
-     * configuration.
-     * A process configured with {@code existingActivation=true} is a re-KYC process.
-     * It requires a valid possession signature from an active activation. The process uses the activation and user ID from
-     * the verified signature, does not create a new activation, and returns {@code activationType=ACTIVATION_ALREADY_EXISTS}.
+     * The request is encrypted using application-scope ECIES encryption and no PowerAuth signature is required.
+     * Re-KYC for an existing activation is handled by {@link #startReKycOnboarding} which is selected when the request
+     * carries a PowerAuth signature HTTP header.
      *
      * @param request Start the onboarding process request.
      * @param encryptionContext Encryption context.
-     * @param apiAuthentication PowerAuth authentication context; required only for a process configured with
-     *                          {@code existingActivation=true}.
      * @param servletRequest HttpServletRequest.
      * @return Start onboarding process response.
+     * @see #startReKycOnboarding(ObjectRequest, EncryptionContext, PowerAuthApiAuthentication, HttpServletRequest) for existing activation re-KYC onboarding.
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
      * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
      * @throws InvalidRequestObjectException Thrown in case request is invalid.
+     * @throws RemoteCommunicationException Thrown in case communication with PowerAuth Server fails.
      */
     @PostMapping("start")
     @Operation(
-            summary = "Start an onboarding process",
+            summary = "Start a standard onboarding process",
             description = """
-                    Starts an application-encrypted onboarding process.
+                    Starts a standard application-encrypted onboarding process that initializes a new activation
+                    according to its configuration.
 
-                    A standard process initializes a new activation according to its configuration. A process
-                    configured with `existingActivation=true` starts re-KYC for the active activation identified
-                    by the required `POSSESSION` PowerAuth signature. In this mode no new activation is created,
-                    and the response contains `activationType=ACTIVATION_ALREADY_EXISTS`.
+                    Re-KYC for an existing activation (a process configured with `existingActivation=true`) is handled
+                    by a separate variant of this endpoint that is selected when the request carries a PowerAuth
+                    signature HTTP header.
                     """
     )
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
-    @PowerAuth(resourceId = "/api/onboarding/start", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
             @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStartRequest> request,
             @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+
+        return startOnboarding(request, encryptionContext, null, servletRequest);
+    }
+
+    /**
+     * Start a re-KYC onboarding process for an existing activation.
+     * <p>
+     * This variant is selected when the request carries a PowerAuth signature HTTP header. Unlike the standard
+     * onboarding start, the request is encrypted using activation-scope ECIES encryption and must be signed with a
+     * valid {@code POSSESSION} PowerAuth signature of an active activation. The process configured with
+     * {@code existingActivation=true} uses the activation and user ID from the verified signature, does not create a
+     * new activation, and returns {@code activationType=ACTIVATION_ALREADY_EXISTS}.
+     *
+     * @param request Start the onboarding process request.
+     * @param encryptionContext Encryption context.
+     * @param apiAuthentication PowerAuth authentication context of the existing activation.
+     * @param servletRequest HttpServletRequest.
+     * @return Start onboarding process response.
+     * @see #startOnboarding(ObjectRequest, EncryptionContext, HttpServletRequest) (ObjectRequest, EncryptionContext, HttpServletRequest) for a new activation onboarding.
+     * @throws PowerAuthEncryptionException Thrown when request is invalid.
+     * @throws OnboardingProcessException Thrown in case onboarding process fails.
+     * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
+     * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
+     * @throws InvalidRequestObjectException Thrown in case request is invalid.
+     * @throws RemoteCommunicationException Thrown in case communication with PowerAuth Server fails.
+     */
+    @PostMapping(value = "start", headers = PowerAuthAuthorizationHttpHeader.HEADER_NAME)
+    // TODO Lubos unify swagger UI
+    @Operation(
+            summary = "Start a re-KYC onboarding process for an existing activation",
+            description = """
+                    Starts an activation-encrypted re-KYC onboarding process for the active activation identified by the
+                    required `POSSESSION` PowerAuth signature. This variant is selected when the request carries a
+                    PowerAuth signature HTTP header. No new activation is created, and the response contains
+                    `activationType=ACTIVATION_ALREADY_EXISTS`.
+                    """
+    )
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/onboarding/start", authenticationCodeType = PowerAuthCodeType.POSSESSION)
+    public ObjectResponse<OnboardingStartResponse> startReKycOnboarding(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStartRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication,
+            final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+
+        return startOnboarding(request, encryptionContext, apiAuthentication, servletRequest);
+    }
+
+    private ObjectResponse<OnboardingStartResponse> startOnboarding(
+            final ObjectRequest<OnboardingStartRequest> request,
+            final EncryptionContext encryptionContext,
+            final PowerAuthApiAuthentication apiAuthentication,
             final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         final OnboardingStartRequest requestObject = request.getRequestObject();
