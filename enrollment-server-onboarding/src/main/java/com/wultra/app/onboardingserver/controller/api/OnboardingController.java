@@ -43,8 +43,11 @@ import com.wultra.security.powerauth.http.PowerAuthAuthorizationHttpHeader;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -89,17 +92,7 @@ public class OnboardingController {
      * @throws RemoteCommunicationException Thrown in case communication with PowerAuth Server fails.
      */
     @PostMapping("start")
-    @Operation(
-            summary = "Start a standard onboarding process",
-            description = """
-                    Starts a standard application-encrypted onboarding process that initializes a new activation
-                    according to its configuration.
-
-                    Re-KYC for an existing activation (a process configured with `existingActivation=true`) is handled
-                    by a separate variant of this endpoint that is selected when the request carries a PowerAuth
-                    signature HTTP header.
-                    """
-    )
+    @Hidden // This handler shares its method and path with startReKycOnboarding; the latter documents both variants.
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
             @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStartRequest> request,
@@ -123,7 +116,7 @@ public class OnboardingController {
      * @param apiAuthentication PowerAuth authentication context of the existing activation.
      * @param servletRequest HttpServletRequest.
      * @return Start onboarding process response.
-     * @see #startOnboarding(ObjectRequest, EncryptionContext, HttpServletRequest) (ObjectRequest, EncryptionContext, HttpServletRequest) for a new activation onboarding.
+     * @see #startOnboarding(ObjectRequest, EncryptionContext, HttpServletRequest) for a new activation onboarding.
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
@@ -132,15 +125,26 @@ public class OnboardingController {
      * @throws RemoteCommunicationException Thrown in case communication with PowerAuth Server fails.
      */
     @PostMapping(value = "start", headers = PowerAuthAuthorizationHttpHeader.HEADER_NAME)
-    // TODO Lubos unify swagger UI
     @Operation(
-            summary = "Start a re-KYC onboarding process for an existing activation",
+            summary = "Start an onboarding process",
             description = """
-                    Starts an activation-encrypted re-KYC onboarding process for the active activation identified by the
-                    required `POSSESSION` PowerAuth signature. This variant is selected when the request carries a
-                    PowerAuth signature HTTP header. No new activation is created, and the response contains
-                    `activationType=ACTIVATION_ALREADY_EXISTS`.
+                    Starts onboarding according to the selected process configuration. The endpoint supports two
+                    mutually exclusive request variants:
+
+                    * **Standard onboarding:** Do not include the `X-PowerAuth-Authorization` header. Encrypt the
+                      request using application-scope ECIES encryption. The process initializes a new activation.
+                    * **Re-KYC for an existing activation:** Include a valid `POSSESSION` PowerAuth signature in the
+                      `X-PowerAuth-Authorization` header. Encrypt the request using activation-scope ECIES encryption.
+                      The process must be configured with `existingActivation=true`; it uses the active activation and
+                      user ID from the verified signature, does not create a new activation, and returns
+                      `activationType=ACTIVATION_ALREADY_EXISTS`.
                     """
+    )
+    @Parameter(
+            name = PowerAuthAuthorizationHttpHeader.HEADER_NAME,
+            in = ParameterIn.HEADER,
+            schema = @Schema(type = "string"),
+            description = "Required only for re-KYC. A valid POSSESSION PowerAuth signature selects the existing-activation variant. Omit it for standard onboarding."
     )
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/onboarding/start", authenticationCodeType = PowerAuthCodeType.POSSESSION)
