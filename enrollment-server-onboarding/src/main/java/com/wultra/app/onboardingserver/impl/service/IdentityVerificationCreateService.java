@@ -24,7 +24,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLim
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,28 +38,13 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@AllArgsConstructor
 public class IdentityVerificationCreateService {
 
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
     private final IdentityVerificationLimitService identityVerificationLimitService;
-
-    /**
-     * Service constructor.
-     * @param identityVerificationService Identity verification service.
-     * @param activationFlagService Activation flag service.
-     * @param identityVerificationLimitService Identity verification limit service.
-     */
-    @Autowired
-    public IdentityVerificationCreateService(
-            final IdentityVerificationService identityVerificationService,
-            final ActivationFlagService activationFlagService,
-            final IdentityVerificationLimitService identityVerificationLimitService) {
-
-        this.identityVerificationService = identityVerificationService;
-        this.activationFlagService = activationFlagService;
-        this.identityVerificationLimitService = identityVerificationLimitService;
-    }
+    private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
     /**
      * Creates new identity for the verification process.
@@ -75,8 +60,7 @@ public class IdentityVerificationCreateService {
         // Check limits on identity verifications
         identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
 
-        // Initialize activation flags for identity verification
-        activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
+        assignActivationFlags(ownerId, processId);
 
         final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
@@ -85,6 +69,15 @@ public class IdentityVerificationCreateService {
         entity.setProcessId(processId);
 
         return identityVerificationService.moveToPhaseAndStatus(entity, DOCUMENT_UPLOAD, IN_PROGRESS, ownerId);
+    }
+
+    private void assignActivationFlags(final OwnerId ownerId, final String processId) throws IdentityVerificationException, RemoteCommunicationException {
+        final var configuration = onboardingProcessConfigurationService.findConfigByProcessId(processId);
+        if (configuration.existingActivation()) {
+            activationFlagService.addActivationFlag(ownerId, configuration.existingActivationFlag());
+        } else {
+            activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
+        }
     }
 
 }

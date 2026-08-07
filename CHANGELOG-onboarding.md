@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Added
+
+- Added support for identity verification using an existing active activation [(#1852)](https://github.com/wultra/enrollment-server/issues/1852)
+
+
 ## [2.2.0] - 2026-07-21
 
 ### Added

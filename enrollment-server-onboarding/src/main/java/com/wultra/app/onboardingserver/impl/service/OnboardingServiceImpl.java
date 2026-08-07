@@ -36,6 +36,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
@@ -44,6 +45,7 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryExcept
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
+import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
@@ -56,6 +58,9 @@ import com.wultra.security.powerauth.client.model.response.InitActivationRespons
 import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +95,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private final OtpServiceImpl otpService;
 
     private final ActivationService activationService;
+    private final ActivationFlagService activationFlagService;
 
     private final LookupUserService lookupUserService;
 
@@ -127,6 +133,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
             final ActivationService activationService,
+            final ActivationFlagService activationFlagService,
             final OnboardingProvider onboardingProvider,
             final LookupUserService lookupUserService,
             final AuditService auditService) {
@@ -136,6 +143,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpService = otpService;
         this.activationService = activationService;
+        this.activationFlagService = activationFlagService;
         this.onboardingProvider = onboardingProvider;
         this.lookupUserService = lookupUserService;
         this.integrationConfigDto = new ConfigurationDataDto();
@@ -145,25 +153,35 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     /**
-     * Start an onboarding process.
-     * @param request Onboarding start request.
-     * @param requestContext Request context.
+     * Start an onboarding process, optionally using the activation authenticated by PowerAuth.
+     *
+     * @param context Start context containing the request, request context, encryption context,
+     *                and optional PowerAuth authentication for an existing activation process.
      * @return Onboarding start response.
-     * @throws OnboardingProcessException Thrown in case onboarding process fails.
-     * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
-     * @throws InvalidRequestObjectException Thrown in case request is invalid.
      */
     @Transactional
-    public OnboardingStartResponse startOnboarding(
-            final OnboardingStartRequest request,
-            final RequestContext requestContext,
-            final EncryptionContext encryptionContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
+    public OnboardingStartResponse startOnboarding(final StartOnboardingContext context)
+            throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
+        final OnboardingProcessConfigurationEntity processConfiguration = fetchProcessConfiguration(context.request().processType());
+        if (processConfiguration.getConfiguration().existingActivation()) {
+            return startOnboardingWithExistingActivation(context, processConfiguration);
+        }
+
+        return startOnboardingWithNewActivation(context);
+    }
+
+    private OnboardingStartResponse startOnboardingWithNewActivation(final StartOnboardingContext context)
+            throws InvalidRequestObjectException, TooManyProcessesException, OnboardingProcessException, OnboardingOtpDeliveryException, RemoteCommunicationException {
+
+
+        final OnboardingStartRequest request = context.request();
         final Map<String, Object> identification = request.identification();
         final String identificationData = parseIdentificationData(identification);
         final Map<String, Object> fdsData = request.fdsData();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
+        final RequestContext requestContext = context.requestContext();
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification, fdsData, requestContext))
                 .orElseGet(() -> createNewProcessAndLookupUser(request, identificationData, requestContext));
@@ -188,6 +206,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final Optional<String> otp = createAndSendOtp(process, userId);
 
+        final EncryptionContext encryptionContext = context.encryptionContext();
         final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
                 .applicationKey(encryptionContext.getApplicationKey())
                 .userId(userId)
@@ -205,6 +224,51 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .config(integrationConfigDto)
                 .activationCode(initActivationResponse.getActivationCode())
                 .activationType(convert(activationType))
+                .build();
+    }
+
+    private OnboardingStartResponse startOnboardingWithExistingActivation(
+            final StartOnboardingContext context,
+            final OnboardingProcessConfigurationEntity processConfiguration) throws OnboardingProcessException, InvalidRequestObjectException {
+
+        if (processConfiguration.getConfiguration().activationType() != OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
+            throw new OnboardingProcessException("Existing activation process must use activationType IDENTITY");
+        }
+
+        final PowerAuthApiAuthentication apiAuthentication = context.apiAuthentication();
+        if (apiAuthentication == null || apiAuthentication.getActivationContext() == null) {
+            throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
+        }
+
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String activationId = ownerId.getActivationId();
+        final String userId = ownerId.getUserId();
+        if (StringUtils.isBlank(activationId) || StringUtils.isBlank(userId)) {
+            throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
+        }
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, activation ID: {}", activationId);
+        if (onboardingProcessRepository.findByActivationIdAndStatusWithLock(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS).isPresent()) {
+            throw new OnboardingProcessException("Identity verification is already in progress for activation ID: " + activationId);
+        }
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setIdentificationData(parseIdentificationData(context.request().identification()));
+        process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        process.setTimestampCreated(new Date());
+        process.setProcessConfiguration(processConfiguration);
+        process.setConsentAccepted(false);
+        process.setUserId(userId);
+        process.setActivationId(activationId);
+        setProcessCustomData(process, context.request().fdsData(), context.requestContext());
+        onboardingProcessRepository.save(process);
+
+        auditService.audit(process, "Existing activation onboarding process started for user: {}", userId);
+
+        return OnboardingStartResponse.builder()
+                .processId(process.getId())
+                .onboardingStatus(process.getStatus())
+                .config(integrationConfigDto)
+                .activationType(ActivationType.ACTIVATION_ALREADY_EXISTS)
                 .build();
     }
 
@@ -331,7 +395,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         otpService.cancelOtp(process, OtpType.ACTIVATION);
         otpService.cancelOtp(process, OtpType.USER_VERIFICATION);
 
-        removeActivation(process);
+        if (isExistingActivation(process)) {
+            clearExistingActivationFlag(process);
+            if (process.getProcessConfiguration().getConfiguration().invalidateExistingActivationOnFailure()) {
+                removeActivation(process);
+            }
+        } else {
+            removeActivation(process);
+        }
 
         process.setStatus(OnboardingStatus.FAILED);
         process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
@@ -641,6 +712,21 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
     }
 
+    private static boolean isExistingActivation(final OnboardingProcessEntity process) {
+        return process.getProcessConfiguration().getConfiguration().existingActivation();
+    }
+
+    private void clearExistingActivationFlag(final OnboardingProcessEntity process) throws OnboardingProcessException {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(process.getActivationId());
+        ownerId.setUserId(process.getUserId());
+        try {
+            activationFlagService.removeActivationFlag(ownerId, process.getProcessConfiguration().getConfiguration().existingActivationFlag());
+        } catch (RemoteCommunicationException e) {
+            throw new OnboardingProcessException("Unable to remove existing activation flag for process ID: " + process.getId(), e);
+        }
+    }
+
     private String parseIdentificationData(final Map<String, Object> identification) throws InvalidRequestObjectException {
         try {
             return normalizedMapper.writeValueAsString(identification);
@@ -686,5 +772,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         auditService.auditOnboardingProvider(process, "Resent activation OTP for user: {}", userId);
+    }
+
+    /**
+     * Context for {@link #startOnboarding(StartOnboardingContext)}.
+     *
+     * @author Lubos Racansky, lubos.racansky@wultra.com
+     */
+    @Builder
+    public record StartOnboardingContext(
+            @NonNull OnboardingStartRequest request,
+            @NonNull RequestContext requestContext,
+            @NonNull EncryptionContext encryptionContext,
+            PowerAuthApiAuthentication apiAuthentication) {
     }
 }

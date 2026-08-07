@@ -54,7 +54,9 @@ public record OnboardingStartResponse(
             Uses 4x5 characters in Base32 encoding separated by a `-` character.""", example = "KA4PD-RTIE2-KOP3U-H53EA", minLength = 23, maxLength = 23)
         String activationCode,
 
-        @Schema(description = "Activation type. When `CODE`, `activationCode` has to be present.")
+        @Schema(description = """
+                Activation type. When `CODE`, `activationCode` has to be present.
+                `ACTIVATION_ALREADY_EXISTS` indicates that the process uses the active activation that signed the start request.""")
         @NotNull
         ActivationType activationType) {
 

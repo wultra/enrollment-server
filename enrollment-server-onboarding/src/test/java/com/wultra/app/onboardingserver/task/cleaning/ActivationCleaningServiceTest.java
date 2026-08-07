@@ -21,8 +21,11 @@ import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.ActivationService;
+import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,8 +55,16 @@ class ActivationCleaningServiceTest {
     @MockitoBean
     private ActivationService activationService;
 
+    @MockitoBean
+    private PowerAuthClient powerAuthClient;
+
     @Autowired
     private EntityManager entityManager;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        when(powerAuthClient.listActivationFlags(any(), any(), any())).thenReturn(new ListActivationFlagsResponse());
+    }
 
     @Test
     void testSuccessful() throws Exception {
@@ -89,6 +100,22 @@ class ActivationCleaningServiceTest {
         final OnboardingProcessEntity process = fetchOnboardingProcess("22222222-df91-4053-bb3d-3970979baf5d");
         assertFalse("activation should not be marked as removed", process.isActivationRemoved());
         verify(activationService, never()).removeActivation("a2");
+    }
+
+    @Test
+    void testKeepsExistingActivationWhenConfigured() throws Exception {
+        when(activationService.fetchActivationStatus("a2"))
+                .thenReturn(ActivationStatus.ACTIVE);
+        final ListActivationFlagsResponse flagsResponse = new ListActivationFlagsResponse();
+        flagsResponse.getActivationFlags().add("RE_KYC_IN_PROGRESS");
+        when(powerAuthClient.listActivationFlags(any(), any(), any())).thenReturn(flagsResponse);
+
+        tested.cleanupActivations();
+
+        final OnboardingProcessEntity process = fetchOnboardingProcess("44444444-df91-4053-bb3d-3970979baf5d");
+        assertTrue("existing activation should be marked as handled", process.isActivationRemoved());
+        verify(activationService, never()).removeActivation("a4");
+        verify(powerAuthClient).removeActivationFlags(any(), any(), any());
     }
 
     private OnboardingProcessEntity fetchOnboardingProcess(final String id) {

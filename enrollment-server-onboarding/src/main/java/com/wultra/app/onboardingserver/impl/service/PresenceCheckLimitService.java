@@ -102,8 +102,7 @@ public class PresenceCheckLimitService {
 
             auditService.audit(onboardingProcess, identityVerification, "Presence check max failed attempts reached for user: {}", onboardingProcess.getUserId());
 
-            // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
-            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, onboardingProcess.getProcessConfiguration().getConfiguration());
 
             throw new PresenceCheckLimitException("Max failed attempts reached for presence check, " + ownerId);
         }
