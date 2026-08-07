@@ -39,6 +39,9 @@ import java.util.Set;
  * @param clientEvaluationEnabled    Whether to call bank systems to evaluate the client.
  * @param verifyPresenceWithOtp      Whether to verify the presence with OTP. If {@code true}, hide the result of presence check until valid OTP is entered.
  * @param consentRequired            Specifies whether user consent must be accepted.
+ * @param existingActivation         Whether the process reuses an existing active activation.
+ * @param existingActivationFlag     Flag set on the existing activation while the process is in progress.
+ * @param invalidateExistingActivationOnFailure Whether a failed or expired process removes the existing activation.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Jacksonized
@@ -53,8 +56,13 @@ public record OnboardingProcessConfigurationValue(
         boolean approvalEnabled,
         boolean clientEvaluationEnabled,
         boolean verifyPresenceWithOtp,
-        boolean consentRequired
+        boolean consentRequired,
+        boolean existingActivation,
+        String existingActivationFlag,
+        boolean invalidateExistingActivationOnFailure
 ) {
+
+    public static final String DEFAULT_EXISTING_ACTIVATION_FLAG = "VERIFICATION_IN_PROGRESS";
 
     public static class OnboardingProcessConfigurationValueBuilder {
         OnboardingProcessConfigurationValueBuilder() {
@@ -67,6 +75,8 @@ public record OnboardingProcessConfigurationValue(
             approvalEnabled = false;
             clientEvaluationEnabled = true;
             verifyPresenceWithOtp = true;
+            existingActivationFlag = DEFAULT_EXISTING_ACTIVATION_FLAG;
+            invalidateExistingActivationOnFailure = true;
         }
     }
 
