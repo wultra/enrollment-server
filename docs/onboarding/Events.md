@@ -3,10 +3,10 @@
 This page describes the event types produced by the Enrollment Server Onboarding.
 
 List of event types:
-- [DOCUMENT_VERIFICATION_FINISHED](#Event-data-for-DOCUMENT_VERIFICATION_FINISHED)
-- [FINAL_DOCUMENT_VERIFICATION_FINISHED](#Event-data-for-FINAL_DOCUMENT_VERIFICATION_FINISHED)
-- [PRESENCE_CHECK_FINISHED](#Event-data-for-PRESENCE_CHECK_FINISHED)
-- [PROCESS_FINISHED](#Event-data-for-PROCESS_FINISHED)
+- [DOCUMENT_VERIFICATION_FINISHED](#event-data-for-document_verification_finished)
+- [FINAL_DOCUMENT_VERIFICATION_FINISHED](#event-data-for-final_document_verification_finished)
+- [PRESENCE_CHECK_FINISHED](#event-data-for-presence_check_finished)
+- [PROCESS_FINISHED](#event-data-for-process_finished)
 
 
 ## Structure
