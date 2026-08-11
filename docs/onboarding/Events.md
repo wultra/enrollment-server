@@ -152,29 +152,30 @@ This contains the results of the verification provider.
 }
 ```
 
-| Attribute                   | Type   | Description                                                                                                                                          |
-|:----------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| `status`                    | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                |
-| `rejectReason`              | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`. The value is taken from the provider's response. You can check the enum below. |
-| `errorDetail`               | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                                                   |
-| `provider`                  | String | Name of the configured external biometry/presence-check provider. For example, `iProov`.                                                             |
-| `score`                     | Number | Outcome confidence of the verification check on scale 0-10.                                                                                          |
-| `presenceCheckResult.frame` | String | Photo/image from the biometry session, encoded in base64.                                                                                            |
+| Attribute                   | Type   | Description                                                                                                                                                |
+|:----------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `status`                    | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                      |
+| `rejectReason`              | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`. The value is taken from the provider's response. You can check the enum table below. |
+| `errorDetail`               | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                                                         |
+| `provider`                  | String | Name of the configured external biometry/presence-check provider. For example, `iProov`.                                                                   |
+| `score`                     | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                |
+| `presenceCheckResult.frame` | String | Photo/image from the biometry session, encoded in base64.                                                                                                  |
 
+**Enum for reject reason - iProov**
 
-#### Enum for rejectReason
+The table below shows the possible values for the `rejectReason` field for the iProov provider. 
 
-**iProov provider**
-
-- Please keep still
-- Strong light source detected behind you. Try turning around
-- Your environment appears too dark. Try turning the lights on
-- Too much light detected on your face
-- Ambient light too strong or screen brightness too low
-- Please do not talk while iProoving
-- Sorry, ambiguous outcome
-- Sorry, your session has timed out
-- Sorry, your device is not supported at the moment
+| Value                                                    |
+|:-------------------------------------------------------------|
+| Please keep still                                            |
+| Strong light source detected behind you. Try turning around  |
+| Your environment appears too dark. Try turning the lights on |
+| Too much light detected on your face                         |
+| Ambient light too strong or screen brightness too low        |
+| Please do not talk while iProoving                           |
+| Sorry, ambiguous outcome                                     |
+| Sorry, your session has timed out                            |
+| Sorry, your device is not supported at the moment            |
 
 
 ### Event data for PROCESS_FINISHED
