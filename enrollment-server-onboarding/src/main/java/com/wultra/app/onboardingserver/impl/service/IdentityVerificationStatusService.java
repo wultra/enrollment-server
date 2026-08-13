@@ -67,10 +67,11 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        final Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        final var identityVerification = identityVerificationService.findByOptional(ownerId)
+                .orElse(null);
 
         // Do not lock onboarding process, it is not required for status check.
-        final var onboardingProcess = findOnboardingProcess(idVerificationOptional, ownerId);
+        final var onboardingProcess = findOnboardingProcess(identityVerification, ownerId);
 
         response.setProcessId(onboardingProcess.getId());
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
@@ -84,7 +85,7 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        if (idVerificationOptional.isEmpty()) {
+        if (identityVerification == null) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
             return response;
@@ -98,11 +99,9 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
-
-        response.setIdentityVerificationStatus(idVerification.getStatus());
-        response.setIdentityVerificationPhase(idVerification.getPhase());
-        response.setRejectReason(idVerification.getRejectReason());
+        response.setIdentityVerificationStatus(identityVerification.getStatus());
+        response.setIdentityVerificationPhase(identityVerification.getPhase());
+        response.setRejectReason(identityVerification.getRejectReason());
         return response;
     }
 
@@ -110,17 +109,16 @@ public class IdentityVerificationStatusService {
         return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
     }
 
-    private OnboardingProcessEntity findOnboardingProcess(final Optional<IdentityVerificationEntity> identityVerificationOpt, final OwnerId ownerId) throws OnboardingProcessException {
+    private OnboardingProcessEntity findOnboardingProcess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) throws OnboardingProcessException {
         final var activationId = ownerId.getActivationId();
 
         // If identity verification is not yet initialized, fall back to the most recently created process.
-        if (identityVerificationOpt.isEmpty()) {
+        if (identityVerification == null) {
             return onboardingService.findProcessByActivationId(activationId);
         }
 
         // If identity verification already exists, resolve the process via its processId to avoid ambiguity when
         // multiple onboarding processes exist for the same activationId (e.g. after reKYC).
-        final var identityVerification = identityVerificationOpt.get();
         final var onboardingProcess = onboardingService.findProcess(identityVerification.getProcessId());
         if (!Objects.equals(onboardingProcess.getActivationId(), activationId)) {
             throw new OnboardingProcessException(
