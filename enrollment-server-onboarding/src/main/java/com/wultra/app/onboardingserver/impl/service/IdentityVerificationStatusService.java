@@ -32,6 +32,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -68,22 +69,24 @@ public class IdentityVerificationStatusService {
 
         final Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
 
-        // Do not lock onboarding process, it is not required for status check
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+        // Do not lock onboarding process, it is not required for status check.
+        final var onboardingProcess = findOnboardingProcess(idVerificationOptional, ownerId);
+
         response.setProcessId(onboardingProcess.getId());
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
         response.setConsentRequired(isConsentPending(onboardingProcess));
 
-        if (idVerificationOptional.isEmpty()) {
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-            response.setIdentityVerificationPhase(null);
-            return response;
-        }
-
-        // Check for expiration of onboarding process
+        // Check for expiration of onboarding process before returning any status,
+        // including the NOT_INITIALIZED case, to avoid returning NOT_INITIALIZED for an expired process.
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
             response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
+            return response;
+        }
+
+        if (idVerificationOptional.isEmpty()) {
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
             return response;
         }
 
@@ -105,6 +108,27 @@ public class IdentityVerificationStatusService {
 
     private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
         return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
+    }
+
+    private OnboardingProcessEntity findOnboardingProcess(final Optional<IdentityVerificationEntity> identityVerificationOpt, final OwnerId ownerId) throws OnboardingProcessException {
+        final var activationId = ownerId.getActivationId();
+
+        // If identity verification is not yet initialized, fall back to the most recently created process.
+        if (identityVerificationOpt.isEmpty()) {
+            return onboardingService.findProcessByActivationId(activationId);
+        }
+
+        // If identity verification already exists, resolve the process via its processId to avoid ambiguity when
+        // multiple onboarding processes exist for the same activationId (e.g. after reKYC).
+        final var identityVerification = identityVerificationOpt.get();
+        final var onboardingProcess = onboardingService.findProcess(identityVerification.getProcessId());
+        if (!Objects.equals(onboardingProcess.getActivationId(), activationId)) {
+            throw new OnboardingProcessException(
+                    "Onboarding process activationId does not match, process ID: %s, %s".formatted(onboardingProcess.getId(), ownerId)
+            );
+        }
+
+        return onboardingProcess;
     }
 
     /**

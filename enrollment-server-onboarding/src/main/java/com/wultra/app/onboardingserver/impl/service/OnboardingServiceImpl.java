@@ -504,7 +504,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
-        return onboardingProcessRepository.findByActivationId(activationId).orElseThrow(() ->
+        return onboardingProcessRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, activation ID: " + activationId));
     }
 
