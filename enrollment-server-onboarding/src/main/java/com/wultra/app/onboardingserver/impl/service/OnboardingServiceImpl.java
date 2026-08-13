@@ -498,9 +498,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     /**
-     * Find an existing onboarding process by activation ID in any state.
+     * Find the most recently created onboarding process by activation ID in any state.
+     * If multiple processes exist for the same activation ID, the process with the latest
+     * {@code timestampCreated} is returned.
+     *
      * @param activationId Activation identifier.
-     * @return Onboarding process.
+     * @return Most recently created onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
