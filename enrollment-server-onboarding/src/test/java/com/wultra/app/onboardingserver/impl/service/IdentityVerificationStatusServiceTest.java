@@ -95,6 +95,34 @@ class IdentityVerificationStatusServiceTest {
     }
 
     @Test
+    void testCheckIdentityVerificationStatus_activationFlagVerificationPending_notInitializedStatus() throws Exception {
+        // given
+        final var ownerId = new OwnerId();
+        ownerId.setActivationId(ACTIVATION_ID);
+
+        final var idVerification = new IdentityVerificationEntity();
+        idVerification.setActivationId(ACTIVATION_ID);
+        idVerification.setProcessId(PROCESS_ID);
+        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+
+        final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
+
+        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(idVerification));
+        when(onboardingService.findProcess(PROCESS_ID)).thenReturn(onboardingProcess);
+        when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
+        when(activationFlagService.containsActivationFlagVerificationPending(ACTIVATION_ID)).thenReturn(true);
+
+        // when
+        final var response = tested.checkIdentityVerificationStatus(new IdentityVerificationStatusRequest(), ownerId);
+
+        // then
+        assertEquals(PROCESS_ID, response.getProcessId());
+        assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, response.getIdentityVerificationStatus());
+        assertNull(response.getIdentityVerificationPhase());
+    }
+
+    @Test
     void testCheckIdentityVerificationStatus_identityVerificationNotInitialized_processFoundByActivationId() throws Exception {
         // given
         final var ownerId = new OwnerId();
