@@ -35,8 +35,8 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
@@ -57,8 +57,8 @@ import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
-import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -498,13 +498,16 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     /**
-     * Find an existing onboarding process by activation ID in any state.
+     * Find the most recently created onboarding process by activation ID in any state.
+     * If multiple processes exist for the same activation ID, the process with the latest
+     * {@code timestampCreated} is returned.
+     *
      * @param activationId Activation identifier.
-     * @return Onboarding process.
+     * @return Most recently created onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
-        return onboardingProcessRepository.findByActivationId(activationId).orElseThrow(() ->
+        return onboardingProcessRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, activation ID: " + activationId));
     }
 

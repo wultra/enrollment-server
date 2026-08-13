@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for identity verification using an existing active activation [(#1852)](https://github.com/wultra/enrollment-server/issues/1852)
 
 
+### Fixed
+
+- Fixed 500 error on `/api/identity/status` during reKYC when multiple onboarding processes exist for the same activation ID [(#1864)](https://github.com/wultra/enrollment-server/issues/1864)
+
+
 ## [2.2.0] - 2026-07-21
 
 ### Added
