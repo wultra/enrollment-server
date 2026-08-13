@@ -152,6 +152,11 @@ class IdentityVerificationStatusServiceTest {
         ownerId.setActivationId(ACTIVATION_ID);
 
         final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
+        onboardingProcess.getProcessConfiguration().setProcessType("onboarding");
+        onboardingProcess.getProcessConfiguration().setConfiguration(OnboardingProcessConfigurationValue.builder()
+                .consentRequired(true)
+                .build());
+        onboardingProcess.setConsentAccepted(false);
 
         when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.empty());
         when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
@@ -161,6 +166,9 @@ class IdentityVerificationStatusServiceTest {
         final var response = tested.checkIdentityVerificationStatus(new IdentityVerificationStatusRequest(), ownerId);
 
         // then
+        assertEquals(PROCESS_ID, response.getProcessId());
+        assertEquals("onboarding", response.getProcessType());
+        assertTrue(response.isConsentRequired());
         assertEquals(IdentityVerificationStatus.FAILED, response.getIdentityVerificationStatus());
         assertEquals(IdentityVerificationPhase.COMPLETED, response.getIdentityVerificationPhase());
     }
