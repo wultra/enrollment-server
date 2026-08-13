@@ -32,6 +32,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -66,24 +67,27 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        final Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        final var identityVerification = identityVerificationService.findByOptional(ownerId)
+                .orElse(null);
 
-        // Do not lock onboarding process, it is not required for status check
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+        // Do not lock onboarding process, it is not required for status check.
+        final var onboardingProcess = findOnboardingProcess(identityVerification, ownerId);
+
         response.setProcessId(onboardingProcess.getId());
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
         response.setConsentRequired(isConsentPending(onboardingProcess));
 
-        if (idVerificationOptional.isEmpty()) {
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-            response.setIdentityVerificationPhase(null);
-            return response;
-        }
-
-        // Check for expiration of onboarding process
+        // Check for expiration of onboarding process before returning any status,
+        // including the NOT_INITIALIZED case, to avoid returning NOT_INITIALIZED for an expired process.
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
             response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
+            return response;
+        }
+
+        if (identityVerification == null) {
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
             return response;
         }
 
@@ -95,16 +99,34 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
-
-        response.setIdentityVerificationStatus(idVerification.getStatus());
-        response.setIdentityVerificationPhase(idVerification.getPhase());
-        response.setRejectReason(idVerification.getRejectReason());
+        response.setIdentityVerificationStatus(identityVerification.getStatus());
+        response.setIdentityVerificationPhase(identityVerification.getPhase());
+        response.setRejectReason(identityVerification.getRejectReason());
         return response;
     }
 
     private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
         return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
+    }
+
+    private OnboardingProcessEntity findOnboardingProcess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) throws OnboardingProcessException {
+        final var activationId = ownerId.getActivationId();
+
+        // If identity verification is not yet initialized, fall back to the most recently created process.
+        if (identityVerification == null) {
+            return onboardingService.findProcessByActivationId(activationId);
+        }
+
+        // If identity verification already exists, resolve the process via its processId to avoid ambiguity when
+        // multiple onboarding processes exist for the same activationId (e.g. after reKYC).
+        final var onboardingProcess = onboardingService.findProcess(identityVerification.getProcessId());
+        if (!Objects.equals(onboardingProcess.getActivationId(), activationId)) {
+            throw new OnboardingProcessException(
+                    "Onboarding process activationId does not match, process ID: %s, %s".formatted(onboardingProcess.getId(), ownerId)
+            );
+        }
+
+        return onboardingProcess;
     }
 
     /**
