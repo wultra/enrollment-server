@@ -65,12 +65,17 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        // Do not lock onboarding process, it is not required for status check.
+        // Do not lock onboarding process, it is not required for status check. An activation can have multiple
+        // onboarding processes (e.g. re-KYC with existingActivation after an earlier onboarding process), and a
+        // process can have multiple identity verification attempts after cleanup or reset. Resolve the latest
+        // process first, then load its latest identity verification by process ID.
         final var onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
-        final var identityVerification = identityVerificationService.findByProcessIdOptional(onboardingProcess.getId())
+
+        final var onboardingProcessId = onboardingProcess.getId();
+        final var identityVerification = identityVerificationService.findByProcessIdOptional(onboardingProcessId)
                 .orElse(null);
 
-        response.setProcessId(onboardingProcess.getId());
+        response.setProcessId(onboardingProcessId);
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
         response.setConsentRequired(isConsentPending(onboardingProcess));
 

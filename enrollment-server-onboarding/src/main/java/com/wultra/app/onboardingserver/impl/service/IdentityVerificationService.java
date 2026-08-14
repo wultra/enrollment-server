@@ -100,7 +100,7 @@ public class IdentityVerificationService {
      * @return Optional entity of the verification identity.
      */
     public Optional<IdentityVerificationEntity> findByProcessIdOptional(final String processId) {
-        return identityVerificationRepository.findByProcessId(processId);
+        return identityVerificationRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
     }
 
     /**
