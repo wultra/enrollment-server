@@ -42,6 +42,8 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
 
     Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(String activationId);
 
+    Optional<IdentityVerificationEntity> findByProcessId(String processId);
+
     List<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(String activationId);
 
     /**

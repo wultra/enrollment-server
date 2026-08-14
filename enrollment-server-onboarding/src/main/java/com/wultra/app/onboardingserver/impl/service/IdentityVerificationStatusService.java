@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVer
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -32,7 +31,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -67,11 +65,10 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        final var identityVerification = identityVerificationService.findByOptional(ownerId)
-                .orElse(null);
-
         // Do not lock onboarding process, it is not required for status check.
-        final var onboardingProcess = findOnboardingProcess(identityVerification, ownerId);
+        final var onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+        final var identityVerification = identityVerificationService.findByProcessIdOptional(onboardingProcess.getId())
+                .orElse(null);
 
         response.setProcessId(onboardingProcess.getId());
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
@@ -107,26 +104,6 @@ public class IdentityVerificationStatusService {
 
     private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
         return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
-    }
-
-    private OnboardingProcessEntity findOnboardingProcess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) throws OnboardingProcessException {
-        final var activationId = ownerId.getActivationId();
-
-        // If identity verification is not yet initialized, fall back to the most recently created process.
-        if (identityVerification == null) {
-            return onboardingService.findProcessByActivationId(activationId);
-        }
-
-        // If identity verification already exists, resolve the process via its processId to avoid ambiguity when
-        // multiple onboarding processes exist for the same activationId (e.g. after reKYC).
-        final var onboardingProcess = onboardingService.findProcess(identityVerification.getProcessId());
-        if (!Objects.equals(onboardingProcess.getActivationId(), activationId)) {
-            throw new OnboardingProcessException(
-                    "Onboarding process activationId does not match, process ID: %s, %s".formatted(onboardingProcess.getId(), ownerId)
-            );
-        }
-
-        return onboardingProcess;
     }
 
     /**

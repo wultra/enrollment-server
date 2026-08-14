@@ -94,6 +94,16 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Finds identity verification for the given onboarding process.
+     *
+     * @param processId Onboarding process identifier.
+     * @return Optional entity of the verification identity.
+     */
+    public Optional<IdentityVerificationEntity> findByProcessIdOptional(final String processId) {
+        return identityVerificationRepository.findByProcessId(processId);
+    }
+
+    /**
      * Finds the current verification identity
      * @param ownerId Owner identification.
      * @return Entity of the verification identity
