@@ -85,18 +85,30 @@ public class IdentityVerificationService {
     private final DocumentResultRepository documentResultRepository;
 
     /**
-     * Finds the current verification identity
+     * Finds the latest created identity verification for the given owner.
+     *
      * @param ownerId Owner identification.
-     * @return Optional entity of the verification identity
+     * @return Optional entity of the latest created identity verification.
      */
     public Optional<IdentityVerificationEntity> findByOptional(OwnerId ownerId) {
         return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
     }
 
     /**
-     * Finds the current verification identity
+     * Finds identity verification for the given onboarding process.
+     *
+     * @param processId Onboarding process identifier.
+     * @return Optional entity of the verification identity.
+     */
+    public Optional<IdentityVerificationEntity> findByProcessIdOptional(final String processId) {
+        return identityVerificationRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
+    }
+
+    /**
+     * Finds the latest created identity verification for the given owner.
+     *
      * @param ownerId Owner identification.
-     * @return Entity of the verification identity
+     * @return Entity of the latest created identity verification.
      * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
      */
     public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
