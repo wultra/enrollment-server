@@ -1,6 +1,7 @@
 -- common
 INSERT INTO es_onboarding_process_configuration (id, process_type, config)
-VALUES (101, 'onboardingTest', e'{"consentRequired": true}');
+VALUES (101, 'onboardingTest', e'{"consentRequired": true}'),
+       (102, 'reKYC', e'{"consentRequired": true}');
 
 -- testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk
 insert into es_onboarding_process (id, identification_data, activation_id, status, custom_data, timestamp_created, error_score)
@@ -58,4 +59,19 @@ values ( '3f5a8b6e-9c21-4d7f-8b3a-2e4c1d9a7f60', '{}', 'a12c9e4f-5b77-4d2b-9f83-
 
 insert into es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created, reject_reason)
 values ('7d0e5a93-8b6f-4c11-9a72-3f8d2e6b0c44', 'a12c9e4f-5b77-4d2b-9f83-6e1a2c0d4b91', 'test-user', '3f5a8b6e-9c21-4d7f-8b3a-2e4c1d9a7f60', 'FAILED', 'COMPLETED', now(), 'test reject reason');
+
+-- testCheckIdentityVerificationStatus_returnsNewestIdentityVerificationAttemptForProcess
+-- Older process: successfully completed onboarding
+insert into es_onboarding_process (id, identification_data, activation_id, status, custom_data, timestamp_created, error_score, process_config_id, consent_accepted)
+values ('e1a2b3c4-5678-4abc-9012-f3a4b5c6d7e8', '{}', 'd2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8', 'FINISHED', '{}', '2026-01-01 10:00:00', 0, 101, true);
+
+insert into es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created)
+values ('a1b2c3d4-5678-4abc-9012-b3c4d5e6f7a8', 'd2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8', 'rekyc-test-user', 'e1a2b3c4-5678-4abc-9012-f3a4b5c6d7e8', 'ACCEPTED', 'COMPLETED', '2026-01-01 10:00:00');
+
+-- Newer process: re-KYC in progress (same activationId, created later)
+insert into es_onboarding_process (id, identification_data, activation_id, status, custom_data, timestamp_created, error_score, process_config_id, consent_accepted)
+values ('f1a2b3c4-5678-4abc-9012-a3b4c5d6e7f8', '{}', 'd2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8', 'VERIFICATION_IN_PROGRESS', '{}', '2027-01-01 10:00:00', 0, 102, false);
+
+insert into es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created)
+values ('b1c2d3e4-5678-4abc-9012-c3d4e5f6a7b8', 'd2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8', 'rekyc-test-user', 'f1a2b3c4-5678-4abc-9012-a3b4c5d6e7f8', 'IN_PROGRESS', 'DOCUMENT_UPLOAD', '2027-01-01 10:00:00');
 

@@ -26,7 +26,6 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,7 +64,7 @@ class IdentityVerificationStatusServiceTest {
     private ActivationFlagService activationFlagService;
 
     @Test
-    void testCheckIdentityVerificationStatus_identityVerificationExists_processFoundByProcessId() throws Exception {
+    void testCheckIdentityVerificationStatus_identityVerificationExists_foundByCurrentProcessId() throws Exception {
         // given
         final var ownerId = new OwnerId();
         ownerId.setActivationId(ACTIVATION_ID);
@@ -78,8 +77,8 @@ class IdentityVerificationStatusServiceTest {
 
         final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
 
-        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(idVerification));
-        when(onboardingService.findProcess(PROCESS_ID)).thenReturn(onboardingProcess);
+        when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.of(idVerification));
         when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
         when(activationFlagService.containsActivationFlagVerificationPending(ACTIVATION_ID)).thenReturn(false);
 
@@ -90,8 +89,8 @@ class IdentityVerificationStatusServiceTest {
         assertEquals(PROCESS_ID, response.getProcessId());
         assertEquals(IdentityVerificationStatus.IN_PROGRESS, response.getIdentityVerificationStatus());
         assertEquals(IdentityVerificationPhase.DOCUMENT_UPLOAD, response.getIdentityVerificationPhase());
-        verify(onboardingService).findProcess(PROCESS_ID);
-        verify(onboardingService, never()).findProcessByActivationId(any());
+        verify(onboardingService).findProcessByActivationId(ACTIVATION_ID);
+        verify(identityVerificationService).findByProcessIdOptional(PROCESS_ID);
     }
 
     @Test
@@ -108,8 +107,8 @@ class IdentityVerificationStatusServiceTest {
 
         final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
 
-        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(idVerification));
-        when(onboardingService.findProcess(PROCESS_ID)).thenReturn(onboardingProcess);
+        when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.of(idVerification));
         when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
         when(activationFlagService.containsActivationFlagVerificationPending(ACTIVATION_ID)).thenReturn(true);
 
@@ -130,8 +129,8 @@ class IdentityVerificationStatusServiceTest {
 
         final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
 
-        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.empty());
         when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.empty());
         when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
 
         // when
@@ -142,7 +141,7 @@ class IdentityVerificationStatusServiceTest {
         assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, response.getIdentityVerificationStatus());
         assertNull(response.getIdentityVerificationPhase());
         verify(onboardingService).findProcessByActivationId(ACTIVATION_ID);
-        verify(onboardingService, never()).findProcess(any());
+        verify(identityVerificationService).findByProcessIdOptional(PROCESS_ID);
     }
 
     @Test
@@ -158,8 +157,8 @@ class IdentityVerificationStatusServiceTest {
                 .build());
         onboardingProcess.setConsentAccepted(false);
 
-        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.empty());
         when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.empty());
         when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(true);
 
         // when
@@ -173,31 +172,26 @@ class IdentityVerificationStatusServiceTest {
         assertEquals(IdentityVerificationPhase.COMPLETED, response.getIdentityVerificationPhase());
     }
 
-    /**
-     * When identity verification exists but the activationId in the onboarding process does not match,
-     * an exception should be thrown indicating data inconsistency.
-     */
     @Test
-    void testCheckIdentityVerificationStatus_identityVerificationExistsAndActivationIdMismatch_exceptionThrown() throws Exception {
+    void testCheckIdentityVerificationStatus_reKycAfterReactivation_identityVerificationNotInitializedForCurrentProcess() throws Exception {
         // given
         final var ownerId = new OwnerId();
         ownerId.setActivationId(ACTIVATION_ID);
 
-        final var idVerification = new IdentityVerificationEntity();
-        idVerification.setActivationId(ACTIVATION_ID);
-        idVerification.setProcessId(PROCESS_ID);
+        final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
 
-        final var onboardingProcess = createOnboardingProcess("different-activation-id");
-
-        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(idVerification));
-        when(onboardingService.findProcess(PROCESS_ID)).thenReturn(onboardingProcess);
+        when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.empty());
+        when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
 
         // when
-        final var exception = assertThrows(OnboardingProcessException.class, () -> tested.checkIdentityVerificationStatus(new IdentityVerificationStatusRequest(), ownerId));
+        final var response = tested.checkIdentityVerificationStatus(new IdentityVerificationStatusRequest(), ownerId);
 
         // then
-        final var expectedMessage = "Onboarding process activationId does not match, process ID: %s, %s".formatted(PROCESS_ID, ownerId);
-        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals(PROCESS_ID, response.getProcessId());
+        assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, response.getIdentityVerificationStatus());
+        assertNull(response.getIdentityVerificationPhase());
+        verify(identityVerificationService, never()).findByOptional(ownerId);
     }
 
     @Test
