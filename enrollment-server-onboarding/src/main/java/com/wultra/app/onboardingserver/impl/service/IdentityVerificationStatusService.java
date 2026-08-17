@@ -60,7 +60,7 @@ public class IdentityVerificationStatusService {
      * @throws RemoteCommunicationException   Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException     Thrown when onboarding process is invalid.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     @SuppressWarnings("unused") // unused request
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
