@@ -246,10 +246,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         if (StringUtils.isBlank(activationId) || StringUtils.isBlank(userId)) {
             throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
         }
-        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, activation ID: {}", activationId);
-        if (onboardingProcessRepository.findByActivationIdAndStatusWithLock(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS).isPresent()) {
-            throw new OnboardingProcessException("Identity verification is already in progress for activation ID: " + activationId);
-        }
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(parseIdentificationData(context.request().identification()));
