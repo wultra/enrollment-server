@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix parsing for document without expiration [(#1875)](https://github.com/wultra/enrollment-server/issues/1875)
+- Fix parsing for documents without an expiration date. [(#1875)](https://github.com/wultra/enrollment-server/issues/1875)
 
 
 ## [2.2.0] - 2026-07-21
