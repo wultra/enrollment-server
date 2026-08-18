@@ -120,14 +120,27 @@ public class MicroblinkExtractedDataParser {
                     node.path("script").asString(null)
             );
         } else if (isSuccessfullyParsed(node)) {
-            final int year = node.path("year").asInt(0);
-            final int month = node.path("month").asInt(0);
-            final int day = node.path("day").asInt(0);
+            final Integer year = asInteger(node, "year");
+            final Integer month = asInteger(node, "month");
+            final Integer day = asInteger(node, "day");
 
-            return new ExtractedValue.Date(LocalDate.of(year, month, day));
+            if (year != null && month != null && day != null) {
+                return new ExtractedValue.Date(LocalDate.of(year, month, day));
+            }
+            return null;
         } else {
             return null;
         }
+    }
+
+    private static Integer asInteger(final JsonNode node, final String fieldName) {
+        final JsonNode valueNode = node.get(fieldName);
+        if (valueNode == null || valueNode.isNull() || !valueNode.canConvertToInt()) {
+            return null;
+        }
+
+        final int value = valueNode.intValue();
+        return value == 0 ? null : value;
     }
 
     private static boolean isSuccessfullyParsed(final JsonNode node) {
