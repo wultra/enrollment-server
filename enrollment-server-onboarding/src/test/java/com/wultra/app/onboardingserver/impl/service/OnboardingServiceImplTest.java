@@ -205,6 +205,57 @@ class OnboardingServiceImplTest {
     }
 
     @Test
+    void testStartProcess_existingActivation_resume() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .build();
+        final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
+        final PowerAuthActivation activation = mock(PowerAuthActivation.class);
+        when(activation.getActivationId()).thenReturn("existing-activation");
+        when(activation.getUserId()).thenReturn("existing-user");
+        when(apiAuthentication.getActivationContext()).thenReturn(activation);
+
+        final RequestContext requestContext = RequestContext.builder().build();
+        final OnboardingStartResponse result1 = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(requestContext)
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(apiAuthentication)
+                .build());
+
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result1.onboardingStatus());
+        assertNull(result1.activationCode());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result1.activationType());
+
+        final OnboardingStartRequest resumeRequest = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .fdsData(Map.of("key", "value"))
+                .build();
+
+        final OnboardingStartResponse result2 = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(resumeRequest)
+                .requestContext(requestContext)
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(apiAuthentication)
+                .build());
+
+        assertEquals(result1.processId(), result2.processId());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result2.onboardingStatus());
+        assertNull(result2.activationCode());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result2.activationType());
+
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(result2.processId()).orElseThrow();
+        assertEquals("existing-activation", process.getActivationId());
+        assertEquals("existing-user", process.getUserId());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, process.getStatus());
+        assertNotNull(process.getTimestampLastUpdated());
+        assertEquals(1, onboardingProcessRepository.count());
+        verifyNoInteractions(powerAuthClient);
+    }
+
+    @Test
     void testStartProcess_existingActivation_requiresSignature() {
         final OnboardingStartRequest request = OnboardingStartRequest.builder()
                 .identification(Map.of("username", "john.doe"))
