@@ -246,7 +246,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final RequestContext requestContext = context.requestContext();
         final String identificationData = parseIdentificationData(context.request.identification());
-        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndUserIdAndStatusWithLock(activationId, userId, OnboardingStatus.ACTIVATION_IN_PROGRESS)
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndUserIdAndStatusWithLock(activationId, userId, OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, fdsData, requestContext))
                 .orElseGet(() -> createNewProcess(context.request(), identificationData, userId, requestContext));
 
