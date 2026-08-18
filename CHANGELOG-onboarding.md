@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `/api/identity/status` to return the latest identity verification attempt for the latest onboarding process during reKYC [(#1869)](https://github.com/wultra/enrollment-server/issues/1869)
 
 
+## [2.2.2] - 2026-08-18
+
+
+### Fixed
+
+- Fix parsing for document without expiration [(#1875)](https://github.com/wultra/enrollment-server/issues/1875)
+
+
 ## [2.2.0] - 2026-07-21
 
 ### Added
@@ -63,4 +71,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
 [unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.0...HEAD
+[2.2.2]: https://github.com/wultra/enrollment-server/compare/2.2.0...2.2.2
 [2.2.0]: https://github.com/wultra/enrollment-server/compare/2.1.1...2.2.0
