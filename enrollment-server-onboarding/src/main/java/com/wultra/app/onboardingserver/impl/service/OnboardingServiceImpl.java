@@ -165,7 +165,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessConfigurationEntity processConfiguration = fetchProcessConfiguration(context.request().processType());
         if (processConfiguration.getConfiguration().existingActivation()) {
-            return startOnboardingWithExistingActivation(context, processConfiguration);
+            return startOnboardingWithExistingActivation(context);
         }
 
         return startOnboardingWithNewActivation(context);
@@ -183,7 +183,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final RequestContext requestContext = context.requestContext();
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
-                .map(it -> resumeExistingProcess(it, identification, fdsData, requestContext))
+                .map(it -> resumeExistingProcessWithUserLookup(it, identification, fdsData, requestContext))
                 .orElseGet(() -> createNewProcessAndLookupUser(request, identificationData, requestContext));
 
         // Check for brute force attacks
@@ -228,12 +228,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     private OnboardingStartResponse startOnboardingWithExistingActivation(
-            final StartOnboardingContext context,
-            final OnboardingProcessConfigurationEntity processConfiguration) throws OnboardingProcessException, InvalidRequestObjectException {
-
-        if (processConfiguration.getConfiguration().activationType() != OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
-            throw new OnboardingProcessException("Existing activation process must use activationType IDENTITY");
-        }
+            final StartOnboardingContext context) throws OnboardingProcessException, InvalidRequestObjectException {
 
         final PowerAuthApiAuthentication apiAuthentication = context.apiAuthentication();
         if (apiAuthentication == null || apiAuthentication.getActivationContext() == null) {
@@ -246,20 +241,16 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         if (StringUtils.isBlank(activationId) || StringUtils.isBlank(userId)) {
             throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
         }
-        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, activation ID: {}", activationId);
-        if (onboardingProcessRepository.findByActivationIdAndStatusWithLock(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS).isPresent()) {
-            throw new OnboardingProcessException("Identity verification is already in progress for activation ID: " + activationId);
-        }
 
-        final OnboardingProcessEntity process = new OnboardingProcessEntity();
-        process.setIdentificationData(parseIdentificationData(context.request().identification()));
-        process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        process.setTimestampCreated(new Date());
-        process.setProcessConfiguration(processConfiguration);
-        process.setConsentAccepted(false);
-        process.setUserId(userId);
+        final Map<String, Object> fdsData = context.request.fdsData();
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
+        final RequestContext requestContext = context.requestContext();
+        final String identificationData = parseIdentificationData(context.request.identification());
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndUserIdAndStatusWithLock(activationId, userId, OnboardingStatus.ACTIVATION_IN_PROGRESS)
+                .map(it -> resumeExistingProcess(it, fdsData, requestContext))
+                .orElseGet(() -> createNewProcess(context.request(), identificationData, userId, requestContext));
+
         process.setActivationId(activationId);
-        setProcessCustomData(process, context.request().fdsData(), context.requestContext());
         onboardingProcessRepository.save(process);
 
         auditService.audit(process, "Existing activation onboarding process started for user: {}", userId);
@@ -610,13 +601,29 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final String identificationData,
             final RequestContext requestContext) {
 
-        final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
+        final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext, OnboardingStatus.ACTIVATION_IN_PROGRESS);
         logger.debug("Created process ID: {}", process.getId());
 
         final Optional<LookupUserResponse> lookupUserResponse = lookupUserService.lookupUser(process, request.identification());
         final String userId = lookupUserResponse.map(LookupUserResponse::getUserId).orElse(null);
         process.setUserId(userId);
         storeConsent(process, lookupUserResponse.map(LookupUserResponse::isConsentNotRequired).orElse(false));
+        auditService.audit(process, "Process started for user: {}", process.getUserId());
+        return process;
+    }
+
+    @SneakyThrows(OnboardingProcessException.class)
+    private OnboardingProcessEntity createNewProcess(
+            final OnboardingStartRequest request,
+            final String identificationData,
+            final String userId,
+            final RequestContext requestContext) {
+
+        final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        logger.debug("Created process ID: {}", process.getId());
+
+        process.setUserId(userId);
+        storeConsent(process, false);
         auditService.audit(process, "Process started for user: {}", process.getUserId());
         return process;
     }
@@ -640,10 +647,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return process.getProcessConfiguration().getConfiguration().consentRequired();
     }
 
-    private OnboardingProcessEntity createNewProcess(final OnboardingStartRequest request, final String identificationData, final RequestContext requestContext) throws OnboardingProcessException {
+    private OnboardingProcessEntity createNewProcess(final OnboardingStartRequest request, final String identificationData, final RequestContext requestContext, OnboardingStatus status) throws OnboardingProcessException {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(identificationData);
-        process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        process.setStatus(status);
         process.setTimestampCreated(new Date());
         process.setProcessConfiguration(fetchProcessConfiguration(request.processType()));
         process.setConsentAccepted(false);
@@ -680,7 +687,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     @SneakyThrows(OnboardingProcessException.class)
-    private OnboardingProcessEntity resumeExistingProcess(
+    private OnboardingProcessEntity resumeExistingProcessWithUserLookup(
             final OnboardingProcessEntity process,
             final Map<String, Object> identification,
             final Map<String, Object> fdsData,
@@ -698,6 +705,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                             userId, process.getUserId(), process.getId()));
         }
         auditService.audit(process, "Process resumed for user: {}", userId);
+        return process;
+    }
+
+    private OnboardingProcessEntity resumeExistingProcess(
+            final OnboardingProcessEntity process,
+            final Map<String, Object> fdsData,
+            final RequestContext requestContext) {
+
+        logger.debug("Resuming process ID: {}", process.getId());
+        process.setTimestampLastUpdated(new Date());
+        setProcessCustomData(process, fdsData, requestContext);
+        auditService.audit(process, "Process resumed for user: {}", process.getUserId());
         return process;
     }
 
