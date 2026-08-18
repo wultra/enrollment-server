@@ -242,10 +242,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException("A valid possession signature with an active activation is required for an existing activation process");
         }
 
-        final Map<String, Object> fdsData = context.request.fdsData();
+        final Map<String, Object> fdsData = context.request().fdsData();
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final RequestContext requestContext = context.requestContext();
-        final String identificationData = parseIdentificationData(context.request.identification());
+        final String identificationData = parseIdentificationData(context.request().identification());
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndUserIdAndStatusWithLock(activationId, userId, OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, fdsData, requestContext))
                 .orElseGet(() -> createNewProcess(context.request(), identificationData, userId, requestContext));
