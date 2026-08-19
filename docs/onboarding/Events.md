@@ -100,7 +100,7 @@ This contains the results from the verification provider. Each document is sent 
 
 **Reject Reason Format - Microblink**
 
-The value of the field `rejectReason` for the Microblink provider has following format:
+The value of the field `rejectReason` for the Microblink provider has the following format:
 ```
 Rejected by provider [{code} {messages}, {code} {messages}...] # there can be more messages
 ```
