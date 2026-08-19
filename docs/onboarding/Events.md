@@ -225,26 +225,9 @@ This contains final process data.
 
 ## Verification Providers Reject Reasons
 
-### Reject Reasons for iProov
-
-The table below shows all possible values in the `rejectReason` field.
-
-| Message                                                        |
-|:---------------------------------------------------------------|
-| Please keep still                                              |
-| Strong light source detected behind you. Try turning around    |
-| Your environment appears too dark. Try turning the lights on   |
-| Too much light detected on your face                           |
-| Ambient light too strong or screen brightness too low          |
-| Please do not talk while iProoving                             |
-| Sorry, ambiguous outcome                                       |
-| Sorry, your session has timed out                              |
-| Sorry, your device is not supported at the moment              |
-
-
 ### Reject Reasons for Microblink
 
-The table below shows all possible values for the `code` and `message` in the `rejectReason` field.
+The table below shows all possible values for the `code` and `message` attributes in the `rejectReason` field.
 
 | Code  | Message                                                                                                                                                                   |
 |:------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -260,3 +243,20 @@ The table below shows all possible values for the `code` and `message` in the `r
 | I001: | "Despite the image-quality warning, verification returned an Accept verdict under the configured image-quality retry policy.                                              |
 | I002: | "Cropping did not block verification because cropAffectsVerdict was false.                                                                                                |
 | I003: | "The document is expired, but rejectExpiredDocuments is disabled, so expiration did not affect the verification verdict.                                                  |
+
+
+### Reject Reasons for iProov
+
+The table below shows all possible values in the `rejectReason` field.
+
+| Message                                                        |
+|:---------------------------------------------------------------|
+| Please keep still                                              |
+| Strong light source detected behind you. Try turning around    |
+| Your environment appears too dark. Try turning the lights on   |
+| Too much light detected on your face                           |
+| Ambient light too strong or screen brightness too low          |
+| Please do not talk while iProoving                             |
+| Sorry, ambiguous outcome                                       |
+| Sorry, your session has timed out                              |
+| Sorry, your device is not supported at the moment              |
