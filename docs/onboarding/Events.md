@@ -110,7 +110,7 @@ Example response:
 Rejected by provider [W001 The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare., I002 Cropping did not block verification because cropAffectsVerdict was false.]
 ```
 
-All `code` and `message` values are described in the section [Reject Reasons for Microblink](#Reject-reasons-for-microblink)
+All `code` and `message` values are described in the section [Reject Reasons for Microblink](#reject-reasons-for-microblink)
 
 
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
