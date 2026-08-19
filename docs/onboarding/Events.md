@@ -150,14 +150,18 @@ Additional checks:
 The value of the field `rejectReason` for the Microblink provider has one of the following format:
 ```
 Rejected by provider [{code} {messages}, {code} {messages}...]
+or
 Extracted document type {extractedType} does not match claimed type {claimedType}
+or
 Document data crosscheck failed for fields: [{field}, {field}...]
 ```
 
 Example responses:
 ```
 Rejected by provider [W001 The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare., I002 Cropping did not block verification because cropAffectsVerdict was false.]
+or
 Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD
+or
 Document data crosscheck failed for fields: [firstName, lastName, dateOfBirth]
 ```
 
