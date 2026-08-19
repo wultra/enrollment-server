@@ -161,6 +161,16 @@ class MicroblinkExtractedDataParserTest {
                     "day": 1,
                     "month": 22,
                     "year": 1990
+                }""",
+
+                // DateOfBirth with 0, parser should treat 0 as null
+                """
+                {
+                    "field": "DateOfBirth",
+                    "successfullyParsed": true,
+                    "day": 0,
+                    "month": 0,
+                    "year": 0
                 }"""
         );
     }
