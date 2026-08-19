@@ -147,7 +147,7 @@ Additional checks:
 
 **Reject Reason Format - Microblink**
 
-The value of the field `rejectReason` for the Microblink provider has one of the following format:
+The value of the field `rejectReason` for the Microblink provider has one of the following formats:
 ```
 Rejected by provider [{code} {messages}, {code} {messages}...]
 or
