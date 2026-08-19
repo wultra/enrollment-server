@@ -9,6 +9,7 @@
 - [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 - [Database Structure](./Database-Structure.md)
 - [Process Metrics](./Process-Metrics.md)
+- [Events](./Events.md)
 - [Audit](./Audit.md)
 
 **Overview**
