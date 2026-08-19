@@ -120,8 +120,8 @@ This contains the overall document check result for all documents combined.
 Bear in mind that even if the individual documents were verified by the verification provider, the overall document check result could still be negative due to the additional checks performed.
 
 Additional checks:
-- document type/country
-- document crosscheck
+- document type - checks whether the required document type matches the uploaded document type
+- document crosscheck - the first name, surname and date of birth, in case the user has uploaded multiple documents
 
 ```json
 {
