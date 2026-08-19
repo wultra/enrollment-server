@@ -39,6 +39,14 @@ ENROLLMENT_SERVER_ONBOARDING_IPROOV_OAUTH_CLIENT_PASSWORD
 
 Database schema creation and upgrades are handled by the separate init image via [Liquibase](https://www.liquibase.org/). The main application container does not perform database migrations.
 
+The init image expects the database connection to be provided via the generic environment variables below (independent of the `ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_*` properties used by the application image):
+
+```
+DATASOURCE_URL=jdbc:postgresql://db-server:5432/onboarding
+DATASOURCE_USERNAME=$USERNAME$
+DATASOURCE_PASSWORD=$PASSWORD$
+```
+
 ## Initialize the Database Schema
 
 Run the init image once to create or upgrade the database schema:
@@ -48,6 +56,8 @@ docker run --rm --env-file env.list \
     --name=enrollment-server-onboarding-init powerauth/enrollment-server-onboarding-init:${VERSION}
 ```
 The command above runs Liquibase migrations and exits on success. If there are any issues connecting to the database or applying the migrations, the command will fail with an error message.
+
+To keep the init container alive after the migration finishes (e.g. for Kubernetes init container health checks), set `KEEP_RUNNING=true` (optionally with `KEEP_RUNNING_PORT`, default `8080`).
 
 ## Start the Docker Container
 After you prepare the configuration file, you can run the image using `docker run`:

@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for identity verification using an existing active activation [(#1852)](https://github.com/wultra/enrollment-server/issues/1852)
 
 
+### Changed
+
+- Changed Docker images to be based on the Wultra base image [(#1880)](https://github.com/wultra/enrollment-server/issues/1880)
+
+
 ### Fixed
 
 - Fixed 500 error on `/api/identity/status` during reKYC when multiple onboarding processes exist for the same activation ID [(#1864)](https://github.com/wultra/enrollment-server/issues/1864)
