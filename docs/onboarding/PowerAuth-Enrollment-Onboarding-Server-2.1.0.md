@@ -10,8 +10,8 @@ For convenience, you can use liquibase for your database migration.
 
 For manual changes use SQL scripts:
 
-- [PostgreSQL script](./../sql/postgresql/onboarding/migration_1.10.0_2.1.0.sql)
-- [Oracle script](./../sql/oracle/onboarding/migration_1.10.0_2.1.0.sql)
+- [PostgreSQL script](../sql/postgresql/onboarding/migration_1.10.0_2.1.0.sql)
+- [Oracle script](../sql/oracle/onboarding/migration_1.10.0_2.1.0.sql)
 
 
 ### Onboarding Process Configuration
