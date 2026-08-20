@@ -71,8 +71,8 @@ For convenience, you can use liquibase for your database migration.
 
 For manual changes use SQL scripts:
 
-- [PostgreSQL script](./../sql/postgresql/onboarding/migration_2.1.0_2.2.0.sql)
-- [Oracle script](./../sql/oracle/onboarding/migration_2.1.0_2.2.0.sql)
+- [PostgreSQL script](../sql/postgresql/onboarding/migration_2.1.0_2.2.0.sql)
+- [Oracle script](../sql/oracle/onboarding/migration_2.1.0_2.2.0.sql)
 
 
 ### External User ID
