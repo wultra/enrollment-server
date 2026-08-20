@@ -39,12 +39,12 @@ ENROLLMENT_SERVER_ONBOARDING_IPROOV_OAUTH_CLIENT_PASSWORD
 
 Database schema creation and upgrades are handled by the separate init image via [Liquibase](https://www.liquibase.org/). The main application container does not perform database migrations.
 
-The init image expects the database connection to be provided via the generic environment variables below (independent of the `ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_*` properties used by the application image):
+The init image reuses the same properties configured above, so no additional variables need to be set for the init image:
 
 ```
-DATASOURCE_URL=jdbc:postgresql://db-server:5432/onboarding
-DATASOURCE_USERNAME=$USERNAME$
-DATASOURCE_PASSWORD=$PASSWORD$
+ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_URL
+ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_USERNAME
+ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_PASSWORD
 ```
 
 ## Initialize the Database Schema
