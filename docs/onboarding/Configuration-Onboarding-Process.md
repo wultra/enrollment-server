@@ -6,18 +6,21 @@ Each configuration is associated with a `process_type` (e.g. `onboarding` or `re
 
 ## Root Object
 
-| Field                        | Type      | Default    | Description                                                                                                       |
-|------------------------------|-----------|------------|-------------------------------------------------------------------------------------------------------------------|
-| `enabled`                    | `boolean` | `false`    | Whether the process type is enabled.                                                                              |
-| `otpForIdentification`       | `boolean` | `false`    | Whether the OTP is required for the initial identification of the user.                                           |
-| `otpForIdentityVerification` | `boolean` | `false`    | Whether the OTP is required for identity verification - request OTP for the next process step.                    |
-| `useTemporaryActivation`     | `boolean` | `false`    | Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.  |
-| `documents`                  | `object`  | `(empty)`  | Configuration of required documents. See [Documents](#documents) below.                                           |
-| `activationType`             | `string`  | `IDENTITY` | Whether the activation is initialized by the onboarding server (`CODE`) or by the SDK (`IDENTITY`).               |
-| `approvalEnabled`            | `boolean` | `false`    | Whether to call bank systems to approve the client.                                                               |
-| `clientEvaluationEnabled`    | `boolean` | `true`     | Whether to call bank systems to evaluate the client.                                                              |
-| `verifyPresenceWithOtp`      | `boolean` | `true`     | Whether to verify the presence with OTP. If `true`, hide the result of presence check until valid OTP is entered. |
-| `consentRequired`            | `boolean` | `false`    | Specifies whether user consent must be accepted.                                                                  |
+| Field                                   | Type      | Default                    | Description                                                                                                       |
+|-----------------------------------------|-----------|----------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `enabled`                               | `boolean` | `false`                    | Whether the process type is enabled.                                                                              |
+| `otpForIdentification`                  | `boolean` | `false`                    | Whether the OTP is required for the initial identification of the user.                                           |
+| `otpForIdentityVerification`            | `boolean` | `false`                    | Whether the OTP is required for identity verification - request OTP for the next process step.                    |
+| `useTemporaryActivation`                | `boolean` | `false`                    | Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.  |
+| `documents`                             | `object`  | `(empty)`                  | Configuration of required documents. See [Documents](#documents) below.                                           |
+| `activationType`                        | `string`  | `IDENTITY`                 | Whether the activation is initialized by the onboarding server (`CODE`) or by the SDK (`IDENTITY`).               |
+| `approvalEnabled`                       | `boolean` | `false`                    | Whether to call bank systems to approve the client.                                                               |
+| `clientEvaluationEnabled`               | `boolean` | `true`                     | Whether to call bank systems to evaluate the client.                                                              |
+| `verifyPresenceWithOtp`                 | `boolean` | `true`                     | Whether to verify the presence with OTP. If `true`, hide the result of presence check until valid OTP is entered. |
+| `consentRequired`                       | `boolean` | `false`                    | Specifies whether user consent must be accepted.                                                                  |
+| `existingActivation`                    | `boolean` | `false`                    | Whether the process starts identity verification for the active activation that signed the start request.         |
+| `existingActivationFlag`                | `string`  | `VERIFICATION_IN_PROGRESS` | Flag set while identity verification for an existing activation is in progress.                                   |
+| `invalidateExistingActivationOnFailure` | `boolean` | `true`                     | Whether a failed or expired existing-activation process removes the activation.                                   |
 
 
 ## Documents
@@ -57,6 +60,7 @@ Each configuration is associated with a `process_type` (e.g. `onboarding` or `re
   "approvalEnabled": true,
   "verifyPresenceWithOtp": false,
   "consentRequired": true,
+  "existingActivation": false,
   "documents": {
     "totalRequiredDocumentsCount": 2,
     "groups": [

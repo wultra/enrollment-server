@@ -64,6 +64,18 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     Optional<OnboardingProcessEntity> findByIdentificationDataAndStatusWithLock(String identificationData, OnboardingStatus status);
 
     /**
+     * Find an existing process by activation identifier and user ID. Lock this process using PESSIMISTIC_WRITE lock.
+     *
+     * @param activationId Activation identifier.
+     * @param userId User ID.
+     * @param status Process status.
+     * @return Optional onboarding process.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status AND p.activationId = :activationId AND p.userId = :userId")
+    Optional<OnboardingProcessEntity> findByActivationIdAndUserIdAndStatusWithLock(String activationId, String userId, OnboardingStatus status);
+
+    /**
      * Find an existing process by activation identifier and process status. The process is not locked.
      *
      * @see #findByActivationIdAndStatusWithLock(String, OnboardingStatus) - alternative method with lock
@@ -106,15 +118,12 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     Optional<OnboardingProcessEntity> findByActivationIdAndStatusWithLock(String activationId, OnboardingStatus status);
 
     /**
-     * Find process by activation identifier. Do not lock the process.
+     * Find the most recently created process by activation identifier. Do not lock the process.
      *
      * @param activationId Activation identifier.
-     * @return Optional onboarding process.
+     * @return Optional onboarding process (most recently created).
      */
-    @Query("SELECT p FROM OnboardingProcessEntity p " +
-            "WHERE p.activationId = :activationId " +
-            "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findByActivationId(String activationId);
+    Optional<OnboardingProcessEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(String activationId);
 
     /**
      * Count onboarding processes for user with timestamp created after given timestamp.

@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVer
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -61,29 +60,36 @@ public class IdentityVerificationStatusService {
      * @throws RemoteCommunicationException   Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException     Thrown when onboarding process is invalid.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     @SuppressWarnings("unused") // unused request
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        final Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        // Do not lock onboarding process, it is not required for status check. An activation can have multiple
+        // onboarding processes (e.g. re-KYC with existingActivation after an earlier onboarding process), and a
+        // process can have multiple identity verification attempts after cleanup or reset. Resolve the latest
+        // process first, then load its latest identity verification by process ID.
+        final var onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
 
-        // Do not lock onboarding process, it is not required for status check
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
-        response.setProcessId(onboardingProcess.getId());
+        final var onboardingProcessId = onboardingProcess.getId();
+        final var identityVerification = identityVerificationService.findByProcessIdOptional(onboardingProcessId)
+                .orElse(null);
+
+        response.setProcessId(onboardingProcessId);
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
         response.setConsentRequired(isConsentPending(onboardingProcess));
 
-        if (idVerificationOptional.isEmpty()) {
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-            response.setIdentityVerificationPhase(null);
-            return response;
-        }
-
-        // Check for expiration of onboarding process
+        // Check for expiration of onboarding process before returning any status,
+        // including the NOT_INITIALIZED case, to avoid returning NOT_INITIALIZED for an expired process.
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
             response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
+            return response;
+        }
+
+        if (identityVerification == null) {
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
             return response;
         }
 
@@ -95,11 +101,9 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
-
-        response.setIdentityVerificationStatus(idVerification.getStatus());
-        response.setIdentityVerificationPhase(idVerification.getPhase());
-        response.setRejectReason(idVerification.getRejectReason());
+        response.setIdentityVerificationStatus(identityVerification.getStatus());
+        response.setIdentityVerificationPhase(identityVerification.getPhase());
+        response.setRejectReason(identityVerification.getRejectReason());
         return response;
     }
 

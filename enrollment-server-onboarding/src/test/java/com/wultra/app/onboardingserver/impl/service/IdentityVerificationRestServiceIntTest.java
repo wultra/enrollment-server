@@ -208,6 +208,29 @@ class IdentityVerificationRestServiceIntTest {
         assertIdentityVerificationStatusResponse(responseObject);
     }
 
+    @Test
+    void testCheckIdentityVerificationStatus_returnsNewestIdentityVerificationAttemptForProcess() throws Exception {
+        // given
+        final var activationId = "d2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8";
+        final var userId = "rekyc-test-user";
+        final var reKycProcessId = "f1a2b3c4-5678-4abc-9012-a3b4c5d6e7f8";
+
+        stubListActivationFlags(activationId);
+
+        final var request = new IdentityVerificationStatusRequest();
+        final var apiAuthentication = buildApiAuthentication(userId, activationId);
+
+        // when
+        final var response = tested.checkIdentityVerificationStatus(request, apiAuthentication);
+
+        // then
+        final var responseObject = response.getResponseObject();
+        assertEquals(reKycProcessId, responseObject.getProcessId());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, responseObject.getIdentityVerificationStatus());
+        assertEquals(IdentityVerificationPhase.DOCUMENT_UPLOAD, responseObject.getIdentityVerificationPhase());
+        assertEquals("reKYC", responseObject.getProcessType());
+    }
+
     private void assertDocumentVerificationAndPresenceCheckCleanup() throws Exception {
         final var documentDataCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM es_document_data", Integer.class);
         assertEquals(0, documentDataCount);

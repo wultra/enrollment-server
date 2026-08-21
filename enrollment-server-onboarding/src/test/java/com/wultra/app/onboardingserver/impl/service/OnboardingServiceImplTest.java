@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl.StartOnboardingContext;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
@@ -34,6 +35,8 @@ import com.wultra.security.powerauth.client.model.response.InitActivationRespons
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,7 +106,12 @@ class OnboardingServiceImplTest {
         when(powerAuthClient.initActivation(any(), any(), any()))
                 .thenReturn(initResponse);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+        final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(context)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(null)
+                .build());
 
         assertNotNull(result);
         assertNotNull(result.processId());
@@ -146,7 +154,12 @@ class OnboardingServiceImplTest {
         when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
                 .thenReturn(appKeyResponse);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+        final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(context)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(null)
+                .build());
 
         assertNotNull(result);
         assertNotNull(result.processId());
@@ -157,6 +170,109 @@ class OnboardingServiceImplTest {
         final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
         assertTrue(process.isPresent());
         assertTrue(process.get().getConsentAccepted());
+    }
+
+    @Test
+    void testStartProcess_existingActivation() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .build();
+        final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
+        final PowerAuthActivation activation = mock(PowerAuthActivation.class);
+        when(activation.getActivationId()).thenReturn("existing-activation");
+        when(activation.getUserId()).thenReturn("existing-user");
+        when(apiAuthentication.getActivationContext()).thenReturn(activation);
+
+        final RequestContext requestContext = RequestContext.builder().build();
+        final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(requestContext)
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(apiAuthentication)
+                .build());
+
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result.onboardingStatus());
+        assertNull(result.activationCode());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result.activationType());
+        verify(powerAuthClient, never()).initActivation(any(), any(), any());
+
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(result.processId()).orElseThrow();
+        assertEquals("existing-activation", process.getActivationId());
+        assertEquals("existing-user", process.getUserId());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, process.getStatus());
+        verifyNoInteractions(powerAuthClient);
+    }
+
+    @Test
+    void testStartProcess_existingActivation_resume() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .build();
+        final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
+        final PowerAuthActivation activation = mock(PowerAuthActivation.class);
+        when(activation.getActivationId()).thenReturn("existing-activation");
+        when(activation.getUserId()).thenReturn("existing-user");
+        when(apiAuthentication.getActivationContext()).thenReturn(activation);
+
+        final RequestContext requestContext = RequestContext.builder().build();
+        final OnboardingStartResponse result1 = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(requestContext)
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(apiAuthentication)
+                .build());
+
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result1.onboardingStatus());
+        assertNull(result1.activationCode());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result1.activationType());
+
+        final OnboardingStartRequest resumeRequest = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .fdsData(Map.of("key", "value"))
+                .build();
+
+        final OnboardingStartResponse result2 = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(resumeRequest)
+                .requestContext(requestContext)
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(apiAuthentication)
+                .build());
+
+        assertEquals(result1.processId(), result2.processId());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result2.onboardingStatus());
+        assertNull(result2.activationCode());
+        assertEquals(ActivationType.ACTIVATION_ALREADY_EXISTS, result2.activationType());
+
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(result2.processId()).orElseThrow();
+        assertEquals("existing-activation", process.getActivationId());
+        assertEquals("existing-user", process.getUserId());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, process.getStatus());
+        assertNotNull(process.getTimestampLastUpdated());
+        assertEquals(1, onboardingProcessRepository.count());
+        verifyNoInteractions(powerAuthClient);
+    }
+
+    @Test
+    void testStartProcess_existingActivation_requiresSignature() {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("re-kyc")
+                .build();
+
+        final OnboardingProcessException exception = assertThrows(OnboardingProcessException.class, () -> {
+            final RequestContext requestContext = RequestContext.builder().build();
+            tested.startOnboarding(StartOnboardingContext.builder()
+                    .request(request)
+                    .requestContext(requestContext)
+                    .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                    .apiAuthentication(null)
+                    .build());
+        });
+
+        assertEquals("A valid possession signature with an active activation is required for an existing activation process", exception.getMessage());
     }
 
     @Test
@@ -185,7 +301,12 @@ class OnboardingServiceImplTest {
         when(powerAuthClient.initActivation(any(), any(), any()))
                 .thenReturn(initResponse);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+        final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(context)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(null)
+                .build());
 
         assertNotNull(result);
         assertNotNull(result.processId());
@@ -209,7 +330,12 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenThrow(new OnboardingProviderException("User not found."));
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+        final OnboardingStartResponse result = tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(context)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(null)
+                .build());
 
         verify(powerAuthClient, never()).initActivation(any(), any(), any());
 
@@ -230,7 +356,12 @@ class OnboardingServiceImplTest {
         final RequestContext context = RequestContext.builder().build();
         final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
 
-        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context, encryptionContext));
+        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(context)
+                .encryptionContext(encryptionContext)
+                .apiAuthentication(null)
+                .build()));
 
         assertEquals("No configuration found for process type: non-existing", result.getMessage());
     }
