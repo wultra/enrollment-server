@@ -91,7 +91,7 @@
     <properties>
         <openapi-generator-maven-plugin.version>7.24.0</openapi-generator-maven-plugin.version>
 
-        <okhttp3.version>5.4.0</okhttp3.version>
+        <okhttp3.version>5.5.0</okhttp3.version>
         <shedlock.version>7.8.0</shedlock.version>
         <spring-statemachine.version>4.0.2</spring-statemachine.version>
         <swagger-annotations-jakarta.version>2.2.53</swagger-annotations-jakarta.version>
