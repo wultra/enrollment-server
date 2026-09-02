@@ -488,7 +488,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("Rejected documents: [id-card-front, id-card-back]", result.getRejectReason());
         assertEquals(2, result.getResults().size());
         result.getResults().forEach(documentResult ->
-                assertEquals("Document validation failed", documentResult.getRejectReason()));
+                assertEquals("Document validation failed — no details from Microblink.", documentResult.getRejectReason()));
     }
 
     @Test
