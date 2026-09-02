@@ -89,7 +89,7 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.24.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.25.0</openapi-generator-maven-plugin.version>
 
         <okhttp3.version>5.5.0</okhttp3.version>
         <shedlock.version>7.9.0</shedlock.version>
