@@ -388,9 +388,8 @@ public class DocumentProcessingService {
             final DocumentsSubmitResult docsSubmitResults,
             final DocumentSubmitResult docSubmitResult) {
 
-        if (StringUtils.isNotBlank(docSubmitResult.getUploadId())) {
-            docVerification.setUploadId(docSubmitResult.getUploadId());
-        }
+        docVerification.setUploadId(docSubmitResult.getUploadId());
+
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
