@@ -389,6 +389,7 @@ public class DocumentProcessingService {
             final DocumentSubmitResult docSubmitResult) {
 
         docVerification.setUploadId(docSubmitResult.getUploadId());
+        docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
@@ -406,7 +407,6 @@ public class DocumentProcessingService {
             auditService.audit(docVerification, "Document verification rejected for user: {}, reason: {}", ownerId.getUserId(), docSubmitResult.getRejectReason());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
-            docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
             if (docVerification.getTimestampUploaded() == null) {
                 docVerification.setTimestampUploaded(ownerId.getTimestamp());
             }
