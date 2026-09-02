@@ -8,19 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-### Added
-
-- Added support for identity verification using an existing active activation [(#1852)](https://github.com/wultra/enrollment-server/issues/1852)
-
-
-### Changed
-
-- Changed Docker images to be based on the Wultra base image [(#1880)](https://github.com/wultra/enrollment-server/issues/1880)
+## [2.2.4] 2026-09-02
 
 
 ### Fixed
 
 - Published `DOCUMENT_VERIFICATION_FINISHED` events for documents rejected or failed during upload [(#1894)](https://github.com/wultra/enrollment-server/issues/1894)
+
+
+## [2.2.3] 2026-08-18
+
+
+### Added
+
+- Added support for identity verification using an existing active activation [(#1852)](https://github.com/wultra/enrollment-server/issues/1852)
+
+
+### Fixed
+
 - Fixed 500 error on `/api/identity/status` during reKYC when multiple onboarding processes exist for the same activation ID [(#1864)](https://github.com/wultra/enrollment-server/issues/1864)
 - Fixed `/api/identity/status` to return the latest identity verification attempt for the latest onboarding process during reKYC [(#1869)](https://github.com/wultra/enrollment-server/issues/1869)
 
@@ -76,6 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured annotationProcessorPaths for Lombok in maven-compiler-plugin [(#1781)](https://github.com/wultra/enrollment-server/issues/1781)
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
-[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.0...HEAD
+[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.4...HEAD
+[2.2.4]: https://github.com/wultra/enrollment-server/compare/2.2.3...2.2.4
+[2.2.3]: https://github.com/wultra/enrollment-server/compare/2.2.2...2.2.3
 [2.2.2]: https://github.com/wultra/enrollment-server/compare/2.2.0...2.2.2
 [2.2.0]: https://github.com/wultra/enrollment-server/compare/2.1.1...2.2.0
