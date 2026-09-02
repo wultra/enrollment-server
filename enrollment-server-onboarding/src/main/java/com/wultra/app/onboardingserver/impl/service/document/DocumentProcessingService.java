@@ -33,15 +33,18 @@ import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
+import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -64,6 +67,8 @@ public class DocumentProcessingService {
     private final DocumentVerificationProvider documentVerificationProvider;
 
     private final AuditService auditService;
+
+    private final OnboardingEventService onboardingEventService;
 
     /**
      * Submit identity-related documents for verification.
@@ -88,7 +93,14 @@ public class DocumentProcessingService {
         for (var documentsOfSameType : documentsByType.values()) {
             docVerifications.addAll(submitDocument(documentsOfSameType, idVerification, ownerId));
         }
+        docVerifications.stream()
+                .filter(isDocumentRejectedOrFailed())
+                .forEach(onboardingEventService::publishDocumentVerificationFinished);
         return docVerifications;
+    }
+
+    private static @NonNull Predicate<DocumentVerificationEntity> isDocumentRejectedOrFailed() {
+        return document -> document.getStatus() == DocumentStatus.REJECTED || document.getStatus() == DocumentStatus.FAILED;
     }
 
     /**
@@ -370,8 +382,15 @@ public class DocumentProcessingService {
         }
     }
 
-    private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
-                                          DocumentsSubmitResult docsSubmitResults, DocumentSubmitResult docSubmitResult) {
+    private void processDocsSubmitResults(
+            final OwnerId ownerId,
+            final DocumentVerificationEntity docVerification,
+            final DocumentsSubmitResult docsSubmitResults,
+            final DocumentSubmitResult docSubmitResult) {
+
+        if (StringUtils.isNotBlank(docSubmitResult.getUploadId())) {
+            docVerification.setUploadId(docSubmitResult.getUploadId());
+        }
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
@@ -392,7 +411,6 @@ public class DocumentProcessingService {
             if (docVerification.getTimestampUploaded() == null) {
                 docVerification.setTimestampUploaded(ownerId.getTimestamp());
             }
-            docVerification.setUploadId(docSubmitResult.getUploadId());
 
             if (docVerification.getType() == DocumentType.SELFIE_PHOTO) {
                 final DocumentStatus status = identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ? DocumentStatus.VERIFICATION_PENDING : DocumentStatus.ACCEPTED;

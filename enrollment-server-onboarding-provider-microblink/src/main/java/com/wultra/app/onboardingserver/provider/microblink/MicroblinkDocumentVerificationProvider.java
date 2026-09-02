@@ -65,6 +65,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private static final Pattern MICROBLINK_TRACE_ID_PATTERN = Pattern.compile("\"traceId\"\\s*:\\s*\"([^\"]+)\"");
     private static final String MICROBLINK_VALIDATION_PASS_RESULT = "Pass";
+    private static final String MICROBLINK_VALIDATION_FAILED_REASON = "Document validation failed";
 
     private final RestClient microblinkRestClient;
     private final ObjectMapper objectMapper;
@@ -394,7 +395,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                         .map(DocumentVerificationResponse.Message::message)
                         .toList();
 
-                result.setRejectReason(validationErrorMessages.toString());
+                result.setRejectReason(validationErrorMessages.isEmpty()
+                        ? MICROBLINK_VALIDATION_FAILED_REASON
+                        : validationErrorMessages.toString());
             }
 
             results.add(result);

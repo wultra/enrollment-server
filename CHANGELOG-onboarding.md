@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Published `DOCUMENT_VERIFICATION_FINISHED` events for documents rejected or failed during upload [(#1894)](https://github.com/wultra/enrollment-server/issues/1894)
 - Fixed 500 error on `/api/identity/status` during reKYC when multiple onboarding processes exist for the same activation ID [(#1864)](https://github.com/wultra/enrollment-server/issues/1864)
 - Fixed `/api/identity/status` to return the latest identity verification attempt for the latest onboarding process during reKYC [(#1869)](https://github.com/wultra/enrollment-server/issues/1869)
 
