@@ -460,6 +460,38 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
+    void testSubmitDocuments_microblinkRejectResponseWithoutMessages_fallbackRejectReason() throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
+        );
+        final var responseJson = buildMicroblinkResponseJson(
+                CheckResult.FAIL,
+                Type.ID,
+                "[]",
+                buildFaceImageJson(),
+                "[]",
+                null
+        );
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals("Rejected documents: [id-card-front, id-card-back]", result.getRejectReason());
+        assertEquals(2, result.getResults().size());
+        result.getResults().forEach(documentResult ->
+                assertEquals("Other", documentResult.getRejectReason()));
+    }
+
+    @Test
     void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);

@@ -200,6 +200,31 @@ class OnboardingEventServiceTest {
     }
 
     @Test
+    void testPublishDocumentVerificationFinished_rejected() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.REJECTED);
+        docVerification.setRejectReason("documentVerificationRejected");
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals(EventStatus.REJECTED, eventData.status());
+        assertEquals("upload1", eventData.documentId());
+        assertEquals("documentVerificationRejected", eventData.rejectReason());
+        assertEquals("microblink", eventData.provider());
+        assertNotNull(eventData.documentVerificationResult());
+    }
+
+    @Test
     void testPublishDocumentVerificationFinished_failed_noResult() throws Exception {
         when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
         when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("zenid");
