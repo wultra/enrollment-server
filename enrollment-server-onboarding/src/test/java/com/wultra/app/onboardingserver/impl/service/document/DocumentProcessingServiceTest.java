@@ -32,6 +32,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,6 +47,11 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -59,6 +65,9 @@ class DocumentProcessingServiceTest {
 
     @MockitoBean
     DataExtractionService dataExtractionService;
+
+    @MockitoBean
+    OnboardingEventService onboardingEventService;
 
     @Autowired
     DocumentProcessingService tested;
@@ -125,6 +134,33 @@ class DocumentProcessingServiceTest {
         assertThat(results)
                 .extracting(DocumentResultEntity::getPhase)
                 .containsOnly(DocumentProcessingPhase.UPLOAD);
+        verify(onboardingEventService, never()).publishDocumentVerificationFinished(any());
+    }
+
+    @Test
+    void testSubmitDocuments_rejected() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").orElseThrow();
+        final OwnerId ownerId = createOwnerId();
+
+        final var request = DocumentSubmitV2Request.builder()
+                .processId("p1")
+                .documents(List.of(DocumentSubmitV2Request.Document.builder()
+                        .filename("unexpected.png")
+                        .data(Base64.getEncoder().encodeToString("img1".getBytes()))
+                        .type(DocumentType.ID_CARD)
+                        .side(CardSide.FRONT)
+                        .build()))
+                .build();
+
+        final List<DocumentVerificationEntity> documents = tested.submitDocuments(identityVerification, request, ownerId);
+
+        assertEquals(1, documents.size());
+        final DocumentVerificationEntity document = documents.get(0);
+        assertEquals(DocumentStatus.REJECTED, document.getStatus());
+        assertEquals("documentVerificationRejected", document.getRejectReason());
+        assertNotNull(document.getUploadId());
+        assertEquals(document.getUploadId(), documentVerificationRepository.findById(document.getId()).orElseThrow().getUploadId());
+        verify(onboardingEventService).publishDocumentVerificationFinished(same(document));
     }
 
     @Test
@@ -172,6 +208,7 @@ class DocumentProcessingServiceTest {
         assertThat(results)
                 .extracting(DocumentResultEntity::getErrorOrigin)
                 .containsOnly(ErrorOrigin.DOCUMENT_VERIFICATION);
+        verify(onboardingEventService, times(2)).publishDocumentVerificationFinished(any());
     }
 
     @Test
@@ -199,6 +236,7 @@ class DocumentProcessingServiceTest {
         assertThat(documents)
                 .extracting(DocumentVerificationEntity::getStatus)
                 .containsExactlyInAnyOrder(DocumentStatus.FAILED);
+        verify(onboardingEventService).publishDocumentVerificationFinished(any());
     }
 
     @Test
