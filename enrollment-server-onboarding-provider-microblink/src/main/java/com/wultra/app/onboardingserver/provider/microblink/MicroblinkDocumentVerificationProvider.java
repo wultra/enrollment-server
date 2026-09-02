@@ -65,7 +65,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private static final Pattern MICROBLINK_TRACE_ID_PATTERN = Pattern.compile("\"traceId\"\\s*:\\s*\"([^\"]+)\"");
     private static final String MICROBLINK_VALIDATION_PASS_RESULT = "Pass";
-    private static final String MICROBLINK_VALIDATION_FAILED_REASON = "Document validation failed — no details from Microblink.";
+    private static final String MICROBLINK_VALIDATION_FAILED_REASON = "Other";
 
     private final RestClient microblinkRestClient;
     private final ObjectMapper objectMapper;
