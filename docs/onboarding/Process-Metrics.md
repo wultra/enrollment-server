@@ -51,7 +51,7 @@ Documents rejected by the provider due to invalid checks, or by the onboarding s
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
-WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+WHERE COALESCE(timestamp_uploaded, timestamp_created) BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
 AND status IN ('REJECTED', 'DISPOSED')
 AND reject_origin = 'DOCUMENT_VERIFICATION';
