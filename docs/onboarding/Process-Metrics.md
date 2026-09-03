@@ -51,9 +51,10 @@ Documents rejected by the provider due to invalid checks, or by the onboarding s
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
-WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+WHERE COALESCE(timestamp_uploaded, timestamp_created) BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
-AND reject_reason = 'documentVerificationRejected';
+AND status IN ('REJECTED', 'DISPOSED')
+AND reject_origin = 'DOCUMENT_VERIFICATION';
 ```
 
 ### Failed Documents
@@ -75,13 +76,13 @@ Documents accepted after multiple attempts (more than one). This means that ther
 SELECT COUNT(*) FROM (
 	SELECT identity_verification_id, type
 	FROM es_document_verification
-	WHERE timestamp_uploaded between now() - INTERVAL '90 day' and now()
+	WHERE COALESCE(timestamp_uploaded, timestamp_created) between now() - INTERVAL '90 day' and now()
 		AND side = 'FRONT'
 	GROUP BY identity_verification_id, type
 	HAVING
 		COUNT(*) > 1
     	AND SUM(CASE WHEN status = 'ACCEPTED' AND reject_reason IS NULL THEN 1 ELSE 0 END) > 0
-    	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason = 'documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
+	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason IS NOT NULL THEN 1 ELSE 0 END) > 0) t;
 ```
 
 **SQL decomposition**

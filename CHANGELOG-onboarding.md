@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [2.2.4] 2026-09-02
+## [2.2.4] - 2026-09-03
 
 
 ### Fixed
 
-- Published `DOCUMENT_VERIFICATION_FINISHED` events for documents rejected or failed during upload [(#1894)](https://github.com/wultra/enrollment-server/issues/1894)
+- Published `DOCUMENT_VERIFICATION_FINISHED` events for documents rejected or failed during upload and preserved rejection reasons [(#1894)](https://github.com/wultra/enrollment-server/issues/1894)
 
 
 ## [2.2.3] 2026-08-18

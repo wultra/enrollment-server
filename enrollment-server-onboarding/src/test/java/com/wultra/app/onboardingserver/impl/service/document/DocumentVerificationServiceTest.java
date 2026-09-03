@@ -18,19 +18,39 @@
 package com.wultra.app.onboardingserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -42,10 +62,65 @@ import static org.mockito.Mockito.when;
 class DocumentVerificationServiceTest {
 
     @Mock
+    private DocumentVerificationProvider documentVerificationProvider;
+
+    @Mock
     private DocumentVerificationRepository documentVerificationRepository;
+
+    @Mock
+    private OnboardingProcessRepository onboardingProcessRepository;
+
+    @Mock
+    private OnboardingProcessLimitService processLimitService;
+
+    @Mock
+    private AuditService auditService;
+
+    @Mock
+    private OnboardingEventService onboardingEventService;
 
     @InjectMocks
     private DocumentVerificationService tested;
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void testExecuteFinalDocumentVerification_fallsBackForBlankRejectReason(final String rejectReason)
+            throws RemoteCommunicationException, DocumentVerificationException {
+
+        final OwnerId ownerId = new OwnerId();
+        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
+        documentVerification.setId("document-verification-id");
+        documentVerification.setUploadId("upload-id");
+        documentVerification.setUsedForVerification(true);
+        documentVerification.setStatus(DocumentStatus.ACCEPTED);
+
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setId("identity-verification-id");
+        identityVerification.setProcessId("process-id");
+        identityVerification.setDocumentVerifications(Set.of(documentVerification));
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        final DocumentsVerificationResult result = DocumentsVerificationResult.builder()
+                .status(DocumentVerificationStatus.REJECTED)
+                .rejectReason(rejectReason)
+                .build();
+        when(documentVerificationProvider.verifyDocuments(ownerId, List.of("upload-id")))
+                .thenReturn(result);
+        when(onboardingProcessRepository.findById("process-id"))
+                .thenReturn(Optional.of(process));
+
+        final DocumentVerificationService.FinalDocumentVerificationResult verificationResult =
+                tested.executeFinalDocumentVerification(identityVerification, ownerId);
+
+        assertEquals(DocumentVerificationService.FinalDocumentVerificationResult.REJECTED, verificationResult);
+        assertEquals(DocumentStatus.REJECTED, documentVerification.getStatus());
+        assertEquals(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, documentVerification.getRejectReason());
+        assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, documentVerification.getRejectOrigin());
+        verify(onboardingEventService).publishFinalDocumentVerificationRejected(
+                identityVerification,
+                ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+    }
 
     @Test
     void testHasDocumentsVerificationPending_true() {

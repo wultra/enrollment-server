@@ -157,9 +157,12 @@ class DocumentProcessingServiceTest {
         assertEquals(1, documents.size());
         final DocumentVerificationEntity document = documents.get(0);
         assertEquals(DocumentStatus.REJECTED, document.getStatus());
-        assertEquals("documentVerificationRejected", document.getRejectReason());
+        assertEquals("Different document side than expected", document.getRejectReason());
         assertNotNull(document.getUploadId());
         assertEquals(document.getUploadId(), documentVerificationRepository.findById(document.getId()).orElseThrow().getUploadId());
+        assertThat(documentResultRepository.findAll())
+                .extracting(DocumentResultEntity::getRejectReason)
+                .containsExactly("Different document side than expected");
         verify(onboardingEventService).publishDocumentVerificationFinished(same(document));
     }
 

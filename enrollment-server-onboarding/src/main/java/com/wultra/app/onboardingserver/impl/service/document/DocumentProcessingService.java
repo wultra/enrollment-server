@@ -400,7 +400,7 @@ public class DocumentProcessingService {
             auditService.audit(docVerification, "Document verification failed for user: {}, detail: {}", ownerId.getUserId(), docSubmitResult.getErrorDetail());
         } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+            docVerification.setRejectReason(docSubmitResult.getRejectReason());
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {}, rejected: {}, {}",
                     docVerification.getId(), docSubmitResult.getRejectReason(), ownerId);
