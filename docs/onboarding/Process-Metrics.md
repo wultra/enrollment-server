@@ -76,7 +76,7 @@ Documents accepted after multiple attempts (more than one). This means that ther
 SELECT COUNT(*) FROM (
 	SELECT identity_verification_id, type
 	FROM es_document_verification
-	WHERE timestamp_uploaded between now() - INTERVAL '90 day' and now()
+	WHERE COALESCE(timestamp_uploaded, timestamp_created) between now() - INTERVAL '90 day' and now()
 		AND side = 'FRONT'
 	GROUP BY identity_verification_id, type
 	HAVING
