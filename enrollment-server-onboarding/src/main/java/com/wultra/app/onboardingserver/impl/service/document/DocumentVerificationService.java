@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitServ
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,22 +140,25 @@ public class DocumentVerificationService {
             final List<DocumentVerificationEntity> documentVerifications,
             final OwnerId ownerId) {
 
+        final String rejectReason = StringUtils.defaultIfBlank(
+                result.getRejectReason(),
+                ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(result.getRejectReason());
+            docVerification.setRejectReason(rejectReason);
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
-            logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), result.getRejectReason(), ownerId);
+            logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), rejectReason, ownerId);
             auditService.audit(docVerification, "Document rejected at final verification for user: {}", identityVerification.getUserId());
         });
 
-        logger.info("Identity verification ID: {} rejected: {}, {}", identityVerification.getId(), result.getRejectReason(), ownerId);
+        logger.info("Identity verification ID: {} rejected: {}, {}", identityVerification.getId(), rejectReason, ownerId);
         identityVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
         identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
 
-        onboardingEventService.publishFinalDocumentVerificationRejected(identityVerification, result.getRejectReason());
+        onboardingEventService.publishFinalDocumentVerificationRejected(identityVerification, rejectReason);
         return FinalDocumentVerificationResult.REJECTED;
     }
 
