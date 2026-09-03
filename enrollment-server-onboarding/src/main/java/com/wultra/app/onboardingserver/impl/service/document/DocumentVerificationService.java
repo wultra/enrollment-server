@@ -152,6 +152,7 @@ public class DocumentVerificationService {
         });
 
         logger.info("Identity verification ID: {} rejected: {}, {}", identityVerification.getId(), rejectReason, ownerId);
+        // TODO (racansky, 2026-09-03) consider using `rejectReason` instead, but prevent leaking of sensitive information at identity verification status endpoint
         identityVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
         identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
