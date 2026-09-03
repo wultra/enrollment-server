@@ -141,7 +141,7 @@ public class DocumentVerificationService {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+            docVerification.setRejectReason(result.getRejectReason());
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), result.getRejectReason(), ownerId);
             auditService.audit(docVerification, "Document rejected at final verification for user: {}", identityVerification.getUserId());

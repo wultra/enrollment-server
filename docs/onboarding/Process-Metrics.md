@@ -53,7 +53,7 @@ Documents rejected by the provider due to invalid checks, or by the onboarding s
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
-AND reject_reason = 'documentVerificationRejected';
+AND status = 'REJECTED';
 ```
 
 ### Failed Documents
@@ -81,7 +81,7 @@ SELECT COUNT(*) FROM (
 	HAVING
 		COUNT(*) > 1
     	AND SUM(CASE WHEN status = 'ACCEPTED' AND reject_reason IS NULL THEN 1 ELSE 0 END) > 0
-    	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason = 'documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
+	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason IS NOT NULL THEN 1 ELSE 0 END) > 0) t;
 ```
 
 **SQL decomposition**

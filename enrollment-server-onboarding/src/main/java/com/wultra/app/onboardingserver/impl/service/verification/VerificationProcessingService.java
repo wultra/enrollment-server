@@ -161,7 +161,7 @@ public class VerificationProcessingService {
             }
             case REJECTED -> {
                 docVerification.setStatus(DocumentStatus.REJECTED);
-                docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+                docVerification.setRejectReason(docVerificationResult.getRejectReason());
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
                 logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), docVerificationResult.getRejectReason(), ownerId);
             }
@@ -196,7 +196,7 @@ public class VerificationProcessingService {
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         } else if (StringUtils.isNotBlank(docVerificationResult.getRejectReason())) {
             logger.info("Document result ID: {} rejected: {}", docResult.getId(), docVerificationResult.getRejectReason());
-            docResult.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+            docResult.setRejectReason(docVerificationResult.getRejectReason());
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
         docResult.setVerificationResult(docVerificationResult.getVerificationResult());
