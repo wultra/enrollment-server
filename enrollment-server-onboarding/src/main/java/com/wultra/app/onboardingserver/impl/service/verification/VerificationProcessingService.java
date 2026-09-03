@@ -160,10 +160,13 @@ public class VerificationProcessingService {
                 logger.info("Document verification ID: {} failed: {}, {}", docVerification.getId(), docVerificationResult.getErrorDetail(), ownerId);
             }
             case REJECTED -> {
+                final String rejectReason = StringUtils.defaultIfBlank(
+                        docVerificationResult.getRejectReason(),
+                        ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
                 docVerification.setStatus(DocumentStatus.REJECTED);
-                docVerification.setRejectReason(docVerificationResult.getRejectReason());
+                docVerification.setRejectReason(rejectReason);
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
-                logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), docVerificationResult.getRejectReason(), ownerId);
+                logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), rejectReason, ownerId);
             }
             default ->
                     throw new IllegalStateException(

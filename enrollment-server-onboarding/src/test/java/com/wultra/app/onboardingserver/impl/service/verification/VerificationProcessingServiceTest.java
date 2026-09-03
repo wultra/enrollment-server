@@ -29,11 +29,15 @@ import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -100,6 +104,37 @@ class VerificationProcessingServiceTest {
         assertEquals(DocumentProcessingPhase.VERIFICATION, resultCaptor.getValue().getPhase());
         assertEquals("Document expired", resultCaptor.getValue().getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, resultCaptor.getValue().getRejectOrigin());
+        verify(onboardingEventService).publishDocumentVerificationFinished(document);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void testProcessVerificationResult_fallsBackForBlankRejectReason(final String rejectReason) {
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
+
+        final DocumentVerificationEntity document = new DocumentVerificationEntity();
+        document.setId("document-verification-id");
+        document.setUploadId("upload-id");
+        document.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        document.setIdentityVerification(identityVerification);
+
+        final DocumentVerificationResult documentResult = DocumentVerificationResult.builder()
+                .uploadId("upload-id")
+                .build();
+        final DocumentsVerificationResult result = DocumentsVerificationResult.builder()
+                .verificationId("verification-id")
+                .status(DocumentVerificationStatus.REJECTED)
+                .rejectReason(rejectReason)
+                .results(List.of(documentResult))
+                .build();
+
+        tested.processVerificationResult(new OwnerId(), List.of(document), result);
+
+        assertEquals(DocumentStatus.REJECTED, document.getStatus());
+        assertEquals(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, document.getRejectReason());
+        assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, document.getRejectOrigin());
         verify(onboardingEventService).publishDocumentVerificationFinished(document);
     }
 }
