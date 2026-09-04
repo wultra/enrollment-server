@@ -98,6 +98,19 @@ This contains the results from the verification provider. Each document is sent 
 | `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                             |
 | `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
 
+**Reject Reason Format - Microblink**
+
+The value of the field `rejectReason` for the Microblink provider has the following format:
+```
+Rejected by provider [{code} {messages}, {code} {messages}...] # there can be more messages
+```
+
+Example response:
+```
+Rejected by provider [W001 The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare., I002 Cropping did not block verification because cropAffectsVerdict was false.]
+```
+
+All `code` and `message` values are described in the section [Reject Reasons for Microblink](#reject-reasons-for-microblink)
 
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
 
