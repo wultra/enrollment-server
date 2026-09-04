@@ -162,7 +162,7 @@ public class VerificationProcessingService {
             case REJECTED -> {
                 final String rejectReason = StringUtils.defaultIfBlank(
                         docVerificationResult.getRejectReason(),
-                        ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+                        DocumentVerificationEntity.DEFAULT_REJECT_REASON);
                 docVerification.setStatus(DocumentStatus.REJECTED);
                 docVerification.setRejectReason(rejectReason);
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);

@@ -92,7 +92,7 @@ This contains the results from the verification provider. Each document is sent 
 | `documentVerificationId`     | String | Document Verification ID.                                                                                                                                                                                                                               |
 | `documentId`                 | String | Document ID.                                                                                                                                                                                                                                            |
 | `status`                     | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                   |
-| `rejectReason`               | String | Reject reason when `status` is `REJECTED`. The reason is returned by the verification provider, or `documentVerificationRejected` when the provider omits it. Otherwise itis `null`. Value details are described under the table.                                                                                                                                         |
+| `rejectReason`               | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`.                                                                                                                  Value details are described under the table.                                                                                                                                         |
 | `errorDetail`                | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
 | `provider`                   | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                           |
 | `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                             |
@@ -233,20 +233,21 @@ This contains final process data.
 
 The table below shows all possible values for the `code` and `message` attributes in the `rejectReason` field.
 
-| Code | Message                                                                                                                                                                  |
-|:-----|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| W001 | The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare.                                        |
-| W002 | Only one side of a multi-sided document was received. Supply the missing side for complete verification and higher confidence.                                           |
-| W003 | The barcode could not be read. Ensure it is fully visible, in focus, and free of blur or glare. If available, supply a separate barcode image.                           |
-| W004 | Screen-presence, photocopy, and generative-AI checks were not performed because verificationContext is InPerson.                                                         |
-| W005 | This document version is not accepted for verification.                                                                                                                  |
-| W006 | The document is expired and rejectExpiredDocuments is enabled, resulting in a Reject verdict.                                                                            |
-| W007 | Verification completed using only the first side because the second side could not be used. Supply a clear image of the matching second side for a more complete result. |
-| W008 | The document is cropped or too close to the image edges, preventing a conclusive verification result. Supply an uncropped image with all document edges visible.         |
-| W009 | The supplied image appears to be the wrong document side while the first side is still required. Supply a clear image of the first side to continue verification.        |
-| I001 | Despite the image-quality warning, verification returned an Accept verdict under the configured image-quality retry policy.                                              |
-| I002 | Cropping did not block verification because cropAffectsVerdict was false.                                                                                                |
-| I003 | The document is expired, but rejectExpiredDocuments is disabled, so expiration did not affect the verification verdict.                                                  |
+| Code  | Message                                                                                                                                                                  |
+|:------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| W001  | The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare.                                        |
+| W002  | Only one side of a multi-sided document was received. Supply the missing side for complete verification and higher confidence.                                           |
+| W003  | The barcode could not be read. Ensure it is fully visible, in focus, and free of blur or glare. If available, supply a separate barcode image.                           |
+| W004  | Screen-presence, photocopy, and generative-AI checks were not performed because verificationContext is InPerson.                                                         |
+| W005  | This document version is not accepted for verification.                                                                                                                  |
+| W006  | The document is expired and rejectExpiredDocuments is enabled, resulting in a Reject verdict.                                                                            |
+| W007  | Verification completed using only the first side because the second side could not be used. Supply a clear image of the matching second side for a more complete result. |
+| W008  | The document is cropped or too close to the image edges, preventing a conclusive verification result. Supply an uncropped image with all document edges visible.         |
+| W009  | The supplied image appears to be the wrong document side while the first side is still required. Supply a clear image of the first side to continue verification.        |
+| I001  | Despite the image-quality warning, verification returned an Accept verdict under the configured image-quality retry policy.                                              |
+| I002  | Cropping did not block verification because cropAffectsVerdict was false.                                                                                                |
+| I003  | The document is expired, but rejectExpiredDocuments is disabled, so expiration did not affect the verification verdict.                                                  |
+| Other | Microblink did not provide a reject reason.                                                                                                                              |
 
 
 ### Reject Reasons for iProov
