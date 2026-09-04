@@ -64,7 +64,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for Microblink document verification provider.
+ * Test for {@link MicroblinkDocumentVerificationProvider}.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
