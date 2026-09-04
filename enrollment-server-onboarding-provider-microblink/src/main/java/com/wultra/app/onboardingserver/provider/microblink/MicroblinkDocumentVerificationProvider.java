@@ -389,20 +389,23 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var validation = responseBody.verification();
 
             if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(validation.result())) {
-                final var validationErrorMessages = responseBody.messages()
-                        .stream()
-                        .map(DocumentVerificationResponse.Message::message)
-                        .toList();
-
-                result.setRejectReason(validationErrorMessages.isEmpty()
-                        ? DocumentVerificationEntity.DEFAULT_REJECT_REASON
-                        : validationErrorMessages.toString());
+                result.setRejectReason(buildProviderRejectReason(responseBody.messages()));
             }
 
             results.add(result);
         }
 
         return results;
+    }
+
+    private static String buildProviderRejectReason(final List<DocumentVerificationResponse.Message> messages) {
+        final var rejectReasons = messages.stream()
+                .map(message -> "%s %s".formatted(message.code(), message.message()))
+                .toList();
+
+        return rejectReasons.isEmpty()
+                ? DocumentVerificationEntity.DEFAULT_REJECT_REASON
+                : "Rejected by provider " + rejectReasons;
     }
 
     private Map<DocumentType, List<DocumentVerificationEntity>> getDocumentVerificationsByDocumentType(final OwnerId ownerId, final Set<DocumentType> documentTypes) {
@@ -658,15 +661,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .orElse(0);
 
         if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
-            final var rejectReasons = Optional.of(microblinkResponse)
+            final var messages = Optional.of(microblinkResponse)
                     .map(DocumentVerificationResponseBundle::getParsedResponseBody)
                     .map(DocumentVerificationResponse::messages)
-                    .orElse(List.of())
-                    .stream()
-                    .map(message -> "%s %s".formatted(message.code(), message.message()))
-                    .toList();
+                    .orElse(List.of());
 
-            documentVerificationResultBuilder.rejectReason("Rejected by provider " + rejectReasons);
+            documentVerificationResultBuilder.rejectReason(buildProviderRejectReason(messages));
             documentVerificationResultBuilder.verificationResult(documentResult.getVerificationResult());
             documentVerificationResultBuilder.extractedData(documentResult.getExtractedData());
             documentVerificationResultBuilder.verificationScore(score);

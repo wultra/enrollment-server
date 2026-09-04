@@ -693,6 +693,27 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
+    void testVerifyDocuments_microblinkRejectWithoutMessages_fallbackRejectReason() {
+        // given
+        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
+        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
+        assertEquals("[uploadId=52ca4d10-06ac-442c-934c-9d085ab18934, rejectReason=Other]", result.getRejectReason());
+    }
+
+    @Test
     void testVerifyDocuments_extractedDocumentTypeIsNull_rejectResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
@@ -1176,7 +1197,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var expectedValidationResultJson = buildExpectedValidationResult(microblinkResponseJson);
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocumentResult.getUploadId()));
-        assertEquals("[Test microblink message]", frontDocumentResult.getRejectReason());
+        assertEquals("Rejected by provider [E004 Test microblink message]", frontDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
         assertEquals(EXTRACTED_DATA_JSON, frontDocumentResult.getExtractedData());
@@ -1187,7 +1208,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .orElseThrow();
 
         assertDoesNotThrow(() -> UUID.fromString(backDocumentResult.getUploadId()));
-        assertEquals("[Test microblink message]", backDocumentResult.getRejectReason());
+        assertEquals("Rejected by provider [E004 Test microblink message]", backDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
         assertEquals(EXTRACTED_DATA_JSON, backDocumentResult.getExtractedData());
