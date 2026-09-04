@@ -17,11 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -29,7 +25,6 @@ import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
@@ -133,7 +128,7 @@ class VerificationProcessingServiceTest {
         tested.processVerificationResult(new OwnerId(), List.of(document), result);
 
         assertEquals(DocumentStatus.REJECTED, document.getStatus());
-        assertEquals(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, document.getRejectReason());
+        assertEquals("Other", document.getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, document.getRejectOrigin());
         verify(onboardingEventService).publishDocumentVerificationFinished(document);
     }

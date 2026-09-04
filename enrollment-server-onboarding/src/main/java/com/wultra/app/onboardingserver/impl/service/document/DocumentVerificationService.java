@@ -142,7 +142,7 @@ public class DocumentVerificationService {
 
         final String rejectReason = StringUtils.defaultIfBlank(
                 result.getRejectReason(),
-                ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+                DocumentVerificationEntity.DEFAULT_REJECT_REASON);
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(rejectReason);

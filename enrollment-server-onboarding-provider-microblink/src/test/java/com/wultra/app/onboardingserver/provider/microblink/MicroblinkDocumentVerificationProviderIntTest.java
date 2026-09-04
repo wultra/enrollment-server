@@ -559,7 +559,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var frontNormalizedExtractedData = buildIdCardRejectNormalizedExtractedDataJson();
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
-        assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
+        assertEquals("Rejected by provider [E004 The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
         assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
         assertJsonEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
 
@@ -571,7 +571,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var backNormalizedExtractedData = buildIdCardRejectNormalizedExtractedDataJson();
 
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
-        assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
+        assertEquals("Rejected by provider [E004 The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
         assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
         assertJsonEquals(idCardRejectValidationResult, backDocument.getValidationResult());
     }

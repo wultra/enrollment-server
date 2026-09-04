@@ -27,7 +27,6 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
@@ -47,9 +46,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -115,11 +112,11 @@ class DocumentVerificationServiceTest {
 
         assertEquals(DocumentVerificationService.FinalDocumentVerificationResult.REJECTED, verificationResult);
         assertEquals(DocumentStatus.REJECTED, documentVerification.getStatus());
-        assertEquals(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, documentVerification.getRejectReason());
+        assertEquals("Other", documentVerification.getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, documentVerification.getRejectOrigin());
         verify(onboardingEventService).publishFinalDocumentVerificationRejected(
                 identityVerification,
-                ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
+                "Other");
     }
 
     @Test
