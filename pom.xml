@@ -106,7 +106,6 @@
         <user-data-store.version>1.7.0-SNAPSHOT</user-data-store.version>
 
         <logstash.version>9.0</logstash.version>
-        <cyclonedx-maven-plugin.version>2.9.3</cyclonedx-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -394,7 +393,6 @@
             <plugin>
                 <groupId>org.cyclonedx</groupId>
                 <artifactId>cyclonedx-maven-plugin</artifactId>
-                <version>${cyclonedx-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
