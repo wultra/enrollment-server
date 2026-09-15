@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+### Fixed
+
+- Fixed default logging silently dropping `kv()` structured log data [(#1909)](https://github.com/wultra/enrollment-server/issues/1909)
+
+
 ## [2.2.4] - 2026-09-03
 
 
