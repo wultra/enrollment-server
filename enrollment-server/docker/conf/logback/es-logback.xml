@@ -4,8 +4,6 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdc>true</includeMdc>
-            <omitEmptyFields>true</omitEmptyFields>
-            <customFields>{"appname":"${appname}"}</customFields>
         </encoder>
     </appender>
 
