@@ -15,4 +15,4 @@
 **REST APIs**
 
 - [Onboarding API](./Onboarding-API.md)
-- [Extenal Onboarding Services](./External-Onboarding-Services.md)
+- [External Onboarding Services](./External-Onboarding-Services.md)
