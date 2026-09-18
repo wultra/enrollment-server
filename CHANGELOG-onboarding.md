@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+### Fixed
+
+- Removed duplicated `enrollment-server-onboarding.presence-check.max-failed-attempts` entry from onboarding configuration properties documentation [(#1915)](https://github.com/wultra/enrollment-server/issues/1915)
+
+
 ## [2.2.4] - 2026-09-03
 
 
