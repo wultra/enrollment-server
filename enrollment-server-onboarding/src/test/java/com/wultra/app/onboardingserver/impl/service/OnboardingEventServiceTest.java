@@ -170,7 +170,7 @@ class OnboardingEventServiceTest {
         final DocumentResultEntity result = new DocumentResultEntity();
         result.setId(1L);
         result.setExtractedData("""
-                {"givenNames": "Jan", "surname": "Novak", "dateOfBirth": "1990-05-15"}""");
+                {"givenNames": "Jan", "surname": "Novak", "dateOfBirth": "1990-05-15", "country": "SVK"}""");
 
         final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
         docVerification.setStatus(DocumentStatus.ACCEPTED);
@@ -191,11 +191,37 @@ class OnboardingEventServiceTest {
         assertEquals(8, eventData.score());
         assertNotNull(eventData.documentVerificationResult());
         assertEquals("ID_CARD", eventData.documentVerificationResult().type());
-        assertEquals("CZE", eventData.documentVerificationResult().country());
+        assertEquals("SVK", eventData.documentVerificationResult().country(), "Country extracted by the provider is expected to win");
         assertNotNull(eventData.documentVerificationResult().data());
         assertEquals("Jan", eventData.documentVerificationResult().data().givenNames());
         assertEquals("Novak", eventData.documentVerificationResult().data().surname());
         assertEquals("1990-05-15", eventData.documentVerificationResult().data().dateOfBirth());
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_countryFallsBackToSubmittedValue() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("zenid");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentResultEntity result = new DocumentResultEntity();
+        result.setId(1L);
+        result.setExtractedData("""
+                {"givenNames": "Jan", "surname": "Novak"}""");
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.ACCEPTED);
+        docVerification.getResults().add(result);
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("CZE", eventData.documentVerificationResult().country());
     }
 
     @Test

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+### Changed
+
+- Changed `documentVerificationResult.country` in `DOCUMENT_VERIFICATION_FINISHED` event to the country extracted by the verification provider, falling back to the value submitted by the mobile client [(#1918)](https://github.com/wultra/enrollment-server/issues/1918)
+
+
 ### Fixed
 
 - Fixed empty `documentVerificationResult.rawData` in `DOCUMENT_VERIFICATION_FINISHED` event and published it as a JSON object instead of a string [(#1917)](https://github.com/wultra/enrollment-server/issues/1917)

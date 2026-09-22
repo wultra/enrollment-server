@@ -259,11 +259,13 @@ public class OnboardingEventService {
                 .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .orElse(null);
 
+        final DocumentExtractedDataValue extractedData = parseExtractedData(latestResult);
+
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
                         .type(document.getType().name())
-                        .country(document.getCountry())
-                        .data(buildDocumentData(latestResult))
+                        .country(resolveCountry(document, extractedData))
+                        .data(buildDocumentData(extractedData))
                         .images(buildImages(document))
                         .rawData(buildRawData(latestResult))
                         .build()
@@ -302,15 +304,30 @@ public class OnboardingEventService {
         }
     }
 
-    private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
+    /**
+     * Resolve the country of the document, preferring the value extracted by the document verification provider
+     * over the value submitted by the mobile client.
+     */
+    private static String resolveCountry(final DocumentVerificationEntity document, final DocumentExtractedDataValue extractedData) {
+        return Optional.ofNullable(extractedData)
+                .map(DocumentExtractedDataValue::country)
+                .orElseGet(document::getCountry);
+    }
+
+    private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity result) {
         if (result == null || result.getExtractedData() == null) {
             return null;
         }
-        final DocumentExtractedDataValue value;
         try {
-            value = objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
+            return objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
         } catch (JacksonException e) {
             logger.warn("Unable to parse extracted data for documentResultId={}: {}", result.getId(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentExtractedDataValue value) {
+        if (value == null) {
             return null;
         }
         return DocumentVerificationFinishedEventData.DocumentData.builder()
