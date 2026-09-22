@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+### Fixed
+
+- Fixed empty `documentVerificationResult.rawData` in `DOCUMENT_VERIFICATION_FINISHED` event and published it as a JSON object instead of a string [(#1917)](https://github.com/wultra/enrollment-server/issues/1917)
+
+
 ## [2.2.4] - 2026-09-03
 
 

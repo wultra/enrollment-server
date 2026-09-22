@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
@@ -61,8 +60,6 @@ public class DocumentProcessingService {
     private final IdentityVerificationConfig identityVerificationConfig;
 
     private final DocumentVerificationRepository documentVerificationRepository;
-
-    private final DocumentResultRepository documentResultRepository;
 
     private final DocumentVerificationProvider documentVerificationProvider;
 
@@ -153,21 +150,16 @@ public class DocumentProcessingService {
                                       final Map<String, DocumentVerificationEntity> docVerificationsMap,
                                       final OwnerId ownerId) {
 
-        final List<DocumentResultEntity> docResults = new ArrayList<>();
-
         for (final DocumentSubmitResult result : results.getResults()) {
             final DocumentVerificationEntity docVerification = docVerificationsMap.get(result.getDocumentId());
             processDocsSubmitResults(ownerId, docVerification, results, result);
 
             final DocumentResultEntity docResult = createDocumentResult(docVerification, result);
             docResult.setTimestampCreated(ownerId.getTimestamp());
-            docResult.setDocumentVerification(docVerification);
-
-            docResults.add(docResult);
+            // The document verifications are managed entities, the results are persisted by the cascade on flush
+            docVerification.addResult(docResult);
         }
 
-        documentVerificationRepository.saveAll(docVerificationsMap.values());
-        documentResultRepository.saveAll(docResults);
         logger.debug("Processed submit result of documents {}, {}", docVerificationsMap.values(), ownerId);
     }
 
