@@ -97,7 +97,7 @@ This contains the results from the verification provider. Each document is sent 
 | `provider`                           | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                           |
 | `score`                              | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                             |
 | `documentVerificationResult`         | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
-| `documentVerificationResult.country` | String | Country of the document extracted by the verification provider. If the provider extracted no country, the value submitted by the mobile client is used.                                                                                                 |
+| `documentVerificationResult.country` | String | Country of the document extracted by the verification provider. If the provider extracted no country, the value is `null`.                                                                                                                              |
 
 **Reject Reason Format - Microblink**
 

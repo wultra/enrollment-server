@@ -264,7 +264,7 @@ public class OnboardingEventService {
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
                         .type(document.getType().name())
-                        .country(resolveCountry(document, extractedData))
+                        .country(resolveCountry(extractedData))
                         .data(buildDocumentData(extractedData))
                         .images(buildImages(document))
                         .rawData(buildRawData(latestResult))
@@ -281,6 +281,13 @@ public class OnboardingEventService {
                 .score(document.getVerificationScore() != null ? document.getVerificationScore() : 0)
                 .documentVerificationResult(result)
                 .build();
+    }
+
+    private static String resolveCountry(final DocumentExtractedDataValue extractedData) {
+        if (extractedData == null) {
+            return null;
+        }
+        return extractedData.country();
     }
 
     private static EventStatus convert(final DocumentStatus source) {
@@ -302,16 +309,6 @@ public class OnboardingEventService {
             logger.warn("Unable to parse verification result for documentResultId={}: {}", result.getId(), e.getMessage());
             return result.getVerificationResult();
         }
-    }
-
-    /**
-     * Resolve the country of the document, preferring the value extracted by the document verification provider
-     * over the value submitted by the mobile client.
-     */
-    private static String resolveCountry(final DocumentVerificationEntity document, final DocumentExtractedDataValue extractedData) {
-        return Optional.ofNullable(extractedData)
-                .map(DocumentExtractedDataValue::country)
-                .orElseGet(document::getCountry);
     }
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity result) {

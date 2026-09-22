@@ -199,7 +199,7 @@ class OnboardingEventServiceTest {
     }
 
     @Test
-    void testPublishDocumentVerificationFinished_countryFallsBackToSubmittedValue() throws Exception {
+    void testPublishDocumentVerificationFinished_countryNotExtracted() throws Exception {
         when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
         when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("zenid");
         when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
@@ -221,7 +221,7 @@ class OnboardingEventServiceTest {
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
-        assertEquals("CZE", eventData.documentVerificationResult().country());
+        assertNull(eventData.documentVerificationResult().country(), "Country submitted by the mobile client must not be used");
     }
 
     @Test
