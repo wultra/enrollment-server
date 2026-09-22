@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Changed `documentVerificationResult.country` in `DOCUMENT_VERIFICATION_FINISHED` event to the country extracted by the verification provider, falling back to the value submitted by the mobile client [(#1918)](https://github.com/wultra/enrollment-server/issues/1918)
+- Changed `documentVerificationResult.country` in `DOCUMENT_VERIFICATION_FINISHED` event to the country extracted by the verification provider, falling back to the value submitted by the mobile client [(#1919)](https://github.com/wultra/enrollment-server/issues/1919)
 
 
 ### Fixed
