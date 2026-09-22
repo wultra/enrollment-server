@@ -255,7 +255,8 @@ public class OnboardingEventService {
         final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
 
         final DocumentResultEntity latestResult = document.getResults().stream()
-                .findFirst()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .orElse(null);
 
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable

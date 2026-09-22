@@ -41,7 +41,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -226,6 +228,41 @@ class OnboardingEventServiceTest {
         assertEquals("microblink", eventData.provider());
         assertNotNull(eventData.documentVerificationResult());
         assertEquals("FAIL", ((JsonNode) eventData.documentVerificationResult().rawData()).path("verification").path("result").asString());
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_latestResultWins() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentResultEntity uploadResult = new DocumentResultEntity();
+        uploadResult.setId(1L);
+        uploadResult.setTimestampCreated(Date.from(Instant.parse("2026-09-22T10:00:00Z")));
+        uploadResult.setVerificationResult("""
+                {"phase": "UPLOAD"}""");
+
+        final DocumentResultEntity verificationResult = new DocumentResultEntity();
+        verificationResult.setId(2L);
+        verificationResult.setTimestampCreated(Date.from(Instant.parse("2026-09-22T11:00:00Z")));
+        verificationResult.setVerificationResult("""
+                {"phase": "VERIFICATION"}""");
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.REJECTED);
+        // The result loaded from the database comes first, the one added in memory is appended at the end
+        docVerification.getResults().add(uploadResult);
+        docVerification.addResult(verificationResult);
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("VERIFICATION", ((JsonNode) eventData.documentVerificationResult().rawData()).path("phase").asString());
     }
 
     @Test
