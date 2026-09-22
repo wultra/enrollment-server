@@ -35,12 +35,9 @@ import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -168,15 +165,15 @@ class OnboardingEventServiceTest {
         final OnboardingProcessEntity process = createProcess(OnboardingStatus.FINISHED);
         when(commonOnboardingService.findProcess("p1")).thenReturn(process);
 
-        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
-        docVerification.setStatus(DocumentStatus.ACCEPTED);
-        docVerification.setVerificationScore(8);
-
         final DocumentResultEntity result = new DocumentResultEntity();
         result.setId(1L);
         result.setExtractedData("""
                 {"givenNames": "Jan", "surname": "Novak", "dateOfBirth": "1990-05-15"}""");
-        docVerification.setResults(new LinkedHashSet<>(Set.of(result)));
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.ACCEPTED);
+        docVerification.setVerificationScore(8);
+        docVerification.getResults().add(result);
 
         tested.publishDocumentVerificationFinished(docVerification);
 
@@ -209,9 +206,15 @@ class OnboardingEventServiceTest {
         final IdentityVerificationEntity identityVerification = createIdentityVerification();
         when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
 
+        final DocumentResultEntity result = new DocumentResultEntity();
+        result.setId(2L);
+        result.setVerificationResult("""
+                {"verification": {"result": "FAIL"}}""");
+
         final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
         docVerification.setStatus(DocumentStatus.REJECTED);
         docVerification.setRejectReason("documentVerificationRejected");
+        docVerification.getResults().add(result);
 
         tested.publishDocumentVerificationFinished(docVerification);
 
@@ -222,6 +225,7 @@ class OnboardingEventServiceTest {
         assertEquals("documentVerificationRejected", eventData.rejectReason());
         assertEquals("microblink", eventData.provider());
         assertNotNull(eventData.documentVerificationResult());
+        assertEquals("FAIL", ((JsonNode) eventData.documentVerificationResult().rawData()).path("verification").path("result").asString());
     }
 
     @Test

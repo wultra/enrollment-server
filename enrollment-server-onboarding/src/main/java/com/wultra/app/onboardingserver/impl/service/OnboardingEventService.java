@@ -264,7 +264,7 @@ public class OnboardingEventService {
                         .country(document.getCountry())
                         .data(buildDocumentData(latestResult))
                         .images(buildImages(document))
-                        .rawData(latestResult == null ? null : latestResult.getVerificationResult())
+                        .rawData(buildRawData(latestResult))
                         .build()
                 : null;
 
@@ -287,6 +287,18 @@ public class OnboardingEventService {
             case FAILED -> EventStatus.FAILED;
             default -> throw new IllegalArgumentException("Unknown document status: " + source);
         };
+    }
+
+    private Object buildRawData(final DocumentResultEntity result) {
+        if (result == null || result.getVerificationResult() == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(result.getVerificationResult());
+        } catch (JacksonException e) {
+            logger.warn("Unable to parse verification result for documentResultId={}: {}", result.getId(), e.getMessage());
+            return result.getVerificationResult();
+        }
     }
 
     private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
