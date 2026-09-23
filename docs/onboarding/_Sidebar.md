@@ -12,14 +12,7 @@
 - [Events](./Events.md)
 - [Audit](./Audit.md)
 
-**Overview**
-
-- [User Journeys](./User-Journeys.md)
-
-**Technical Details**
-- [Integration](./Integration.md)
-
 **REST APIs**
 
 - [Onboarding API](./Onboarding-API.md)
-- [Extenal Onboarding Services](./External-Onboarding-Services.md)
+- [External Onboarding Services](./External-Onboarding-Services.md)
