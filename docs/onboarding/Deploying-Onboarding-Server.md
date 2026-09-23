@@ -33,9 +33,9 @@ logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS
 
 This keeps structured key-value information on the same log line.
 
-> **Warning:** If you customize `logging.pattern.console` and omit `%sa`, structured
-> log data (e.g. action, state, result, IDs, and other useful parameters attached to
-> log messages) will be silently dropped from the console output.
+<!-- begin box warning -->
+If you customize `logging.pattern.console` and omit `%sa`, structured log data (e.g. action, state, result, IDs, and other useful parameters attached to log messages) will be silently dropped from the console output.
+<!-- end -->
 
 Update the correlation header name in case you want to use a different HTTP header than `X-Correlation-ID`. You can also update the regular expression for correlation header value validation to match the exact format of correlation header value that will be used.
 
