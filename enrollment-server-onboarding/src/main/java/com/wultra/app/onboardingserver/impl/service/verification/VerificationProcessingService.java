@@ -120,9 +120,9 @@ public class VerificationProcessingService {
             if (docResults.isEmpty()) {
                 logger.warn("No document result for upload of {}, creating a new one, {}", docVerification, ownerId);
                 docResult = new DocumentResultEntity();
-                docResult.setDocumentVerification(docVerification);
                 docResult.setPhase(DocumentProcessingPhase.UPLOAD);
                 docResult.setTimestampCreated(ownerId.getTimestamp());
+                docVerification.addResult(docResult);
             } else {
                 docResult = docResults.get(0);
                 if (docResults.size() > 1) {
@@ -132,9 +132,9 @@ public class VerificationProcessingService {
             }
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(phase)) {
             docResult = new DocumentResultEntity();
-            docResult.setDocumentVerification(docVerification);
             docResult.setPhase(DocumentProcessingPhase.VERIFICATION);
             docResult.setTimestampCreated(ownerId.getTimestamp());
+            docVerification.addResult(docResult);
         } else {
             throw new DocumentVerificationException(String.format("Unexpected identity verification phase: %s, %s", phase, ownerId));
         }
