@@ -21,11 +21,7 @@ package com.wultra.app.onboardingserver.provider.rest;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
-import com.wultra.app.onboardingserver.provider.model.request.EventType;
-import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
-import com.wultra.app.onboardingserver.provider.model.request.ProcessFinishedEventData;
-import com.wultra.app.onboardingserver.provider.model.request.EventStatus;
+import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -159,7 +156,8 @@ class RestOnboardingProviderTest {
         assertEquals("dummyProcessId", requestDto.getProcessId());
         assertEquals("dummyProcessType", requestDto.getProcessType());
         assertEquals("dummyId", requestDto.getId());
-        assertEquals(LocalDateTime.parse("2026-06-17T10:46:15"), requestDto.getTimestamp());
+        assertEquals(LocalDateTime.parse("2026-06-17T10:46:15"),
+                LocalDateTime.ofInstant(requestDto.getTimestamp(), ZoneOffset.UTC));
         assertEquals("dummyUserId", requestDto.getUserId());
         assertEquals("dummyExternalUserId", requestDto.getExternalUserId());
         assertEquals("dummyIdentityVerificationId", requestDto.getIdentityVerificationId());
