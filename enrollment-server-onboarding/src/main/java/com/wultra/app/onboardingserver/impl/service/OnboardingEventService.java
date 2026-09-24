@@ -255,16 +255,19 @@ public class OnboardingEventService {
         final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
 
         final DocumentResultEntity latestResult = document.getResults().stream()
-                .findFirst()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .orElse(null);
+
+        final DocumentExtractedDataValue extractedData = parseExtractedData(latestResult);
 
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
                         .type(document.getType().name())
-                        .country(document.getCountry())
-                        .data(buildDocumentData(latestResult))
+                        .country(resolveCountry(extractedData))
+                        .data(buildDocumentData(extractedData))
                         .images(buildImages(document))
-                        .rawData(latestResult == null ? null : latestResult.getVerificationResult())
+                        .rawData(buildRawData(latestResult))
                         .build()
                 : null;
 
@@ -280,6 +283,13 @@ public class OnboardingEventService {
                 .build();
     }
 
+    private static String resolveCountry(final DocumentExtractedDataValue extractedData) {
+        if (extractedData == null) {
+            return null;
+        }
+        return extractedData.country();
+    }
+
     private static EventStatus convert(final DocumentStatus source) {
         return switch (source) {
             case ACCEPTED -> EventStatus.ACCEPTED;
@@ -289,15 +299,32 @@ public class OnboardingEventService {
         };
     }
 
-    private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
+    private Object buildRawData(final DocumentResultEntity result) {
+        if (result == null || result.getVerificationResult() == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(result.getVerificationResult());
+        } catch (JacksonException e) {
+            logger.warn("Unable to parse verification result for documentResultId={}: {}", result.getId(), e.getMessage());
+            return result.getVerificationResult();
+        }
+    }
+
+    private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity result) {
         if (result == null || result.getExtractedData() == null) {
             return null;
         }
-        final DocumentExtractedDataValue value;
         try {
-            value = objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
+            return objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
         } catch (JacksonException e) {
             logger.warn("Unable to parse extracted data for documentResultId={}: {}", result.getId(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentExtractedDataValue value) {
+        if (value == null) {
             return null;
         }
         return DocumentVerificationFinishedEventData.DocumentData.builder()

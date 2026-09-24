@@ -35,16 +35,15 @@ import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -168,15 +167,15 @@ class OnboardingEventServiceTest {
         final OnboardingProcessEntity process = createProcess(OnboardingStatus.FINISHED);
         when(commonOnboardingService.findProcess("p1")).thenReturn(process);
 
-        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
-        docVerification.setStatus(DocumentStatus.ACCEPTED);
-        docVerification.setVerificationScore(8);
-
         final DocumentResultEntity result = new DocumentResultEntity();
         result.setId(1L);
         result.setExtractedData("""
-                {"givenNames": "Jan", "surname": "Novak", "dateOfBirth": "1990-05-15"}""");
-        docVerification.setResults(new LinkedHashSet<>(Set.of(result)));
+                {"givenNames": "Jan", "surname": "Novak", "dateOfBirth": "1990-05-15", "country": "SVK"}""");
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.ACCEPTED);
+        docVerification.setVerificationScore(8);
+        docVerification.getResults().add(result);
 
         tested.publishDocumentVerificationFinished(docVerification);
 
@@ -192,11 +191,37 @@ class OnboardingEventServiceTest {
         assertEquals(8, eventData.score());
         assertNotNull(eventData.documentVerificationResult());
         assertEquals("ID_CARD", eventData.documentVerificationResult().type());
-        assertEquals("CZE", eventData.documentVerificationResult().country());
+        assertEquals("SVK", eventData.documentVerificationResult().country(), "Country extracted by the provider is expected to win");
         assertNotNull(eventData.documentVerificationResult().data());
         assertEquals("Jan", eventData.documentVerificationResult().data().givenNames());
         assertEquals("Novak", eventData.documentVerificationResult().data().surname());
         assertEquals("1990-05-15", eventData.documentVerificationResult().data().dateOfBirth());
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_countryNotExtracted() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("zenid");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentResultEntity result = new DocumentResultEntity();
+        result.setId(1L);
+        result.setExtractedData("""
+                {"givenNames": "Jan", "surname": "Novak"}""");
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.ACCEPTED);
+        docVerification.getResults().add(result);
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertNull(eventData.documentVerificationResult().country(), "Country submitted by the mobile client must not be used");
     }
 
     @Test
@@ -209,9 +234,15 @@ class OnboardingEventServiceTest {
         final IdentityVerificationEntity identityVerification = createIdentityVerification();
         when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
 
+        final DocumentResultEntity result = new DocumentResultEntity();
+        result.setId(2L);
+        result.setVerificationResult("""
+                {"verification": {"result": "FAIL"}}""");
+
         final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
         docVerification.setStatus(DocumentStatus.REJECTED);
         docVerification.setRejectReason("documentVerificationRejected");
+        docVerification.getResults().add(result);
 
         tested.publishDocumentVerificationFinished(docVerification);
 
@@ -222,6 +253,42 @@ class OnboardingEventServiceTest {
         assertEquals("documentVerificationRejected", eventData.rejectReason());
         assertEquals("microblink", eventData.provider());
         assertNotNull(eventData.documentVerificationResult());
+        assertEquals("FAIL", ((JsonNode) eventData.documentVerificationResult().rawData()).path("verification").path("result").asString());
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_latestResultWins() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentResultEntity uploadResult = new DocumentResultEntity();
+        uploadResult.setId(1L);
+        uploadResult.setTimestampCreated(Date.from(Instant.parse("2026-09-22T10:00:00Z")));
+        uploadResult.setVerificationResult("""
+                {"phase": "UPLOAD"}""");
+
+        final DocumentResultEntity verificationResult = new DocumentResultEntity();
+        verificationResult.setId(2L);
+        verificationResult.setTimestampCreated(Date.from(Instant.parse("2026-09-22T11:00:00Z")));
+        verificationResult.setVerificationResult("""
+                {"phase": "VERIFICATION"}""");
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setStatus(DocumentStatus.REJECTED);
+        // The result loaded from the database comes first, the one added in memory is appended at the end
+        docVerification.getResults().add(uploadResult);
+        docVerification.addResult(verificationResult);
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("VERIFICATION", ((JsonNode) eventData.documentVerificationResult().rawData()).path("phase").asString());
     }
 
     @Test
