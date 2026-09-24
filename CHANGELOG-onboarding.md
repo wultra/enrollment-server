@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.5] - 2026-09-24
 
 ### Changed
 
@@ -94,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
 [unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.4...HEAD
+[2.2.5]: https://github.com/wultra/enrollment-server/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/wultra/enrollment-server/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/wultra/enrollment-server/compare/2.2.2...2.2.3
 [2.2.2]: https://github.com/wultra/enrollment-server/compare/2.2.0...2.2.2
