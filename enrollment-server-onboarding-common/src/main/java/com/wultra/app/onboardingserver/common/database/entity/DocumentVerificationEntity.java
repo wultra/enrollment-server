@@ -241,15 +241,6 @@ public class DocumentVerificationEntity {
     }
 
     /**
-     * Check whether this document is the back side of a two-sided document already paired with its front side.
-     *
-     * @return {@code true} if this is a back side with a known other side, {@code false} otherwise.
-     */
-    public boolean isPairedBackSide() {
-        return side == CardSide.BACK && otherSideId != null;
-    }
-
-    /**
      * Filter the list of document verifications to find the preferred document with a photo.
      *
      * @param documentVerifications List of document verifications to filter.

@@ -34,8 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service implementing verification processing features.
@@ -99,11 +101,12 @@ public class VerificationProcessingService {
                 }
             }
             documentVerificationRepository.save(docVerification);
-            // a paired two-sided document is reported by a single event of its front side
-            if (!docVerification.isPairedBackSide()) {
-                onboardingEventService.publishDocumentVerificationFinished(docVerification);
-            }
         }
+
+        docVerifications.stream()
+                .collect(Collectors.groupingBy(DocumentVerificationEntity::getType, LinkedHashMap::new, Collectors.toList()))
+                .values()
+                .forEach(onboardingEventService::publishDocumentVerificationFinished);
     }
 
     /**

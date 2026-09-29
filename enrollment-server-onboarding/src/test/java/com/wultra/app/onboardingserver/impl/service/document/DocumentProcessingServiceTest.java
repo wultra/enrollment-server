@@ -49,7 +49,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -163,7 +162,7 @@ class DocumentProcessingServiceTest {
         assertThat(documentResultRepository.findAll())
                 .extracting(DocumentResultEntity::getRejectReason)
                 .containsExactly("Different document side than expected");
-        verify(onboardingEventService).publishDocumentVerificationFinished(same(document));
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(document));
     }
 
     @Test
@@ -212,10 +211,12 @@ class DocumentProcessingServiceTest {
                 .extracting(DocumentResultEntity::getErrorOrigin)
                 .containsOnly(ErrorOrigin.DOCUMENT_VERIFICATION);
 
-        final ArgumentCaptor<DocumentVerificationEntity> eventCaptor = ArgumentCaptor.forClass(DocumentVerificationEntity.class);
+        final ArgumentCaptor<List<DocumentVerificationEntity>> eventCaptor = ArgumentCaptor.captor();
         verify(onboardingEventService).publishDocumentVerificationFinished(eventCaptor.capture());
-        assertEquals(CardSide.FRONT, eventCaptor.getValue().getSide(), "Only the front side of a paired document is expected to be published");
-        assertNotNull(eventCaptor.getValue().getOtherSideId());
+        assertThat(eventCaptor.getValue())
+                .as("Both sides of the document are expected to be published by a single event")
+                .extracting(DocumentVerificationEntity::getSide)
+                .containsExactlyInAnyOrder(CardSide.FRONT, CardSide.BACK);
     }
 
     @Test

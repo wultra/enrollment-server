@@ -41,8 +41,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * Test for {@link VerificationProcessingService}.
@@ -75,6 +75,7 @@ class VerificationProcessingServiceTest {
         final DocumentVerificationEntity document = new DocumentVerificationEntity();
         document.setId("document-verification-id");
         document.setUploadId("upload-id");
+        document.setType(DocumentType.PASSPORT);
         document.setStatus(DocumentStatus.VERIFICATION_PENDING);
         document.setIdentityVerification(identityVerification);
 
@@ -100,7 +101,7 @@ class VerificationProcessingServiceTest {
         assertEquals(DocumentProcessingPhase.VERIFICATION, resultCaptor.getValue().getPhase());
         assertEquals("Document expired", resultCaptor.getValue().getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, resultCaptor.getValue().getRejectOrigin());
-        verify(onboardingEventService).publishDocumentVerificationFinished(document);
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(document));
     }
 
     @ParameterizedTest
@@ -113,6 +114,7 @@ class VerificationProcessingServiceTest {
         final DocumentVerificationEntity document = new DocumentVerificationEntity();
         document.setId("document-verification-id");
         document.setUploadId("upload-id");
+        document.setType(DocumentType.PASSPORT);
         document.setStatus(DocumentStatus.VERIFICATION_PENDING);
         document.setIdentityVerification(identityVerification);
 
@@ -131,7 +133,7 @@ class VerificationProcessingServiceTest {
         assertEquals(DocumentStatus.REJECTED, document.getStatus());
         assertEquals("Other", document.getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, document.getRejectOrigin());
-        verify(onboardingEventService).publishDocumentVerificationFinished(document);
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(document));
     }
 
     @Test
@@ -144,7 +146,6 @@ class VerificationProcessingServiceTest {
         front.setUploadId("front-upload-id");
         front.setType(DocumentType.ID_CARD);
         front.setSide(CardSide.FRONT);
-        front.setOtherSideId("back-id");
         front.setStatus(DocumentStatus.VERIFICATION_PENDING);
         front.setIdentityVerification(identityVerification);
 
@@ -153,7 +154,6 @@ class VerificationProcessingServiceTest {
         back.setUploadId("back-upload-id");
         back.setType(DocumentType.ID_CARD);
         back.setSide(CardSide.BACK);
-        back.setOtherSideId("front-id");
         back.setStatus(DocumentStatus.VERIFICATION_PENDING);
         back.setIdentityVerification(identityVerification);
 
@@ -169,31 +169,42 @@ class VerificationProcessingServiceTest {
 
         assertEquals(DocumentStatus.ACCEPTED, front.getStatus());
         assertEquals(DocumentStatus.ACCEPTED, back.getStatus());
-        verify(onboardingEventService).publishDocumentVerificationFinished(front);
-        verify(onboardingEventService, never()).publishDocumentVerificationFinished(back);
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(front, back));
+        verifyNoMoreInteractions(onboardingEventService);
     }
 
     @Test
-    void testProcessVerificationResult_unpairedBackSidePublished() {
+    void testProcessVerificationResult_eachDocumentTypePublishedOnce() {
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
 
-        final DocumentVerificationEntity back = new DocumentVerificationEntity();
-        back.setId("back-id");
-        back.setUploadId("back-upload-id");
-        back.setType(DocumentType.ID_CARD);
-        back.setSide(CardSide.BACK);
-        back.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        back.setIdentityVerification(identityVerification);
+        final DocumentVerificationEntity idCard = new DocumentVerificationEntity();
+        idCard.setId("id-card-id");
+        idCard.setUploadId("id-card-upload-id");
+        idCard.setType(DocumentType.ID_CARD);
+        idCard.setSide(CardSide.FRONT);
+        idCard.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        idCard.setIdentityVerification(identityVerification);
+
+        final DocumentVerificationEntity passport = new DocumentVerificationEntity();
+        passport.setId("passport-id");
+        passport.setUploadId("passport-upload-id");
+        passport.setType(DocumentType.PASSPORT);
+        passport.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        passport.setIdentityVerification(identityVerification);
 
         final DocumentsVerificationResult result = DocumentsVerificationResult.builder()
                 .verificationId("verification-id")
                 .status(DocumentVerificationStatus.ACCEPTED)
-                .results(List.of(DocumentVerificationResult.builder().uploadId("back-upload-id").build()))
+                .results(List.of(
+                        DocumentVerificationResult.builder().uploadId("id-card-upload-id").build(),
+                        DocumentVerificationResult.builder().uploadId("passport-upload-id").build()))
                 .build();
 
-        tested.processVerificationResult(new OwnerId(), List.of(back), result);
+        tested.processVerificationResult(new OwnerId(), List.of(idCard, passport), result);
 
-        verify(onboardingEventService).publishDocumentVerificationFinished(back);
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(idCard));
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(passport));
+        verifyNoMoreInteractions(onboardingEventService);
     }
 }

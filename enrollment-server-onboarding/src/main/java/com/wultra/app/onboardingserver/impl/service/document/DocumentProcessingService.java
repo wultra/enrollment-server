@@ -45,7 +45,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
 
 /**
@@ -89,14 +88,12 @@ public class DocumentProcessingService {
 
         final List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
         for (var documentsOfSameType : documentsByType.values()) {
-            docVerifications.addAll(submitDocument(documentsOfSameType, idVerification, ownerId));
+            final List<DocumentVerificationEntity> documentSides = submitDocument(documentsOfSameType, idVerification, ownerId);
+            docVerifications.addAll(documentSides);
+            if (documentSides.stream().anyMatch(isDocumentRejectedOrFailed())) {
+                onboardingEventService.publishDocumentVerificationFinished(documentSides);
+            }
         }
-        pairTwoSidedDocuments(docVerifications);
-        // a paired two-sided document is reported by a single event of its front side
-        docVerifications.stream()
-                .filter(isDocumentRejectedOrFailed())
-                .filter(not(DocumentVerificationEntity::isPairedBackSide))
-                .forEach(onboardingEventService::publishDocumentVerificationFinished);
         return docVerifications;
     }
 

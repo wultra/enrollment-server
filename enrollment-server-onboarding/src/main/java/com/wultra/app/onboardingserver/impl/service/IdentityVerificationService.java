@@ -180,7 +180,8 @@ public class IdentityVerificationService {
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
-        documentProcessingService.submitDocuments(idVerification, request, ownerId);
+        final List<DocumentVerificationEntity> docsVerifications = documentProcessingService.submitDocuments(idVerification, request, ownerId);
+        documentProcessingService.pairTwoSidedDocuments(docsVerifications);
 
         identityVerificationRepository.save(idVerification);
     }
