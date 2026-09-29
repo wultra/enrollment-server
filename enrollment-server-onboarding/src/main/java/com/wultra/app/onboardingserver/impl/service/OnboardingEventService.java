@@ -99,37 +99,37 @@ public class OnboardingEventService {
      * The event is represented by the side with the worst outcome ({@code FAILED} &gt; {@code REJECTED} &gt; {@code ACCEPTED}),
      * the front side wins a tie. Images of all given sides are included.
      *
-     * @param documentSides Document verification entities of all sides of the same document.
+     * @param documentVerifications Document verification entities of the same document type submitted together, typically both sides of a two-sided document.
      */
-    public void publishDocumentVerificationFinished(final List<DocumentVerificationEntity> documentSides) {
+    public void publishDocumentVerificationFinished(final List<DocumentVerificationEntity> documentVerifications) {
         if (isEventTypeNotEnabled(EventType.DOCUMENT_VERIFICATION_FINISHED)) {
             return;
         }
 
-        final DocumentVerificationEntity documentVerification = documentSides.stream()
+        final DocumentVerificationEntity representative = documentVerifications.stream()
                 .filter(it -> DOCUMENT_STATUS_SEVERITY.containsKey(it.getStatus()))
                 .min(Comparator.<DocumentVerificationEntity, Integer>comparing(it -> DOCUMENT_STATUS_SEVERITY.get(it.getStatus()))
                         .thenComparing(it -> it.getSide() != CardSide.FRONT))
                 .orElse(null);
-        if (documentVerification == null) {
+        if (representative == null) {
             logger.warn("Unable to publish {} event - no document side in a finished state, documentVerificationIds={}",
-                    EventType.DOCUMENT_VERIFICATION_FINISHED, documentSides.stream().map(DocumentVerificationEntity::getId).toList());
+                    EventType.DOCUMENT_VERIFICATION_FINISHED, documentVerifications.stream().map(DocumentVerificationEntity::getId).toList());
             return;
         }
 
-        final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
+        final IdentityVerificationEntity identityVerification = representative.getIdentityVerification();
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
         }
 
-        final Set<String> documentVerificationIds = documentSides.stream()
+        final Set<String> documentVerificationIds = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getId)
                 .collect(Collectors.toSet());
 
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.DOCUMENT_VERIFICATION_FINISHED)
-                .eventData(createDocumentVerificationFinishedEventData(documentVerification, documentVerificationIds))
+                .eventData(createDocumentVerificationFinishedEventData(representative, documentVerificationIds))
                 .build();
         sendEvent(request);
     }

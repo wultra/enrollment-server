@@ -88,12 +88,12 @@ public class DocumentProcessingService {
 
         final List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
         for (var documentsOfSameType : documentsByType.values()) {
-            final List<DocumentVerificationEntity> documentSides = submitDocument(documentsOfSameType, idVerification, ownerId);
-            docVerifications.addAll(documentSides);
+            final List<DocumentVerificationEntity> docVerificationsOfSameType = submitDocument(documentsOfSameType, idVerification, ownerId);
+            docVerifications.addAll(docVerificationsOfSameType);
             // Successfully uploaded documents are published after verification by VerificationProcessingService.
             // Rejected or failed documents never enter verification, so they must be published here.
-            if (documentSides.stream().anyMatch(isDocumentRejectedOrFailed())) {
-                onboardingEventService.publishDocumentVerificationFinished(documentSides);
+            if (docVerificationsOfSameType.stream().anyMatch(isDocumentRejectedOrFailed())) {
+                onboardingEventService.publishDocumentVerificationFinished(docVerificationsOfSameType);
             }
         }
         return docVerifications;
