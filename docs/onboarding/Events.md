@@ -52,6 +52,9 @@ A two-sided document (e.g. an ID card with front and back side) is sent as a sin
 The event is represented by the side with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`); the front side is used when both sides have the same outcome.
 `documentVerificationResult.images` contain images of both sides.
 
+For example, an ID card where the front is ACCEPTED but the back is REJECTED produces a single REJECTED event.
+An ID card where both the front and back are ACCEPTED produces a single ACCEPTED event.
+
 ```json
 {
     "documentVerification": {
