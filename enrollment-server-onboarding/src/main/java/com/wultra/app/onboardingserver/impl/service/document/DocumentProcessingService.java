@@ -90,8 +90,10 @@ public class DocumentProcessingService {
         for (var documentsOfSameType : documentsByType.values()) {
             docVerifications.addAll(submitDocument(documentsOfSameType, idVerification, ownerId));
         }
+        pairTwoSidedDocuments(docVerifications);
         docVerifications.stream()
                 .filter(isDocumentRejectedOrFailed())
+                .filter(DocumentProcessingService::isEventRepresentative)
                 .forEach(onboardingEventService::publishDocumentVerificationFinished);
         return docVerifications;
     }
@@ -309,6 +311,20 @@ public class DocumentProcessingService {
                         documentVerificationRepository.setOtherDocumentSide(item.getId(), document.getId());
                     });
         }
+    }
+
+    /**
+     * Decide whether the given document represents itself in a {@code DOCUMENT_VERIFICATION_FINISHED} event.
+     * <p>
+     * Both sides of a paired two-sided document are reported by a single event of the front side,
+     * so the back side is skipped. An unpaired document (single-sided or with the other side missing) is always reported.
+     * Documents must be paired by {@link #pairTwoSidedDocuments(List)} beforehand.
+     *
+     * @param document Document verification entity.
+     * @return {@code true} if an event should be published for the document, {@code false} otherwise.
+     */
+    public static boolean isEventRepresentative(final DocumentVerificationEntity document) {
+        return document.getSide() != CardSide.BACK || document.getOtherSideId() == null;
     }
 
     private DocumentResultEntity createDocumentResult(

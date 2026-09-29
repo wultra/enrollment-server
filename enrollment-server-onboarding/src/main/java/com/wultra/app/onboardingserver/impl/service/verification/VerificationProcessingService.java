@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -99,7 +100,9 @@ public class VerificationProcessingService {
                 }
             }
             documentVerificationRepository.save(docVerification);
-            onboardingEventService.publishDocumentVerificationFinished(docVerification);
+            if (DocumentProcessingService.isEventRepresentative(docVerification)) {
+                onboardingEventService.publishDocumentVerificationFinished(docVerification);
+            }
         }
     }
 

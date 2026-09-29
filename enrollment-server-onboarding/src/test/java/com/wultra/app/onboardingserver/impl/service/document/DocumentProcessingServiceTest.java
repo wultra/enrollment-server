@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -50,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -211,7 +211,11 @@ class DocumentProcessingServiceTest {
         assertThat(results)
                 .extracting(DocumentResultEntity::getErrorOrigin)
                 .containsOnly(ErrorOrigin.DOCUMENT_VERIFICATION);
-        verify(onboardingEventService, times(2)).publishDocumentVerificationFinished(any());
+
+        final ArgumentCaptor<DocumentVerificationEntity> eventCaptor = ArgumentCaptor.forClass(DocumentVerificationEntity.class);
+        verify(onboardingEventService).publishDocumentVerificationFinished(eventCaptor.capture());
+        assertEquals(CardSide.FRONT, eventCaptor.getValue().getSide(), "Only the front side of a paired document is expected to be published");
+        assertNotNull(eventCaptor.getValue().getOtherSideId());
     }
 
     @Test

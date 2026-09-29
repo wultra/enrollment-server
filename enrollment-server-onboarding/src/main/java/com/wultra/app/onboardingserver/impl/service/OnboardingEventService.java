@@ -84,6 +84,9 @@ public class OnboardingEventService {
 
     /**
      * Publish a {@link EventType#DOCUMENT_VERIFICATION_FINISHED} event for a single document.
+     * <p>
+     * For a paired two-sided document, the event is expected to be published only for the front side;
+     * images of both sides are included.
      *
      * @param documentVerification Document verification entity whose verification has finished.
      */
@@ -343,8 +346,11 @@ public class OnboardingEventService {
     }
 
     private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final DocumentVerificationEntity doc) {
+        final Set<String> documentVerificationIds = doc.getOtherSideId() == null
+                ? Set.of(doc.getId())
+                : Set.of(doc.getId(), doc.getOtherSideId());
         final List<ProcessedDocumentDataEntity> entities =
-                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
         if (entities.isEmpty()) {
             return List.of();
         }

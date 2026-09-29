@@ -48,6 +48,7 @@ Different event types have different structures in `eventData`.
 ### Event data for DOCUMENT_VERIFICATION_FINISHED
 
 This contains the results from the verification provider. Each document is sent separately.
+A two-sided document (e.g. an ID card with front and back side submitted together) is sent as a single event identified by its front side; `documentVerificationResult.images` contain images of both sides.
 
 ```json
 {

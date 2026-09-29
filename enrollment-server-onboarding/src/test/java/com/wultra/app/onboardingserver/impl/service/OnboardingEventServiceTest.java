@@ -17,10 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -222,6 +224,37 @@ class OnboardingEventServiceTest {
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
         assertNull(eventData.documentVerificationResult().country(), "Country submitted by the mobile client must not be used");
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_pairedDocumentIncludesImagesOfBothSides() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+
+        final ProcessedDocumentDataEntity frontImage = new ProcessedDocumentDataEntity();
+        frontImage.setDataType(ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
+        frontImage.setData("front".getBytes());
+        final ProcessedDocumentDataEntity backImage = new ProcessedDocumentDataEntity();
+        backImage.setDataType(ProcessedDocumentDataType.DOCUMENT_BACK_SIDE);
+        backImage.setData("back".getBytes());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of("dv1", "dv2"))).thenReturn(List.of(frontImage, backImage));
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
+        docVerification.setSide(CardSide.FRONT);
+        docVerification.setOtherSideId("dv2");
+        docVerification.setStatus(DocumentStatus.ACCEPTED);
+
+        tested.publishDocumentVerificationFinished(docVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("dv1", eventData.documentVerificationId());
+        assertEquals(List.of("DOCUMENT_FRONT_SIDE", "DOCUMENT_BACK_SIDE"),
+                eventData.documentVerificationResult().images().stream().map(DocumentVerificationFinishedEventData.DocumentImage::type).toList());
     }
 
     @Test

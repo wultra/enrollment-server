@@ -41,6 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -131,5 +132,68 @@ class VerificationProcessingServiceTest {
         assertEquals("Other", document.getRejectReason());
         assertEquals(RejectOrigin.DOCUMENT_VERIFICATION, document.getRejectOrigin());
         verify(onboardingEventService).publishDocumentVerificationFinished(document);
+    }
+
+    @Test
+    void testProcessVerificationResult_pairedDocumentPublishedOnce() {
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
+
+        final DocumentVerificationEntity front = new DocumentVerificationEntity();
+        front.setId("front-id");
+        front.setUploadId("front-upload-id");
+        front.setType(DocumentType.ID_CARD);
+        front.setSide(CardSide.FRONT);
+        front.setOtherSideId("back-id");
+        front.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        front.setIdentityVerification(identityVerification);
+
+        final DocumentVerificationEntity back = new DocumentVerificationEntity();
+        back.setId("back-id");
+        back.setUploadId("back-upload-id");
+        back.setType(DocumentType.ID_CARD);
+        back.setSide(CardSide.BACK);
+        back.setOtherSideId("front-id");
+        back.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        back.setIdentityVerification(identityVerification);
+
+        final DocumentsVerificationResult result = DocumentsVerificationResult.builder()
+                .verificationId("verification-id")
+                .status(DocumentVerificationStatus.ACCEPTED)
+                .results(List.of(
+                        DocumentVerificationResult.builder().uploadId("front-upload-id").build(),
+                        DocumentVerificationResult.builder().uploadId("back-upload-id").build()))
+                .build();
+
+        tested.processVerificationResult(new OwnerId(), List.of(front, back), result);
+
+        assertEquals(DocumentStatus.ACCEPTED, front.getStatus());
+        assertEquals(DocumentStatus.ACCEPTED, back.getStatus());
+        verify(onboardingEventService).publishDocumentVerificationFinished(front);
+        verify(onboardingEventService, never()).publishDocumentVerificationFinished(back);
+    }
+
+    @Test
+    void testProcessVerificationResult_unpairedBackSidePublished() {
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
+
+        final DocumentVerificationEntity back = new DocumentVerificationEntity();
+        back.setId("back-id");
+        back.setUploadId("back-upload-id");
+        back.setType(DocumentType.ID_CARD);
+        back.setSide(CardSide.BACK);
+        back.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        back.setIdentityVerification(identityVerification);
+
+        final DocumentsVerificationResult result = DocumentsVerificationResult.builder()
+                .verificationId("verification-id")
+                .status(DocumentVerificationStatus.ACCEPTED)
+                .results(List.of(DocumentVerificationResult.builder().uploadId("back-upload-id").build()))
+                .build();
+
+        tested.processVerificationResult(new OwnerId(), List.of(back), result);
+
+        verify(onboardingEventService).publishDocumentVerificationFinished(back);
     }
 }
