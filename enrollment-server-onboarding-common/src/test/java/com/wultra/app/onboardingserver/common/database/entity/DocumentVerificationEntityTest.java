@@ -17,8 +17,11 @@
  */
 package com.wultra.app.onboardingserver.common.database.entity;
 
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +58,22 @@ class DocumentVerificationEntityTest {
         final Optional<DocumentVerificationEntity> result = DocumentVerificationEntity.filterPreferredDocumentWithPhoto(input);
 
         assertFalse(result.isPresent());
+    }
+
+    @ParameterizedTest
+    @CsvSource(nullValues = "null", value = {
+            "BACK, other-id, true",
+            "BACK, null, false",
+            "FRONT, other-id, false",
+            "FRONT, null, false",
+            "null, null, false"
+    })
+    void testIsPairedBackSide(final CardSide side, final String otherSideId, final boolean expected) {
+        final DocumentVerificationEntity documentVerification = createDocumentVerification(DocumentType.ID_CARD);
+        documentVerification.setSide(side);
+        documentVerification.setOtherSideId(otherSideId);
+
+        assertEquals(expected, documentVerification.isPairedBackSide());
     }
 
     private static DocumentVerificationEntity createDocumentVerification(final DocumentType documentType) {
