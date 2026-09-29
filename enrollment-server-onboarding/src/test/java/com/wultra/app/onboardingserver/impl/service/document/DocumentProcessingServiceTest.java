@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -48,9 +49,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -163,7 +162,7 @@ class DocumentProcessingServiceTest {
         assertThat(documentResultRepository.findAll())
                 .extracting(DocumentResultEntity::getRejectReason)
                 .containsExactly("Different document side than expected");
-        verify(onboardingEventService).publishDocumentVerificationFinished(same(document));
+        verify(onboardingEventService).publishDocumentVerificationFinished(List.of(document));
     }
 
     @Test
@@ -211,7 +210,13 @@ class DocumentProcessingServiceTest {
         assertThat(results)
                 .extracting(DocumentResultEntity::getErrorOrigin)
                 .containsOnly(ErrorOrigin.DOCUMENT_VERIFICATION);
-        verify(onboardingEventService, times(2)).publishDocumentVerificationFinished(any());
+
+        final ArgumentCaptor<List<DocumentVerificationEntity>> eventCaptor = ArgumentCaptor.captor();
+        verify(onboardingEventService).publishDocumentVerificationFinished(eventCaptor.capture());
+        assertThat(eventCaptor.getValue())
+                .as("Both sides of the document are expected to be published by a single event")
+                .extracting(DocumentVerificationEntity::getSide)
+                .containsExactlyInAnyOrder(CardSide.FRONT, CardSide.BACK);
     }
 
     @Test
