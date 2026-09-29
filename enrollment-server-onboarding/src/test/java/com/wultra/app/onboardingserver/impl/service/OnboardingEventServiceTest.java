@@ -17,10 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -35,6 +37,8 @@ import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tools.jackson.databind.JsonNode;
@@ -177,7 +181,7 @@ class OnboardingEventServiceTest {
         docVerification.setVerificationScore(8);
         docVerification.getResults().add(result);
 
-        tested.publishDocumentVerificationFinished(docVerification);
+        tested.publishDocumentVerificationFinished(List.of(docVerification));
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final ProcessEventRequest request = requestCaptor.getValue();
@@ -217,11 +221,89 @@ class OnboardingEventServiceTest {
         docVerification.setStatus(DocumentStatus.ACCEPTED);
         docVerification.getResults().add(result);
 
-        tested.publishDocumentVerificationFinished(docVerification);
+        tested.publishDocumentVerificationFinished(List.of(docVerification));
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
         assertNull(eventData.documentVerificationResult().country(), "Country submitted by the mobile client must not be used");
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_twoSidedDocument() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+
+        final ProcessedDocumentDataEntity frontImage = new ProcessedDocumentDataEntity();
+        frontImage.setDataType(ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
+        frontImage.setData("front".getBytes());
+        final ProcessedDocumentDataEntity backImage = new ProcessedDocumentDataEntity();
+        backImage.setDataType(ProcessedDocumentDataType.DOCUMENT_BACK_SIDE);
+        backImage.setData("back".getBytes());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of("dv1", "dv2"))).thenReturn(List.of(frontImage, backImage));
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentVerificationEntity back = createDocumentVerification(identityVerification, "dv2", CardSide.BACK);
+        back.setStatus(DocumentStatus.ACCEPTED);
+        final DocumentVerificationEntity front = createDocumentVerification(identityVerification, "dv1", CardSide.FRONT);
+        front.setStatus(DocumentStatus.ACCEPTED);
+
+        tested.publishDocumentVerificationFinished(List.of(back, front));
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("dv1", eventData.documentVerificationId(), "Front side is expected to win a tie");
+        assertEquals(EventStatus.ACCEPTED, eventData.status());
+        assertEquals(List.of("DOCUMENT_FRONT_SIDE", "DOCUMENT_BACK_SIDE"),
+                eventData.documentVerificationResult().images().stream().map(DocumentVerificationFinishedEventData.DocumentImage::type).toList());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "ACCEPTED, REJECTED, REJECTED",
+            "VERIFICATION_PENDING, REJECTED, REJECTED",
+            "UPLOAD_IN_PROGRESS, FAILED, FAILED",
+            "REJECTED, FAILED, FAILED"
+    })
+    void testPublishDocumentVerificationFinished_twoSidedDocument_worstSideWins(
+            final DocumentStatus frontStatus, final DocumentStatus backStatus, final EventStatus expectedStatus) throws Exception {
+
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("zenid");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+        lenient().when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentVerificationEntity front = createDocumentVerification(identityVerification, "dv1", CardSide.FRONT);
+        front.setStatus(frontStatus);
+        final DocumentVerificationEntity back = createDocumentVerification(identityVerification, "dv2", CardSide.BACK);
+        back.setStatus(backStatus);
+        back.setRejectReason("Back side rejected");
+
+        tested.publishDocumentVerificationFinished(List.of(front, back));
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("dv2", eventData.documentVerificationId());
+        assertEquals(expectedStatus, eventData.status());
+        assertEquals("Back side rejected", eventData.rejectReason());
+    }
+
+    @Test
+    void testPublishDocumentVerificationFinished_noFinishedSide() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.DOCUMENT_VERIFICATION_FINISHED));
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        final DocumentVerificationEntity front = createDocumentVerification(identityVerification, "dv1", CardSide.FRONT);
+        front.setStatus(DocumentStatus.VERIFICATION_PENDING);
+
+        tested.publishDocumentVerificationFinished(List.of(front));
+
+        verify(onboardingProvider, never()).processEvent(any());
     }
 
     @Test
@@ -244,7 +326,7 @@ class OnboardingEventServiceTest {
         docVerification.setRejectReason("documentVerificationRejected");
         docVerification.getResults().add(result);
 
-        tested.publishDocumentVerificationFinished(docVerification);
+        tested.publishDocumentVerificationFinished(List.of(docVerification));
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
@@ -284,7 +366,7 @@ class OnboardingEventServiceTest {
         docVerification.getResults().add(uploadResult);
         docVerification.addResult(verificationResult);
 
-        tested.publishDocumentVerificationFinished(docVerification);
+        tested.publishDocumentVerificationFinished(List.of(docVerification));
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
@@ -305,7 +387,7 @@ class OnboardingEventServiceTest {
         docVerification.setStatus(DocumentStatus.FAILED);
         docVerification.setErrorDetail("provider timeout");
 
-        tested.publishDocumentVerificationFinished(docVerification);
+        tested.publishDocumentVerificationFinished(List.of(docVerification));
 
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final DocumentVerificationFinishedEventData eventData = (DocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
@@ -323,7 +405,7 @@ class OnboardingEventServiceTest {
         final DocumentVerificationEntity docVerification = createDocumentVerification(identityVerification);
         docVerification.setStatus(DocumentStatus.ACCEPTED);
 
-        assertDoesNotThrow(() -> tested.publishDocumentVerificationFinished(docVerification));
+        assertDoesNotThrow(() -> tested.publishDocumentVerificationFinished(List.of(docVerification)));
         verify(onboardingProvider, never()).processEvent(any());
     }
 
@@ -493,6 +575,18 @@ class OnboardingEventServiceTest {
         identityVerification.setUserId("u1");
         identityVerification.setDocumentVerifications(Set.of());
         return identityVerification;
+    }
+
+    private static DocumentVerificationEntity createDocumentVerification(
+            final IdentityVerificationEntity identityVerification,
+            final String id,
+            final CardSide side) {
+
+        final DocumentVerificationEntity documentVerification = createDocumentVerification(identityVerification);
+        documentVerification.setId(id);
+        documentVerification.setUploadId("upload-" + id);
+        documentVerification.setSide(side);
+        return documentVerification;
     }
 
     private static DocumentVerificationEntity createDocumentVerification(final IdentityVerificationEntity identityVerification) {
