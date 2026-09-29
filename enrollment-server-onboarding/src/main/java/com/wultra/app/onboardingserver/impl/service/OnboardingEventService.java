@@ -108,7 +108,7 @@ public class OnboardingEventService {
 
         final DocumentVerificationEntity documentVerification = documentSides.stream()
                 .filter(it -> DOCUMENT_STATUS_SEVERITY.containsKey(it.getStatus()))
-                .min(Comparator.comparing((DocumentVerificationEntity it) -> DOCUMENT_STATUS_SEVERITY.get(it.getStatus()))
+                .min(Comparator.<DocumentVerificationEntity, Integer>comparing(it -> DOCUMENT_STATUS_SEVERITY.get(it.getStatus()))
                         .thenComparing(it -> it.getSide() != CardSide.FRONT))
                 .orElse(null);
         if (documentVerification == null) {
