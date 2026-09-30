@@ -68,6 +68,16 @@ public class OnboardingEventService {
             DocumentStatus.ACCEPTED, 2
     );
 
+    /**
+     * Order used to select a representative document, the first one is the representative.
+     * The worst outcome wins, the front side wins a tie, remaining ties are resolved by document type and ID.
+     */
+    private static final Comparator<DocumentVerificationEntity> REPRESENTATIVE_DOCUMENT_ORDER =
+            Comparator.comparing(OnboardingEventService::statusSeverity)
+                    .thenComparing(it -> it.getSide() != CardSide.FRONT)
+                    .thenComparing(DocumentVerificationEntity::getType, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(DocumentVerificationEntity::getId, Comparator.nullsLast(Comparator.naturalOrder()));
+
     private final OnboardingProvider onboardingProvider;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final CommonOnboardingService commonOnboardingService;
@@ -108,8 +118,7 @@ public class OnboardingEventService {
 
         final DocumentVerificationEntity representative = documentVerifications.stream()
                 .filter(it -> DOCUMENT_STATUS_SEVERITY.containsKey(it.getStatus()))
-                .min(Comparator.<DocumentVerificationEntity, Integer>comparing(it -> DOCUMENT_STATUS_SEVERITY.get(it.getStatus()))
-                        .thenComparing(it -> it.getSide() != CardSide.FRONT))
+                .min(REPRESENTATIVE_DOCUMENT_ORDER)
                 .orElse(null);
         if (representative == null) {
             logger.warn("Unable to publish {} event - no document side in a finished state, documentVerificationIds={}",
@@ -176,6 +185,16 @@ public class OnboardingEventService {
             return;
         }
 
+        final List<DocumentVerificationEntity> documentVerifications = identityVerification.getDocumentVerifications().stream()
+                .filter(DocumentVerificationEntity::isUsedForVerification)
+                .toList();
+
+        if (documentVerifications.isEmpty()) {
+            logger.warn("Unable to publish {} event - no document used for verification, identityVerificationId={}",
+                    EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED, identityVerification.getId());
+            return;
+        }
+
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
@@ -183,7 +202,7 @@ public class OnboardingEventService {
 
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)
-                .eventData(createFinalDocumentVerificationFinishedEventData(identityVerification, status, rejectReason, errorDetail))
+                .eventData(createFinalDocumentVerificationFinishedEventData(documentVerifications, status, rejectReason, errorDetail))
                 .build();
         sendEvent(request);
     }
@@ -404,19 +423,28 @@ public class OnboardingEventService {
         return uploadId;
     }
 
+    private static int statusSeverity(final DocumentVerificationEntity documentVerification) {
+        final DocumentStatus status = documentVerification.getStatus();
+        return status == null ? Integer.MAX_VALUE : DOCUMENT_STATUS_SEVERITY.getOrDefault(status, Integer.MAX_VALUE);
+    }
+
     private EventData createFinalDocumentVerificationFinishedEventData(
-            final IdentityVerificationEntity identityVerification,
+            final List<DocumentVerificationEntity> documentVerifications,
             final EventStatus status,
             final String rejectReason,
             final String errorDetail) {
 
-        final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
-                .filter(DocumentVerificationEntity::isUsedForVerification)
+        final String representativeId = documentVerifications.stream()
+                .min(REPRESENTATIVE_DOCUMENT_ORDER)
+                .map(DocumentVerificationEntity::getId)
+                .orElse("n/a");
+
+        final List<String> documentIds = documentVerifications.stream()
                 .map(OnboardingEventService::resolveDocumentId)
                 .toList();
 
         return FinalDocumentVerificationFinishedEventData.builder()
-                .documentVerificationId(identityVerification.getId())
+                .documentVerificationId(representativeId)
                 .status(status)
                 .rejectReason(rejectReason)
                 .errorDetail(errorDetail)
