@@ -189,6 +189,12 @@ public class OnboardingEventService {
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .toList();
 
+        if (documentVerifications.isEmpty()) {
+            logger.warn("Unable to publish {} event - no document used for verification, identityVerificationId={}",
+                    EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED, identityVerification.getId());
+            return;
+        }
+
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
