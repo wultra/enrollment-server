@@ -24,9 +24,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Repository for processed document data records.
@@ -47,5 +47,5 @@ public interface ProcessedDocumentDataRepository extends CrudRepository<Processe
     int cleanup(final Date dateCleanup);
 
     @Query("SELECT p FROM ProcessedDocumentDataEntity p WHERE p.documentVerificationId IN :documentVerificationIds")
-    List<ProcessedDocumentDataEntity> findAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
+    List<ProcessedDocumentDataEntity> findAllByDocumentVerificationIds(final Collection<String> documentVerificationIds);
 }

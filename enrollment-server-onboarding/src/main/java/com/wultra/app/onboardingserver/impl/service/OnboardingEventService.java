@@ -373,7 +373,7 @@ public class OnboardingEventService {
 
     private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final List<String> documentVerificationIds) {
         final List<ProcessedDocumentDataEntity> entities =
-                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.copyOf(documentVerificationIds));
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
         if (entities.isEmpty()) {
             return List.of();
         }

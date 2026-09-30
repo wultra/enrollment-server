@@ -239,7 +239,7 @@ class OnboardingEventServiceTest {
         final ProcessedDocumentDataEntity backImage = new ProcessedDocumentDataEntity();
         backImage.setDataType(ProcessedDocumentDataType.DOCUMENT_BACK_SIDE);
         backImage.setData("back".getBytes());
-        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of("dv1", "dv2"))).thenReturn(List.of(frontImage, backImage));
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(List.of("dv1", "dv2"))).thenReturn(List.of(frontImage, backImage));
 
         final IdentityVerificationEntity identityVerification = createIdentityVerification();
         when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
