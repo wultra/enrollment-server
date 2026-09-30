@@ -34,11 +34,10 @@ import java.util.List;
 @Builder
 @PublicApi
 public record FinalDocumentVerificationFinishedEventData(
-        @NonNull String documentVerificationId,
+        @NonNull List<String> documentVerificationIds,
         @NonNull EventStatus status,
         String rejectReason,
         String errorDetail,
-        @NonNull String provider,
-        @NonNull List<String> documentIds
+        @NonNull String provider
 ) implements EventData {
 }

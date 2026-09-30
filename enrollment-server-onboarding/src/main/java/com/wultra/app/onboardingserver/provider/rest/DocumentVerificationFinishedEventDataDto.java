@@ -31,8 +31,7 @@ record DocumentVerificationFinishedEventDataDto(DocumentVerification documentVer
 
     @Builder
     public record DocumentVerification(
-            String documentVerificationId,
-            String documentId,
+            List<String> documentVerificationIds,
             String status,
             String rejectReason,
             String errorDetail,

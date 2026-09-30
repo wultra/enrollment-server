@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests verifying that {@link ProcessEventRequestDto} serializes
@@ -103,8 +104,7 @@ class ProcessEventRequestDtoSerializationTest {
         dto.setType(EventTypeDto.DOCUMENT_VERIFICATION_FINISHED);
         dto.setEventData(DocumentVerificationFinishedEventDataDto.builder()
                 .documentVerification(DocumentVerificationFinishedEventDataDto.DocumentVerification.builder()
-                        .documentVerificationId("dv-1")
-                        .documentId("d-1")
+                        .documentVerificationIds(List.of("dv-1", "dv-2"))
                         .status("ACCEPTED")
                         .rejectReason(null)
                         .errorDetail(null)
@@ -132,8 +132,11 @@ class ProcessEventRequestDtoSerializationTest {
 
         // verify event data shape only (other generic fields covered by previous test)
         final var node = objectMapper.readTree(json).path("eventData").path("documentVerification");
-        assertEquals("dv-1", node.path("documentVerificationId").asText());
-        assertEquals("d-1", node.path("documentId").asText());
+        assertEquals(2, node.path("documentVerificationIds").size());
+        assertEquals("dv-1", node.path("documentVerificationIds").path(0).asText());
+        assertEquals("dv-2", node.path("documentVerificationIds").path(1).asText());
+        assertTrue(node.path("documentVerificationId").isMissingNode());
+        assertTrue(node.path("documentId").isMissingNode());
         assertEquals("ACCEPTED", node.path("status").asText());
         assertEquals("Microblink", node.path("provider").asText());
         assertEquals(9, node.path("score").asInt());
@@ -150,24 +153,24 @@ class ProcessEventRequestDtoSerializationTest {
         dto.setType(EventTypeDto.FINAL_DOCUMENT_VERIFICATION_FINISHED);
         dto.setEventData(FinalDocumentVerificationFinishedEventDataDto.builder()
                 .finalDocumentVerification(FinalDocumentVerificationFinishedEventDataDto.FinalDocumentVerification.builder()
-                        .documentVerificationId("dv-final-1")
+                        .documentVerificationIds(List.of("dv-1", "dv-2"))
                         .status("REJECTED")
                         .rejectReason("crosscheck failed")
                         .errorDetail(null)
                         .provider("Microblink")
-                        .documentIds(List.of("d-1", "d-2"))
                         .build())
                 .build());
 
         final var node = objectMapper.readTree(objectMapper.writeValueAsString(dto))
                 .path("eventData").path("finalDocumentVerification");
-        assertEquals("dv-final-1", node.path("documentVerificationId").asText());
+        assertEquals(2, node.path("documentVerificationIds").size());
+        assertEquals("dv-1", node.path("documentVerificationIds").path(0).asText());
+        assertEquals("dv-2", node.path("documentVerificationIds").path(1).asText());
+        assertTrue(node.path("documentVerificationId").isMissingNode());
+        assertTrue(node.path("documentIds").isMissingNode());
         assertEquals("REJECTED", node.path("status").asText());
         assertEquals("crosscheck failed", node.path("rejectReason").asText());
         assertEquals("Microblink", node.path("provider").asText());
-        assertEquals(2, node.path("documentIds").size());
-        assertEquals("d-1", node.path("documentIds").path(0).asText());
-        assertEquals("d-2", node.path("documentIds").path(1).asText());
     }
 
     @Test

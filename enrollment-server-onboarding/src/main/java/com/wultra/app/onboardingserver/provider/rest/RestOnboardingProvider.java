@@ -289,8 +289,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static DocumentVerificationFinishedEventDataDto convert(final DocumentVerificationFinishedEventData source) {
         return DocumentVerificationFinishedEventDataDto.builder()
                 .documentVerification(DocumentVerificationFinishedEventDataDto.DocumentVerification.builder()
-                        .documentVerificationId(source.documentVerificationId())
-                        .documentId(source.documentId())
+                        .documentVerificationIds(source.documentVerificationIds())
                         .status(source.status().name())
                         .rejectReason(source.rejectReason())
                         .errorDetail(source.errorDetail())
@@ -352,12 +351,11 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static FinalDocumentVerificationFinishedEventDataDto convert(final FinalDocumentVerificationFinishedEventData source) {
         return FinalDocumentVerificationFinishedEventDataDto.builder()
                 .finalDocumentVerification(FinalDocumentVerificationFinishedEventDataDto.FinalDocumentVerification.builder()
-                        .documentVerificationId(source.documentVerificationId())
+                        .documentVerificationIds(source.documentVerificationIds())
                         .status(source.status().name())
                         .rejectReason(source.rejectReason())
                         .errorDetail(source.errorDetail())
                         .provider(source.provider())
-                        .documentIds(source.documentIds())
                         .build())
                 .build();
     }

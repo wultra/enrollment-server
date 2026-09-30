@@ -31,11 +31,10 @@ record FinalDocumentVerificationFinishedEventDataDto(FinalDocumentVerification f
 
     @Builder
     public record FinalDocumentVerification(
-            String documentVerificationId,
+            List<String> documentVerificationIds,
             String status,
             String rejectReason,
             String errorDetail,
-            String provider,
-            List<String> documentIds
+            String provider
     ) {}
 }

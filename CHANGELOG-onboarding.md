@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed `documentVerificationResult.country` in `DOCUMENT_VERIFICATION_FINISHED` event to the country extracted by the verification provider instead of the value submitted by the mobile client [(#1919)](https://github.com/wultra/enrollment-server/issues/1919)
+- **Breaking:** Replaced `documentVerificationId` and `documentId` in `DOCUMENT_VERIFICATION_FINISHED` event with `documentVerificationIds` array of all document sides [(#1929)](https://github.com/wultra/enrollment-server/issues/1929)
+- **Breaking:** Replaced `documentVerificationId` (wrongly containing the identity verification ID) and `documentIds` in `FINAL_DOCUMENT_VERIFICATION_FINISHED` event with `documentVerificationIds` array of document verifications used for the final verification [(#1929)](https://github.com/wultra/enrollment-server/issues/1929)
 
 
 ### Fixed

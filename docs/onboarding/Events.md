@@ -58,8 +58,7 @@ An ID card where both the front and back are ACCEPTED produces a single ACCEPTED
 ```json
 {
     "documentVerification": {
-        "documentVerificationId": "String",
-        "documentId": "String",
+        "documentVerificationIds": ["String", "String"],
         "status": "String",
         "rejectReason": null,
         "errorDetail": null,
@@ -95,8 +94,7 @@ An ID card where both the front and back are ACCEPTED produces a single ACCEPTED
 
 | Attribute                            | Type   | Description                                                                                                                                                                                                                                             |
 |:-------------------------------------|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `documentVerificationId`             | String | Document Verification ID.                                                                                                                                                                                                                               |
-| `documentId`                         | String | Document ID.                                                                                                                                                                                                                                            |
+| `documentVerificationIds`            | Array  | Array of Document Verification IDs of all document sides represented by the event (front side first).                                                                                                                                                   |
 | `status`                             | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                   |
 | `rejectReason`                       | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`.                                                                                                                  Value details are described under the table.                      |
 | `errorDetail`                        | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
@@ -133,24 +131,22 @@ Additional checks:
 ```json
 {
     "finalDocumentVerification": {
-        "documentVerificationId": "String",
+        "documentVerificationIds": ["String", "String"],
         "status": "String",
         "rejectReason": null,
         "errorDetail": null,
-        "provider": "String",
-        "documentIds": ["String","String"]
+        "provider": "String"
     }
 }
 ```
 
-| Attribute                | Type   | Description                                                                                                        |
-|:-------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------|
-| `documentVerificationId` | String | Document Verification ID.                                                                                          |
-| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                              |
-| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`. Value details are described under the table. |
-| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                 |
-| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.                                      |
-| `documentIds`            | Array  | Array of verified Document IDs.                                                                                    |
+| Attribute                 | Type   | Description                                                                                                        |
+|:--------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------|
+| `documentVerificationIds` | Array  | Array of Document Verification IDs used for the final verification.                                                |
+| `status`                  | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                              |
+| `rejectReason`            | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`. Value details are described under the table. |
+| `errorDetail`             | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                 |
+| `provider`                | String | Name of the configured external biometry provider. For example, `Microblink`.                                      |
 
 **Reject Reason Format - Microblink**
 

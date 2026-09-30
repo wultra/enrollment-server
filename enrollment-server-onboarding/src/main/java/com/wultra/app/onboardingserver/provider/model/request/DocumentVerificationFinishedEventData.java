@@ -33,8 +33,7 @@ import java.util.List;
 @Builder
 @PublicApi
 public record DocumentVerificationFinishedEventData(
-        @NonNull String documentVerificationId,
-        @NonNull String documentId,
+        @NonNull List<String> documentVerificationIds,
         @NonNull EventStatus status,
         String rejectReason,
         String errorDetail,

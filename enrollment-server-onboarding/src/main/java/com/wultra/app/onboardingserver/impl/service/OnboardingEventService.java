@@ -42,7 +42,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
@@ -123,9 +122,11 @@ public class OnboardingEventService {
             return;
         }
 
-        final Set<String> documentVerificationIds = documentVerifications.stream()
+        final List<String> documentVerificationIds = documentVerifications.stream()
+                .sorted(Comparator.comparing(it -> it.getSide() != CardSide.FRONT))
                 .map(DocumentVerificationEntity::getId)
-                .collect(Collectors.toSet());
+                .distinct()
+                .toList();
 
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.DOCUMENT_VERIFICATION_FINISHED)
@@ -279,7 +280,7 @@ public class OnboardingEventService {
         };
     }
 
-    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document, final Set<String> documentVerificationIds) {
+    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document, final List<String> documentVerificationIds) {
         final DocumentStatus documentStatus = document.getStatus();
         final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
 
@@ -301,8 +302,7 @@ public class OnboardingEventService {
                 : null;
 
         return DocumentVerificationFinishedEventData.builder()
-                .documentVerificationId(document.getId())
-                .documentId(resolveDocumentId(document))
+                .documentVerificationIds(documentVerificationIds)
                 .status(convert(documentStatus))
                 .rejectReason(document.getRejectReason())
                 .errorDetail(document.getErrorDetail())
@@ -371,9 +371,9 @@ public class OnboardingEventService {
                 .build();
     }
 
-    private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final Set<String> documentVerificationIds) {
+    private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final List<String> documentVerificationIds) {
         final List<ProcessedDocumentDataEntity> entities =
-                processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.copyOf(documentVerificationIds));
         if (entities.isEmpty()) {
             return List.of();
         }
@@ -389,39 +389,23 @@ public class OnboardingEventService {
         return date == null ? null : date.toString();
     }
 
-    /**
-     * Resolve document identifier to be used in events.
-     * Returns {@code uploadId} — the ID assigned by the external verification provider.
-     * At event time, this should always be set (documents must pass through provider submission before verification finishes).
-     * Logs a warning if missing.
-     */
-    private static String resolveDocumentId(final DocumentVerificationEntity documentVerification) {
-        final String uploadId = documentVerification.getUploadId();
-        if (uploadId == null) {
-            logger.warn("DocumentVerification#uploadId is null which is unexpected at verification-finished phase, documentVerificationId={}, type={}",
-                    documentVerification.getId(), documentVerification.getType());
-        }
-        return uploadId;
-    }
-
     private EventData createFinalDocumentVerificationFinishedEventData(
             final IdentityVerificationEntity identityVerification,
             final EventStatus status,
             final String rejectReason,
             final String errorDetail) {
 
-        final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
+        final List<String> documentVerificationIds = identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
-                .map(OnboardingEventService::resolveDocumentId)
+                .map(DocumentVerificationEntity::getId)
                 .toList();
 
         return FinalDocumentVerificationFinishedEventData.builder()
-                .documentVerificationId(identityVerification.getId())
+                .documentVerificationIds(documentVerificationIds)
                 .status(status)
                 .rejectReason(rejectReason)
                 .errorDetail(errorDetail)
                 .provider(identityVerificationConfig.getDocumentVerificationProvider())
-                .documentIds(documentIds)
                 .build();
     }
 
