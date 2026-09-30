@@ -142,15 +142,17 @@ Additional checks:
 }
 ```
 
-| Attribute                | Type   | Description                                                                           |
-|:-------------------------|:-------|:--------------------------------------------------------------------------------------|
-| `documentVerificationId` | String | Document Verification ID.                                                             |
-| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`. |
-| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
-| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
-| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.         |
-| `documentIds`            | Array  | Array of verified Document IDs.                                                       |
+| Attribute                | Type   | Description                                                                                       |
+|:-------------------------|:-------|:--------------------------------------------------------------------------------------------------|
+| `documentVerificationId` | String | Document Verification ID of the representative document, see the selection rules below the table. |
+| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.             |
+| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                             |
+| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                |
+| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.                     |
+| `documentIds`            | Array  | Array of verified Document IDs.                                                                   |
 
+The `documentVerificationId` is selected from the documents used for the verification using the same rules as for `DOCUMENT_VERIFICATION_FINISHED`.
+The document with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`) is used, the front side wins a tie, and remaining ties are resolved by the document type order (`ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`, then other types).
 
 ### Event data for PRESENCE_CHECK_FINISHED
 

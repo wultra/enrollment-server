@@ -438,7 +438,62 @@ class OnboardingEventServiceTest {
         assertNull(eventData.rejectReason());
         assertNull(eventData.errorDetail());
         assertEquals("zenid", eventData.provider());
+        assertEquals("dv1", eventData.documentVerificationId());
         assertTrue(eventData.documentIds().containsAll(List.of("upload1", "upload2")));
+    }
+
+    @Test
+    void testPublishFinalDocumentVerification_representativeDocument() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED));
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("microblink");
+        when(onboardingProvider.processEvent(any())).thenReturn(ProcessEventResponse.builder().build());
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+        when(commonOnboardingService.findProcess("p1")).thenReturn(createProcess(OnboardingStatus.FINISHED));
+
+        final DocumentVerificationEntity drivingLicenseFront = createDocumentVerification(identityVerification, "dv-dl-front", CardSide.FRONT);
+        drivingLicenseFront.setType(DocumentType.DRIVING_LICENSE);
+        final DocumentVerificationEntity idCardBack = createDocumentVerification(identityVerification, "dv-id-back", CardSide.BACK);
+        final DocumentVerificationEntity idCardFront = createDocumentVerification(identityVerification, "dv-id-front", CardSide.FRONT);
+        final DocumentVerificationEntity replaced = createDocumentVerification(identityVerification, "dv-replaced", CardSide.FRONT);
+        replaced.setStatus(DocumentStatus.FAILED);
+        replaced.setUsedForVerification(false);
+
+        final List<DocumentVerificationEntity> documentVerifications = List.of(drivingLicenseFront, idCardBack, idCardFront, replaced);
+        documentVerifications.forEach(it -> {
+            it.setFilename(it.getId() + ".jpg");
+            it.setTimestampCreated(new Date());
+        });
+        List.of(drivingLicenseFront, idCardBack, idCardFront).forEach(it -> {
+            it.setStatus(DocumentStatus.ACCEPTED);
+            it.setUsedForVerification(true);
+        });
+        identityVerification.setDocumentVerifications(new LinkedHashSet<>(documentVerifications));
+
+        tested.publishFinalDocumentVerificationAccepted(identityVerification);
+
+        verify(onboardingProvider).processEvent(requestCaptor.capture());
+        final FinalDocumentVerificationFinishedEventData eventData = (FinalDocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("dv-id-front", eventData.documentVerificationId(),
+                "Front side is expected to win a tie, then document type order, documents not used for verification are ignored");
+
+        idCardBack.setStatus(DocumentStatus.REJECTED);
+        tested.publishFinalDocumentVerificationAccepted(identityVerification);
+
+        verify(onboardingProvider, times(2)).processEvent(requestCaptor.capture());
+        final FinalDocumentVerificationFinishedEventData eventDataRejected = (FinalDocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
+        assertEquals("dv-id-back", eventDataRejected.documentVerificationId(), "Worst outcome is expected to win");
+    }
+
+    @Test
+    void testPublishFinalDocumentVerification_noDocumentUsedForVerification() throws Exception {
+        when(onboardingConfig.getEventTypes()).thenReturn(List.of(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED));
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification();
+
+        tested.publishFinalDocumentVerificationFailed(identityVerification, "provider error");
+
+        verify(onboardingProvider, never()).processEvent(any());
     }
 
     @Test
@@ -460,6 +515,7 @@ class OnboardingEventServiceTest {
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final FinalDocumentVerificationFinishedEventData eventData = (FinalDocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
         assertEquals(EventStatus.REJECTED, eventData.status());
+        assertEquals("dv1", eventData.documentVerificationId());
         assertEquals("documents do not match", eventData.rejectReason());
         assertNull(eventData.errorDetail());
     }
@@ -483,6 +539,7 @@ class OnboardingEventServiceTest {
         verify(onboardingProvider).processEvent(requestCaptor.capture());
         final FinalDocumentVerificationFinishedEventData eventData = (FinalDocumentVerificationFinishedEventData) requestCaptor.getValue().getEventData();
         assertEquals(EventStatus.FAILED, eventData.status());
+        assertEquals("dv1", eventData.documentVerificationId());
         assertNull(eventData.rejectReason());
         assertEquals("crosscheck failed", eventData.errorDetail());
     }
