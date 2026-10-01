@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider.rest;
 
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.OffsetDateTime;
@@ -35,13 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ProcessEventRequestDtoSerializationTest {
 
-    private final ObjectMapper objectMapper = JsonMapper.builder().build();
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .build();
 
     @Test
     void testSerializeProcessFinished() throws Exception {
         final var dto = new ProcessEventRequestDto();
         dto.setId("790c5d2d-0a30-4850-9fc8-b3889563d833");
-        dto.setTimestamp(OffsetDateTime.parse("2026-06-17T10:46:15Z").toLocalDateTime());
+        dto.setTimestamp(OffsetDateTime.parse("2026-06-17T10:46:15Z").toInstant());
         dto.setProcessId("8b2dfae4-d955-4d8f-a95b-2d9c5a4b0e26");
         dto.setProcessType("onboarding");
         dto.setIdentityVerificationId("d3827099-3b6c-4df9-887d-4eac402fc4f9");
@@ -64,7 +67,7 @@ class ProcessEventRequestDtoSerializationTest {
         final String expectedJson = """
                 {
                   "id": "790c5d2d-0a30-4850-9fc8-b3889563d833",
-                  "timestamp": "2026-06-17T10:46:15",
+                  "timestamp": "2026-06-17T10:46:15Z",
                   "processId": "8b2dfae4-d955-4d8f-a95b-2d9c5a4b0e26",
                   "processType": "onboarding",
                   "identityVerificationId": "d3827099-3b6c-4df9-887d-4eac402fc4f9",

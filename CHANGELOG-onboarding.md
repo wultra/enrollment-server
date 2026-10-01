@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.5] - 2026-09-30
+
+### Changed
+
+- Changed `documentVerificationResult.country` in `DOCUMENT_VERIFICATION_FINISHED` event to the country extracted by the verification provider instead of the value submitted by the mobile client [(#1919)](https://github.com/wultra/enrollment-server/issues/1919)
+
+
+### Fixed
+
+- Fixed default logging silently dropping `kv()` structured log data [(#1909)](https://github.com/wultra/enrollment-server/issues/1909)
+- Fixed `timestamp` in process events being serialized as a numeric array instead of an ISO-8601 UTC string [(#1923)](https://github.com/wultra/enrollment-server/issues/1923)
+- Fixed empty `documentVerificationResult.rawData` in `DOCUMENT_VERIFICATION_FINISHED` event and published it as a JSON object instead of a string [(#1917)](https://github.com/wultra/enrollment-server/issues/1917)
+- Fixed `DOCUMENT_VERIFICATION_FINISHED` event being published twice for two-sided documents; a single event represented by the side with the worst outcome is published including images of both sides [(#1927)](https://github.com/wultra/enrollment-server/issues/1927)
+- Fixed `documentVerificationId` in `FINAL_DOCUMENT_VERIFICATION_FINISHED` event containing the identity verification ID; it now contains the ID of the representative document selected by the same rules as for `DOCUMENT_VERIFICATION_FINISHED` [(#1931)](https://github.com/wultra/enrollment-server/issues/1931)
+
 
 ## [2.2.4] - 2026-09-03
 
@@ -82,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
 [unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.4...HEAD
+[2.2.5]: https://github.com/wultra/enrollment-server/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/wultra/enrollment-server/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/wultra/enrollment-server/compare/2.2.2...2.2.3
 [2.2.2]: https://github.com/wultra/enrollment-server/compare/2.2.0...2.2.2

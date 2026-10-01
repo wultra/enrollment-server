@@ -215,7 +215,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
             logger.debug("Parsing frame image {}", id);
             target.setPhoto(parseImage(source.getFrame()));
         } else {
-            logger.debug("Frame is not available, {}", id);
+            logger.info("Frame is not available, {}", id);
         }
 
         return target;

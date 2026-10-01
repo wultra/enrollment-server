@@ -208,7 +208,11 @@ public class DocumentVerificationEntity {
     private Date timestampLastUpdated;
 
     /**
-     * Document results from different phases of processing (upload, verification) starting with the latest entity
+     * Document results from different phases of processing (upload, verification).
+     * <p>
+     * The {@code @OrderBy} ordering is applied only when the collection is loaded from the database. Entities added
+     * in memory are appended at the end, therefore never rely on the iteration order to pick the latest result;
+     * compare {@link DocumentResultEntity#getTimestampCreated()} explicitly instead.
      */
     @OneToMany(mappedBy = "documentVerification", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated desc")
@@ -224,6 +228,16 @@ public class DocumentVerificationEntity {
     @Override
     public int hashCode() {
         return Objects.hash(type, side, filename, timestampCreated);
+    }
+
+    /**
+     * Add the given document result and keep both sides of the bidirectional association in sync.
+     *
+     * @param result Document result to add.
+     */
+    public void addResult(final DocumentResultEntity result) {
+        result.setDocumentVerification(this);
+        results.add(result);
     }
 
     /**

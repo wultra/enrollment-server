@@ -34,8 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service implementing verification processing features.
@@ -99,8 +101,12 @@ public class VerificationProcessingService {
                 }
             }
             documentVerificationRepository.save(docVerification);
-            onboardingEventService.publishDocumentVerificationFinished(docVerification);
         }
+
+        docVerifications.stream()
+                .collect(Collectors.groupingBy(DocumentVerificationEntity::getType, LinkedHashMap::new, Collectors.toList()))
+                .values()
+                .forEach(onboardingEventService::publishDocumentVerificationFinished);
     }
 
     /**
@@ -120,9 +126,9 @@ public class VerificationProcessingService {
             if (docResults.isEmpty()) {
                 logger.warn("No document result for upload of {}, creating a new one, {}", docVerification, ownerId);
                 docResult = new DocumentResultEntity();
-                docResult.setDocumentVerification(docVerification);
                 docResult.setPhase(DocumentProcessingPhase.UPLOAD);
                 docResult.setTimestampCreated(ownerId.getTimestamp());
+                docVerification.addResult(docResult);
             } else {
                 docResult = docResults.get(0);
                 if (docResults.size() > 1) {
@@ -132,9 +138,9 @@ public class VerificationProcessingService {
             }
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(phase)) {
             docResult = new DocumentResultEntity();
-            docResult.setDocumentVerification(docVerification);
             docResult.setPhase(DocumentProcessingPhase.VERIFICATION);
             docResult.setTimestampCreated(ownerId.getTimestamp());
+            docVerification.addResult(docResult);
         } else {
             throw new DocumentVerificationException(String.format("Unexpected identity verification phase: %s, %s", phase, ownerId));
         }

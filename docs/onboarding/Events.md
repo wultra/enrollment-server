@@ -48,6 +48,12 @@ Different event types have different structures in `eventData`.
 ### Event data for DOCUMENT_VERIFICATION_FINISHED
 
 This contains the results from the verification provider. Each document is sent separately.
+A two-sided document (e.g. an ID card with front and back side) is sent as a single event.
+The event is represented by the side with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`); the front side is used when both sides have the same outcome.
+`documentVerificationResult.images` contain images of both sides.
+
+For example, an ID card where the front is ACCEPTED but the back is REJECTED produces a single REJECTED event.
+An ID card where both the front and back are ACCEPTED produces a single ACCEPTED event.
 
 ```json
 {
@@ -87,8 +93,8 @@ This contains the results from the verification provider. Each document is sent 
 }
 ```
 
-| Attribute                    | Type   | Description                                                                                                                                                                                                                                             |
-|:-----------------------------|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Attribute                            | Type   | Description                                                                                                                                                                                                                                             |
+|:-------------------------------------|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `documentVerificationId`     | String | Document Verification ID.                                                                                                                                                                                                                               |
 | `documentId`                 | String | Document ID.                                                                                                                                                                                                                                            |
 | `status`                     | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                   |
@@ -96,7 +102,7 @@ This contains the results from the verification provider. Each document is sent 
 | `errorDetail`                | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
 | `provider`                   | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                           |
 | `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                             |
-| `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
+| `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. || `documentVerificationResult.country` | String | Country of the document extracted by the verification provider. If the provider extracted no country, the value is `null`.                                                                                                                              |
 
 **Reject Reason Format - Microblink**
 
@@ -136,15 +142,17 @@ Additional checks:
 }
 ```
 
-| Attribute                | Type   | Description                                                                           |
-|:-------------------------|:-------|:--------------------------------------------------------------------------------------|
-| `documentVerificationId` | String | Document Verification ID.                                                             |
-| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`. |
-| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
-| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
-| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.         |
-| `documentIds`            | Array  | Array of verified Document IDs.                                                       |
+| Attribute                | Type   | Description                                                                                       |
+|:-------------------------|:-------|:--------------------------------------------------------------------------------------------------|
+| `documentVerificationId` | String | Document Verification ID of the representative document, see the selection rules below the table. |
+| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.             |
+| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                             |
+| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                |
+| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.                     |
+| `documentIds`            | Array  | Array of verified Document IDs.                                                                   |
 
+The `documentVerificationId` is selected from the documents used for the verification using the same rules as for `DOCUMENT_VERIFICATION_FINISHED`.
+The document with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`) is used, the front side wins a tie, and remaining ties are resolved by the document type order (`ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`, then other types).
 
 ### Event data for PRESENCE_CHECK_FINISHED
 

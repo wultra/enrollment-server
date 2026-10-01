@@ -17,9 +17,10 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Request object for processing event.
@@ -31,7 +32,12 @@ class ProcessEventRequestDto {
 
     private String id;
 
-    private LocalDateTime timestamp;
+    /**
+     * Serialized explicitly as an ISO-8601 string. The object mapper of the REST client enables
+     * {@code WRITE_DATES_AS_TIMESTAMPS} and would otherwise write the value as a numeric array.
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant timestamp;
 
     private String processId;
 

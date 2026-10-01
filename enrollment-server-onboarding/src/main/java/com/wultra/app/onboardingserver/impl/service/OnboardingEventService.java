@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
@@ -41,6 +42,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
@@ -56,6 +58,25 @@ import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*
 @Slf4j
 @AllArgsConstructor
 public class OnboardingEventService {
+
+    /**
+     * Severity of a finished document status, lower value means worse outcome.
+     */
+    private static final Map<DocumentStatus, Integer> DOCUMENT_STATUS_SEVERITY = Map.of(
+            DocumentStatus.FAILED, 0,
+            DocumentStatus.REJECTED, 1,
+            DocumentStatus.ACCEPTED, 2
+    );
+
+    /**
+     * Order used to select a representative document, the first one is the representative.
+     * The worst outcome wins, the front side wins a tie, remaining ties are resolved by document type and ID.
+     */
+    private static final Comparator<DocumentVerificationEntity> REPRESENTATIVE_DOCUMENT_ORDER =
+            Comparator.comparing(OnboardingEventService::statusSeverity)
+                    .thenComparing(it -> it.getSide() != CardSide.FRONT)
+                    .thenComparing(DocumentVerificationEntity::getType, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(DocumentVerificationEntity::getId, Comparator.nullsLast(Comparator.naturalOrder()));
 
     private final OnboardingProvider onboardingProvider;
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -83,24 +104,41 @@ public class OnboardingEventService {
     }
 
     /**
-     * Publish a {@link EventType#DOCUMENT_VERIFICATION_FINISHED} event for a single document.
+     * Publish a single {@link EventType#DOCUMENT_VERIFICATION_FINISHED} event for a document consisting of one or more sides.
+     * <p>
+     * The event is represented by the side with the worst outcome ({@code FAILED} &gt; {@code REJECTED} &gt; {@code ACCEPTED}),
+     * the front side wins a tie. Images of all given sides are included.
      *
-     * @param documentVerification Document verification entity whose verification has finished.
+     * @param documentVerifications Document verification entities of the same document type submitted together, typically both sides of a two-sided document.
      */
-    public void publishDocumentVerificationFinished(final DocumentVerificationEntity documentVerification) {
+    public void publishDocumentVerificationFinished(final List<DocumentVerificationEntity> documentVerifications) {
         if (isEventTypeNotEnabled(EventType.DOCUMENT_VERIFICATION_FINISHED)) {
             return;
         }
 
-        final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
+        final DocumentVerificationEntity representative = documentVerifications.stream()
+                .filter(it -> DOCUMENT_STATUS_SEVERITY.containsKey(it.getStatus()))
+                .min(REPRESENTATIVE_DOCUMENT_ORDER)
+                .orElse(null);
+        if (representative == null) {
+            logger.warn("Unable to publish {} event - no document side in a finished state, documentVerificationIds={}",
+                    EventType.DOCUMENT_VERIFICATION_FINISHED, documentVerifications.stream().map(DocumentVerificationEntity::getId).toList());
+            return;
+        }
+
+        final IdentityVerificationEntity identityVerification = representative.getIdentityVerification();
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
         }
 
+        final Set<String> documentVerificationIds = documentVerifications.stream()
+                .map(DocumentVerificationEntity::getId)
+                .collect(Collectors.toSet());
+
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.DOCUMENT_VERIFICATION_FINISHED)
-                .eventData(createDocumentVerificationFinishedEventData(documentVerification))
+                .eventData(createDocumentVerificationFinishedEventData(representative, documentVerificationIds))
                 .build();
         sendEvent(request);
     }
@@ -147,6 +185,16 @@ public class OnboardingEventService {
             return;
         }
 
+        final List<DocumentVerificationEntity> documentVerifications = identityVerification.getDocumentVerifications().stream()
+                .filter(DocumentVerificationEntity::isUsedForVerification)
+                .toList();
+
+        if (documentVerifications.isEmpty()) {
+            logger.warn("Unable to publish {} event - no document used for verification, identityVerificationId={}",
+                    EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED, identityVerification.getId());
+            return;
+        }
+
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
@@ -154,7 +202,7 @@ public class OnboardingEventService {
 
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)
-                .eventData(createFinalDocumentVerificationFinishedEventData(identityVerification, status, rejectReason, errorDetail))
+                .eventData(createFinalDocumentVerificationFinishedEventData(documentVerifications, status, rejectReason, errorDetail))
                 .build();
         sendEvent(request);
     }
@@ -250,21 +298,24 @@ public class OnboardingEventService {
         };
     }
 
-    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document) {
+    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document, final Set<String> documentVerificationIds) {
         final DocumentStatus documentStatus = document.getStatus();
         final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
 
         final DocumentResultEntity latestResult = document.getResults().stream()
-                .findFirst()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated, Comparator.nullsFirst(Comparator.naturalOrder())))
                 .orElse(null);
+
+        final DocumentExtractedDataValue extractedData = parseExtractedData(latestResult);
 
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
                         .type(document.getType().name())
-                        .country(document.getCountry())
-                        .data(buildDocumentData(latestResult))
-                        .images(buildImages(document))
-                        .rawData(latestResult == null ? null : latestResult.getVerificationResult())
+                        .country(resolveCountry(extractedData))
+                        .data(buildDocumentData(extractedData))
+                        .images(buildImages(documentVerificationIds))
+                        .rawData(buildRawData(latestResult))
                         .build()
                 : null;
 
@@ -280,6 +331,13 @@ public class OnboardingEventService {
                 .build();
     }
 
+    private static String resolveCountry(final DocumentExtractedDataValue extractedData) {
+        if (extractedData == null) {
+            return null;
+        }
+        return extractedData.country();
+    }
+
     private static EventStatus convert(final DocumentStatus source) {
         return switch (source) {
             case ACCEPTED -> EventStatus.ACCEPTED;
@@ -289,15 +347,32 @@ public class OnboardingEventService {
         };
     }
 
-    private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
+    private Object buildRawData(final DocumentResultEntity result) {
+        if (result == null || result.getVerificationResult() == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(result.getVerificationResult());
+        } catch (JacksonException e) {
+            logger.warn("Unable to parse verification result for documentResultId={}: {}", result.getId(), e.getMessage());
+            return result.getVerificationResult();
+        }
+    }
+
+    private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity result) {
         if (result == null || result.getExtractedData() == null) {
             return null;
         }
-        final DocumentExtractedDataValue value;
         try {
-            value = objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
+            return objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
         } catch (JacksonException e) {
             logger.warn("Unable to parse extracted data for documentResultId={}: {}", result.getId(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentExtractedDataValue value) {
+        if (value == null) {
             return null;
         }
         return DocumentVerificationFinishedEventData.DocumentData.builder()
@@ -315,9 +390,9 @@ public class OnboardingEventService {
                 .build();
     }
 
-    private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final DocumentVerificationEntity doc) {
+    private List<DocumentVerificationFinishedEventData.DocumentImage> buildImages(final Set<String> documentVerificationIds) {
         final List<ProcessedDocumentDataEntity> entities =
-                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
         if (entities.isEmpty()) {
             return List.of();
         }
@@ -348,19 +423,28 @@ public class OnboardingEventService {
         return uploadId;
     }
 
+    private static int statusSeverity(final DocumentVerificationEntity documentVerification) {
+        final DocumentStatus status = documentVerification.getStatus();
+        return status == null ? Integer.MAX_VALUE : DOCUMENT_STATUS_SEVERITY.getOrDefault(status, Integer.MAX_VALUE);
+    }
+
     private EventData createFinalDocumentVerificationFinishedEventData(
-            final IdentityVerificationEntity identityVerification,
+            final List<DocumentVerificationEntity> documentVerifications,
             final EventStatus status,
             final String rejectReason,
             final String errorDetail) {
 
-        final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
-                .filter(DocumentVerificationEntity::isUsedForVerification)
+        final String representativeId = documentVerifications.stream()
+                .min(REPRESENTATIVE_DOCUMENT_ORDER)
+                .map(DocumentVerificationEntity::getId)
+                .orElse("n/a");
+
+        final List<String> documentIds = documentVerifications.stream()
                 .map(OnboardingEventService::resolveDocumentId)
                 .toList();
 
         return FinalDocumentVerificationFinishedEventData.builder()
-                .documentVerificationId(identityVerification.getId())
+                .documentVerificationId(representativeId)
                 .status(status)
                 .rejectReason(rejectReason)
                 .errorDetail(errorDetail)
