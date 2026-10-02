@@ -87,4 +87,3 @@ public class PersonalDataCleaningTask {
 		logger.debug("Cleanup processed document data succeeded", action("cleanupProcessedDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 }
-
