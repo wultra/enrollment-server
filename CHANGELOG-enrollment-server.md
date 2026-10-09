@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `QR_SCAN` pre-approval screens in `preApprovalScreens` not being suppressed when proximity check is disabled [(#1939)](https://github.com/wultra/enrollment-server/issues/1939)
+
 ## [2.2.5] - 2026-10-01
 
 ### Fixed
