@@ -89,6 +89,8 @@ Currently, the following types of pre-approval screen are supported.
 - `INFO` for a general information screen.
 - `QR_SCAN` for screen to scan QR code to do proximity check.
 
+If proximity check is not enabled for the operation (no proximity OTP was generated), the `QR_SCAN` screen is omitted from the response.
+
 
 ### Pre-approval Screens
 
@@ -186,6 +188,8 @@ Currently, the following types of pre-approval screen are supported.
 - `WARNING` for warning screen.
 - `INFO` for a general information screen.
 - `QR_SCAN` for screen to scan QR code to do proximity check.
+
+If the proximity check is not enabled for the operation (no proximity OTP was generated), all `QR_SCAN` screens are omitted from the response; other screens retain their order.
 
 
 ### Post-approval Screen
