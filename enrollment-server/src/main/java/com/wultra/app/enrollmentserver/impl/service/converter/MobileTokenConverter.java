@@ -206,8 +206,19 @@ public class MobileTokenConverter {
                 && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreenV1.ScreenType.QR_SCAN
                 && operationDetail.getProximityOtp() == null) {
 
-            logger.info("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());
+            logger.info("Template for operationId: {} is configured to use pre-approval screens QR_SCAN, but OTP was not created", operationDetail.getId());
             uiExtensions.setPreApprovalScreen(null);
+        }
+
+        final List<PreApprovalScreenV2> preApprovalScreens = uiExtensions.getPreApprovalScreens();
+        if (preApprovalScreens != null && operationDetail.getProximityOtp() == null) {
+            final List<PreApprovalScreenV2> filteredScreens = preApprovalScreens.stream()
+                    .filter(screen -> screen == null || screen.getType() != PreApprovalScreenV2.ScreenType.QR_SCAN)
+                    .toList();
+            if (filteredScreens.size() != preApprovalScreens.size()) {
+                logger.info("Template for operationId: {} is configured to use pre-approval screens QR_SCAN, but OTP was not created", operationDetail.getId());
+                uiExtensions.setPreApprovalScreens(filteredScreens.isEmpty() ? null : filteredScreens);
+            }
         }
         return uiExtensions;
     }

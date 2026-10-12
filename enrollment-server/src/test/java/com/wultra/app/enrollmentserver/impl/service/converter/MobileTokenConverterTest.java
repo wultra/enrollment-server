@@ -119,6 +119,7 @@ class MobileTokenConverterTest {
     void testPreApprovalScreenV2() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setRiskFlags("C");
+        operationDetail.setProximityOtp("1234");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("""
@@ -966,6 +967,86 @@ class MobileTokenConverterTest {
 
         final UiExtensions ui = result.getUi();
         assertNull(ui.getPreApprovalScreen());
+    }
+
+    @Test
+    void testConvertUiPreApprovalScreensV2ScanQrSuppressed() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "preApprovalScreens": [
+                    {
+                      "id": "qr1",
+                      "type": "QR_SCAN",
+                      "heading": "Scan the QR code!",
+                      "message": "Scan it."
+                    },
+                    {
+                      "id": "warning",
+                      "type": "WARNING",
+                      "heading": "Watch out!",
+                      "message": "You may become a victim of an attack."
+                    },
+                    {
+                      "id": "qr2",
+                      "type": "QR_SCAN",
+                      "heading": "Scan the QR code!",
+                      "message": "Scan it."
+                    },
+                    {
+                      "id": "info",
+                      "type": "INFO",
+                      "heading": "Info",
+                      "message": "Some information."
+                    }
+                  ]
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<PreApprovalScreenV2> screens = result.getUi().getPreApprovalScreens();
+        assertNotNull(screens);
+        assertEquals(List.of("warning", "info"), screens.stream().map(PreApprovalScreenV2::getId).toList());
+    }
+
+    @Test
+    void testConvertUiPreApprovalScreensV2OnlyScanQrSuppressed() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "preApprovalScreens": [
+                    {
+                      "type": "QR_SCAN",
+                      "heading": "Scan the QR code!",
+                      "message": "Scan it."
+                    }
+                  ]
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNotNull(result.getUi());
+        assertNull(result.getUi().getPreApprovalScreens());
+    }
+
+    @Test
+    void testConvertUiPreApprovalScreensV2Empty() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "preApprovalScreens": []
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNotNull(result.getUi());
+        assertEquals(List.of(), result.getUi().getPreApprovalScreens());
     }
 
     @Test
