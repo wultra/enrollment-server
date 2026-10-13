@@ -699,7 +699,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final String userId = lookupUserService.lookupUser(process, identification)
                 .map(LookupUserResponse::getUserId)
                 .orElse(null);
-        if (!process.getUserId().equals(userId)) {
+        if (!Objects.equals(process.getUserId(), userId)) {
             throw new OnboardingProcessException(
                     String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",
                             userId, process.getUserId(), process.getId()));
