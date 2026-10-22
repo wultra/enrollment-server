@@ -114,7 +114,7 @@ Rejected by provider [{code} {messages}, {code} {messages}...] # there can be mo
 
 Example response:
 ```
-Rejected by provider [W001 The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare., I002 Cropping did not block verification because cropAffectsVerdict was false.]
+Rejected by provider [W002 The image quality was insufficient, please try again., I001 We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.]
 ```
 
 All `code` and `message` values are described in the section [Reject Reasons for Microblink](#reject-reasons-for-microblink)
@@ -168,7 +168,7 @@ Document data crosscheck failed for fields: [{field}, {field}...]
 
 Example responses:
 ```
-Rejected by provider [W001 The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare., I002 Cropping did not block verification because cropAffectsVerdict was false.]
+Rejected by provider [W002 The image quality was insufficient, please try again., I001 We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.]
 or
 Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD
 or
@@ -243,21 +243,20 @@ This contains final process data.
 
 The table below shows all possible values for the `code` and `message` attributes in the `rejectReason` field.
 
-| Code  | Message                                                                                                                                                                  |
-|:------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| W001  | The image quality is below the configured verification threshold. Ensure the image is sharp, well-lit, and free of blur or glare.                                        |
-| W002  | Only one side of a multi-sided document was received. Supply the missing side for complete verification and higher confidence.                                           |
-| W003  | The barcode could not be read. Ensure it is fully visible, in focus, and free of blur or glare. If available, supply a separate barcode image.                           |
-| W004  | Screen-presence, photocopy, and generative-AI checks were not performed because verificationContext is InPerson.                                                         |
-| W005  | This document version is not accepted for verification.                                                                                                                  |
-| W006  | The document is expired and rejectExpiredDocuments is enabled, resulting in a Reject verdict.                                                                            |
-| W007  | Verification completed using only the first side because the second side could not be used. Supply a clear image of the matching second side for a more complete result. |
-| W008  | The document is cropped or too close to the image edges, preventing a conclusive verification result. Supply an uncropped image with all document edges visible.         |
-| W009  | The supplied image appears to be the wrong document side while the first side is still required. Supply a clear image of the first side to continue verification.        |
-| I001  | Despite the image-quality warning, verification returned an Accept verdict under the configured image-quality retry policy.                                              |
-| I002  | Cropping did not block verification because cropAffectsVerdict was false.                                                                                                |
-| I003  | The document is expired, but rejectExpiredDocuments is disabled, so expiration did not affect the verification verdict.                                                  |
-| Other | Microblink did not provide a reject reason.                                                                                                                              |
+| Code  | Message                                                                                                                                                                                    |
+|:------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| E001  | Empty response. Please check your request parameters.                                                                                                                                      |
+| E003  | Unable to process due to extraction failure. Providing better-quality front and back images might solve this issue. Ensure the images are not cropped and that all edges are visible.      |
+| W001  | The front image was uncertain. Nevertheless, we managed to take some action based on it. If the result is inadequate, review the process indicators.                                       |
+| W002  | The image quality was insufficient, please try again.                                                                                                                                      |
+| W003  | Only one image has been provided for multisided document, supplying other side of the document could result in a better outcome.                                                           |
+| W004  | The barcode image is not of sufficient quality, providing a better one could lead to an improved outcome.                                                                                  |
+| W005  | Image quality was not good enough for us to make verdict.                                                                                                                                  |
+| W006  | The image lacks clarity. Supplying a clearer image could improve the outcome.                                                                                                              |
+| W007  | Document too close to the edges of the image. We weren't able to perform liveness checks and can't make an overall fraud determination. Supply a non cropped image to improve the outcome. |
+| W008  | Document too close to the edge of the image, verification will proceed but liveness check will not be performed. Supply a non cropped image to improve the outcome.                        |
+| I001  | We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.                                                                            |
+| Other | Microblink did not provide a reject reason.                                                                                                                                                |
 
 
 ### Reject Reasons for iProov
