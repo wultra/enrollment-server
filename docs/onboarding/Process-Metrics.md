@@ -24,13 +24,17 @@ You can calculate the following metrics based on the data below:
 (Multiple Attempts / (All Documents − Failed Documents)) × 100
 ```
 
+All document queries filter by `COALESCE(timestamp_uploaded, timestamp_created)`, because `timestamp_uploaded` is set only for documents that were successfully uploaded. Documents rejected or failed already during the upload would otherwise be missing.
+
+The `DISPOSED` status is used for documents replaced by a resubmitted document. A disposed document keeps its original reject or error details, so both `REJECTED` and `DISPOSED` (resp. `FAILED` and `DISPOSED`) statuses need to be counted.
+
 ### All Documents
 
 All document verification attempts.
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
-WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+WHERE COALESCE(timestamp_uploaded, timestamp_created) BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'; -- the document is always evaluated as whole with the same result for FRONT and BACK
 ```
 
@@ -40,9 +44,9 @@ Documents accepted by the provider that have passed the document type check and 
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
-WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+WHERE COALESCE(timestamp_uploaded, timestamp_created) BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
-AND reject_reason IS NULL;
+AND status = 'ACCEPTED';
 ```
 
 ### Rejected Documents
@@ -63,9 +67,10 @@ A document verification attempt failed due to a technical reason, such as a time
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
-WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+WHERE COALESCE(timestamp_uploaded, timestamp_created) BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
-AND reject_reason = 'documentVerificationFailed';
+AND status IN ('FAILED', 'DISPOSED')
+AND error_origin = 'DOCUMENT_VERIFICATION';
 ```
 
 ### Multiple Attempts
