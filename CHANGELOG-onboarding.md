@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.2.7] - 2026-11-02
+
+
 ### Changed
 
 - Changed Microblink document verification decision to use the `verification.recommendedOutcome` response field; only `Accept` is considered successful [(#1962)](https://github.com/wultra/enrollment-server/issues/1962)
@@ -113,7 +116,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured annotationProcessorPaths for Lombok in maven-compiler-plugin [(#1781)](https://github.com/wultra/enrollment-server/issues/1781)
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
-[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.4...HEAD
+[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.7...HEAD
+[2.2.7]: https://github.com/wultra/enrollment-server/compare/2.2.6...2.2.7
 [2.2.5]: https://github.com/wultra/enrollment-server/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/wultra/enrollment-server/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/wultra/enrollment-server/compare/2.2.2...2.2.3
