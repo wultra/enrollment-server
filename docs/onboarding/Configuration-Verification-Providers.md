@@ -116,6 +116,9 @@ For example, to set `options.photocopyMatchLevel` to `Level5`, use this configur
 enrollment-server-onboarding.document-verification.microblink.request-options.photocopy-match-level=Level5
 ```
 
+By default, `useCase.manualReviewStrategy` is set to `Never`, so that `verification.recommendedOutcome` never contains `ManuallyReview`, as manual review is not supported.
+See the [manual review strategy](https://docs.microblink.com/verify/configuration#manual-review-strategy) for details.
+
 See [options model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationProcessingOptions) and [useCase model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationUseCaseOptions) for the full list of properties and their values.
 
 
