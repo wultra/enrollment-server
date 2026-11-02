@@ -41,7 +41,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -193,11 +192,12 @@ class IProovRestApiService {
      * Deletes the given user if already exists at iProov.
      *
      * @param id Owner identification.
+     * @throws RemoteCommunicationException In case of a failure of the iProov user management API call.
      */
-    public void deleteUserIfAlreadyExists(final OwnerId id) {
+    public void deleteUserIfAlreadyExists(final OwnerId id) throws RemoteCommunicationException {
         final String userId = getUserId(id);
         logger.debug("Checking whether iProov exists userId: {}, {}", userId, id);
-        final boolean userExists = doesUserExists(userId, new OwnerId());
+        final boolean userExists = doesUserExists(userId, id);
         logger.info("iProov userId: {}, exists: {}, {}", userId, userExists, id);
         if (userExists) {
             logger.debug("Deleting iProov userId: {}, {}", userId, id);
@@ -206,47 +206,50 @@ class IProovRestApiService {
         }
     }
 
-    private boolean doesUserExists(final String userId, final OwnerId id) {
-        return Objects.requireNonNullElse(managementWebClient.get()
-                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
-                .exchangeToMono(response -> {
-                    final HttpStatusCode httpStatusCode = response.statusCode();
-                    if (httpStatusCode == HttpStatus.OK) {
-                        return Mono.just(true);
-                    } else if (httpStatusCode == HttpStatus.BAD_REQUEST) {
-                        return response.bodyToMono(Map.class).flatMap(map -> {
-                            final Object errorCode = map.get(ClientErrorResponse.JSON_PROPERTY_ERROR);
-                            if (ClientErrorResponse.ErrorEnum.INVALID_USER_ID.getValue().equals(errorCode)) {
-                                return Mono.just(false);
-                            } else {
-                                return Mono.error(new RemoteCommunicationException("Not expected error code: " + errorCode));
-                            }
-                        });
-                    }
-                    return response.createError();
-                })
-                .doOnError(e -> {
-                    if (e instanceof final WebClientResponseException exception) {
-                        logger.error("Get user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
-                    } else {
-                        logger.error("Get user - Error, userId: {}, {}", userId, id, e);
-                    }
-                })
-                .block(), false);
+    private boolean doesUserExists(final String userId, final OwnerId id) throws RemoteCommunicationException {
+        try {
+            return Boolean.TRUE.equals(managementWebClient.get()
+                    .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
+                    .exchangeToMono(response -> {
+                        final HttpStatusCode httpStatusCode = response.statusCode();
+                        if (httpStatusCode == HttpStatus.OK) {
+                            return Mono.just(true);
+                        } else if (httpStatusCode == HttpStatus.BAD_REQUEST) {
+                            return response.bodyToMono(Map.class).defaultIfEmpty(Map.of()).flatMap(map -> {
+                                final Object errorCode = map.get(ClientErrorResponse.JSON_PROPERTY_ERROR);
+                                if (ClientErrorResponse.ErrorEnum.INVALID_USER_ID.getValue().equals(errorCode)) {
+                                    return Mono.just(false);
+                                } else {
+                                    return Mono.error(new IllegalStateException("Not expected error code: " + errorCode));
+                                }
+                            });
+                        }
+                        return response.createError();
+                    })
+                    .block());
+        } catch (WebClientResponseException e) {
+            throw new RemoteCommunicationException("Failed to get iProov userId: %s, statusCode: %s, responseBody: '%s', %s"
+                    .formatted(userId, e.getStatusCode(), e.getResponseBodyAsString(), id), e);
+        } catch (RuntimeException e) {
+            // block() may throw various unchecked exceptions, e.g. connection or timeout errors
+            throw new RemoteCommunicationException("Failed to get iProov userId: %s, %s".formatted(userId, id), e);
+        }
     }
 
-    private void deleteUser(final String userId, final OwnerId id) {
-        managementWebClient.delete()
-                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
-                .exchangeToMono(Mono::just)
-                .doOnError(e -> {
-                    if (e instanceof final WebClientResponseException exception) {
-                        logger.error("Delete user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
-                    } else {
-                        logger.error("Get user - Error, userId: {}, {}", userId, id, e);
-                    }
-                })
-                .block();
+    private void deleteUser(final String userId, final OwnerId id) throws RemoteCommunicationException {
+        try {
+            managementWebClient.delete()
+                    .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (WebClientResponseException e) {
+            throw new RemoteCommunicationException("Failed to delete iProov userId: %s, statusCode: %s, responseBody: '%s', %s"
+                    .formatted(userId, e.getStatusCode(), e.getResponseBodyAsString(), id), e);
+        } catch (RuntimeException e) {
+            // block() may throw various unchecked exceptions, e.g. connection or timeout errors
+            throw new RemoteCommunicationException("Failed to delete iProov userId: %s, %s".formatted(userId, id), e);
+        }
     }
 
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {
