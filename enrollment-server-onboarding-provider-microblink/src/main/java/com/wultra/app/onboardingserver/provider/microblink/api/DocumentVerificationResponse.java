@@ -18,6 +18,10 @@
 
 package com.wultra.app.onboardingserver.provider.microblink.api;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -34,8 +38,23 @@ public record DocumentVerificationResponse(
 ){
     public record Verification(
             String result,
+            @JsonFormat(with = JsonFormat.Feature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
+            RecommendedOutcome recommendedOutcome,
             String certaintyLevel
     ) {}
+
+    /**
+     * Recommended outcome of the Microblink verification. Unrecognized values are mapped to {@link #UNKNOWN}.
+     */
+    public enum RecommendedOutcome {
+        @JsonEnumDefaultValue
+        @JsonProperty("Unknown") UNKNOWN,
+        @JsonProperty("Undeterminable") UNDETERMINABLE,
+        @JsonProperty("Reject") REJECT,
+        @JsonProperty("Accept") ACCEPT,
+        @JsonProperty("Retry") RETRY,
+        @JsonProperty("ManuallyReview") MANUALLY_REVIEW
+    }
 
     public record Extraction(
             List<Result> overall,

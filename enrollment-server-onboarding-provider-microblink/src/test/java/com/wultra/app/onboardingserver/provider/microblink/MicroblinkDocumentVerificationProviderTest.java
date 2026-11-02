@@ -336,7 +336,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", "[]", "[]", null);
+        final var responseJson = buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", "[]", "[]", null);
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
@@ -360,7 +360,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", "[]", "[]", null);
+        final var responseJson = buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", "[]", "[]", null);
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
@@ -384,7 +384,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]", null);
+        final var responseJson = buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", buildFaceImageJson(), "[]", null);
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
@@ -408,7 +408,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]", null);
+        final var responseJson = buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", buildFaceImageJson(), "[]", null);
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
@@ -437,7 +437,7 @@ class MicroblinkDocumentVerificationProviderTest {
         );
 
         final var responseJson = buildMicroblinkResponseJson(
-                CheckResult.FAIL,
+                RecommendedOutcome.REJECT,
                 Type.ID,
                 "[]",
                 buildFaceImageJson(),
@@ -468,7 +468,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
         final var responseJson = buildMicroblinkResponseJson(
-                CheckResult.FAIL,
+                RecommendedOutcome.REJECT,
                 Type.ID,
                 "[]",
                 buildFaceImageJson(),
@@ -491,6 +491,73 @@ class MicroblinkDocumentVerificationProviderTest {
                 assertEquals("Other", documentResult.getRejectReason()));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "ACCEPT,FAIL,false",
+            "RETRY,PASS,true",
+            ",PASS,true"
+    })
+    void testSubmitDocuments_decisionByRecommendedOutcome(final RecommendedOutcome recommendedOutcome, final CheckResult checkResult, final boolean expectedRejected) throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
+        );
+        final var responseJson = buildMicroblinkResponseJson(recommendedOutcome, checkResult, Type.ID, "[]", buildFaceImageJson(), "[]", null);
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals(2, result.getResults().size());
+        result.getResults().forEach(documentResult ->
+                assertEquals(expectedRejected, documentResult.getRejectReason() != null));
+    }
+
+    @Test
+    void testSubmitDocuments_notAcceptedResponseWithoutMessages_fallbackRejectReason() throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
+        );
+        final var responseJson = """
+                {
+                    "verification": {
+                        "recommendedOutcome": "Retry",
+                        "result": "Pass"
+                    },
+                    "extraction": {
+                        "overall": [],
+                        "classInfo": {
+                            "type": "Id"
+                        }
+                    },
+                    "images": []
+                }
+                """;
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals(2, result.getResults().size());
+        result.getResults().forEach(documentResult ->
+                assertEquals("Other", documentResult.getRejectReason()));
+    }
+
     @Test
     void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
@@ -502,7 +569,7 @@ class MicroblinkDocumentVerificationProviderTest {
         );
 
         final var responseJson = buildMicroblinkResponseJson(
-                CheckResult.PASS,
+                RecommendedOutcome.ACCEPT,
                 Type.ID,
                 "[]",
                 buildFaceImageJson(),
@@ -535,7 +602,7 @@ class MicroblinkDocumentVerificationProviderTest {
         );
 
         final var responseJson = buildMicroblinkResponseJson(
-                CheckResult.PASS,
+                RecommendedOutcome.ACCEPT,
                 Type.ID,
                 "[]",
                 buildFaceImageJson(),
@@ -567,7 +634,7 @@ class MicroblinkDocumentVerificationProviderTest {
         );
 
         final var responseJson = buildMicroblinkResponseJson(
-                CheckResult.PASS,
+                RecommendedOutcome.ACCEPT,
                 Type.ID,
                 "[]",
                 buildImagesJson(),
@@ -620,7 +687,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -641,7 +708,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "invalid_json", "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "invalid_json", "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -678,7 +745,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildVerificationResultJson("John"), "[]", buildMessage(), null)
+                buildMicroblinkResponseJson(RecommendedOutcome.REJECT, Type.ID, buildVerificationResultJson("John"), "[]", buildMessage(), null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -699,7 +766,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.REJECT, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -720,7 +787,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, null, buildVerificationResultJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, null, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -743,7 +810,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.HEALTH_INSURANCE_CARD, buildVerificationResultJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.HEALTH_INSURANCE_CARD, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -766,7 +833,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -789,7 +856,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -800,6 +867,37 @@ class MicroblinkDocumentVerificationProviderTest {
 
         // then
         assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "ACCEPT,FAIL,ACCEPTED",
+            "ACCEPT,PASS,ACCEPTED",
+            "ACCEPT,NOT_PERFORMED,ACCEPTED",
+            "RETRY,PASS,REJECTED",
+            "REJECT,PASS,REJECTED",
+            "MANUALLY_REVIEW,PASS,REJECTED",
+            "UNKNOWN,PASS,REJECTED",
+            "UNDETERMINABLE,PASS,REJECTED",
+            ",PASS,REJECTED"
+    })
+    void testVerifyDocuments_decisionByRecommendedOutcome(final RecommendedOutcome recommendedOutcome, final CheckResult checkResult, final DocumentVerificationStatus expectedStatus) {
+        // given
+        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(recommendedOutcome, checkResult, Type.ID, "[]", "[]", buildMessage(), null)
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
+        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals(expectedStatus, result.getStatus());
     }
 
     @ParameterizedTest
@@ -816,7 +914,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", "[]", "[]", certaintyLevel)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, "[]", "[]", "[]", certaintyLevel)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -850,7 +948,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var idCardDocumentResult = new DocumentResultEntity();
         idCardDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson(idCardFirstName), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.ID, buildVerificationResultJson(idCardFirstName), "[]", "[]", null)
         );
         idCardDocumentResult.setExtractedData(buildExtractedDataJson(idCardFirstName));
 
@@ -860,7 +958,7 @@ class MicroblinkDocumentVerificationProviderTest {
         );
         final var drivingLicenseDocumentResult = new DocumentResultEntity();
         drivingLicenseDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, buildVerificationResultJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(RecommendedOutcome.ACCEPT, Type.DL, buildVerificationResultJson("John"), "[]", "[]", null)
         );
         drivingLicenseDocumentResult.setExtractedData(buildExtractedDataJson("John"));
 
@@ -983,6 +1081,18 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     private static String buildMicroblinkResponseJson(
+            final RecommendedOutcome recommendedOutcome,
+            final Type extractedType,
+            final String overallExtractionJson,
+            final String imagesJson,
+            final String messages,
+            final String certaintyLevel
+    ) {
+        return buildMicroblinkResponseJson(recommendedOutcome, CheckResult.NOT_PERFORMED, extractedType, overallExtractionJson, imagesJson, messages, certaintyLevel);
+    }
+
+    private static String buildMicroblinkResponseJson(
+            final RecommendedOutcome recommendedOutcome,
             final CheckResult checkResult,
             final Type extractedType,
             final String overallExtractionJson,
@@ -990,9 +1100,11 @@ class MicroblinkDocumentVerificationProviderTest {
             final String messages,
             final String certaintyLevel
     ) {
+        final var recommendedOutcomeJson = recommendedOutcome == null ? "null" : "\"%s\"".formatted(recommendedOutcome);
         return """
                 {
                     "verification": {
+                        "recommendedOutcome": %s,
                         "result": "%s",
                         "certaintyLevel": %s
                     },
@@ -1016,7 +1128,7 @@ class MicroblinkDocumentVerificationProviderTest {
                     "images": %s,
                     "messages": %s
                 }
-                """.formatted(checkResult, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
+                """.formatted(recommendedOutcomeJson, checkResult, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
     }
 
     private static String buildVerificationResultJson(final String firstName) {

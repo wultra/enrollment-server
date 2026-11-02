@@ -78,6 +78,9 @@ When documents are uploaded via the onboarding server `POST /api/v2/identity/doc
 Then, the Microblink endpoint is called for each document type to fetch the verification result. The processed images from the response (cropped document photos and the face photo) are saved
 in the `es_processed_document_data` database table. See the [Request configuration](#request-configuration) section to control Microblink verification and the returned data.
 
+The document is considered successfully verified only when the Microblink response field `verification.recommendedOutcome` is `Accept`. Any other value
+(see [RecommendedOutcome](https://docs.microblink.com/verify/api/ref/v2#models/RecommendedOutcome)) or a missing value results in rejection of the document.
+
 
 #### Mobile SDK license
 

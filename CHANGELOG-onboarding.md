@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Changed Microblink document verification decision to use the `verification.recommendedOutcome` response field; only `Accept` is considered successful [(#1962)](https://github.com/wultra/enrollment-server/issues/1962)
 - Changed the response for remote communication failures in onboarding process steps from `ERROR_GENERIC` (HTTP 500) to `REMOTE_COMMUNICATION_ERROR` (HTTP 409), consistent with other endpoints [(#1965)](https://github.com/wultra/enrollment-server/issues/1965)
 
 
