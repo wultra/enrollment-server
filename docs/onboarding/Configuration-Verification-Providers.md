@@ -78,6 +78,9 @@ When documents are uploaded via the onboarding server `POST /api/v2/identity/doc
 Then, the Microblink endpoint is called for each document type to fetch the verification result. The processed images from the response (cropped document photos and the face photo) are saved
 in the `es_processed_document_data` database table. See the [Request configuration](#request-configuration) section to control Microblink verification and the returned data.
 
+The document is considered successfully verified only when the Microblink response field `verification.recommendedOutcome` is `Accept`. Any other value
+(see [RecommendedOutcome](https://docs.microblink.com/verify/api/ref/v2#models/RecommendedOutcome)) or a missing value results in rejection of the document.
+
 
 #### Mobile SDK license
 
@@ -112,6 +115,9 @@ For example, to set `options.photocopyMatchLevel` to `Level5`, use this configur
 ```properties
 enrollment-server-onboarding.document-verification.microblink.request-options.photocopy-match-level=Level5
 ```
+
+By default, `useCase.manualReviewStrategy` is set to `Never`, so that `verification.recommendedOutcome` never contains `ManuallyReview`, as manual review is not supported.
+See the [manual review strategy](https://docs.microblink.com/verify/configuration#manual-review-strategy) for details.
 
 See [options model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationProcessingOptions) and [useCase model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationUseCaseOptions) for the full list of properties and their values.
 
