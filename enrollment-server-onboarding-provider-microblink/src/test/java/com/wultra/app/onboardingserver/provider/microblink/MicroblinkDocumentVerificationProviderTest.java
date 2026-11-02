@@ -76,6 +76,8 @@ class MicroblinkDocumentVerificationProviderTest {
             Pattern.DOTALL
     );
 
+    private static final JsonMapper JSON_MAPPER = JsonMapper.builder().build();
+
     private static final String USER_ID = "fc87e60a-85fe-405c-bfa3-9580211e1670";
     private static final String ACTIVATION_ID = "da15f970-d939-46f0-abe7-7858e74ea3b0";
 
@@ -1100,12 +1102,13 @@ class MicroblinkDocumentVerificationProviderTest {
             final String messages,
             final String certaintyLevel
     ) {
-        final var recommendedOutcomeJson = recommendedOutcome == null ? "null" : "\"%s\"".formatted(recommendedOutcome);
+        final var recommendedOutcomeJson = JSON_MAPPER.writeValueAsString(recommendedOutcome);
+        final var checkResultJson = JSON_MAPPER.writeValueAsString(checkResult);
         return """
                 {
                     "verification": {
                         "recommendedOutcome": %s,
-                        "result": "%s",
+                        "result": %s,
                         "certaintyLevel": %s
                     },
                     "extraction": {
@@ -1128,7 +1131,7 @@ class MicroblinkDocumentVerificationProviderTest {
                     "images": %s,
                     "messages": %s
                 }
-                """.formatted(recommendedOutcomeJson, checkResult, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
+                """.formatted(recommendedOutcomeJson, checkResultJson, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
     }
 
     private static String buildVerificationResultJson(final String firstName) {
