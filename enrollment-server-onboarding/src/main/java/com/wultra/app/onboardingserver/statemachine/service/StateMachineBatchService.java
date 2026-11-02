@@ -39,16 +39,19 @@ public class StateMachineBatchService {
 
     /**
      * Change machine states in batch.
+     *
+     * @return Number of identity verifications whose state actually changed.
      */
-    public void changeMachineStatesInBatch() {
-        final var countFinished = identityVerificationService.findAllIdentityVerificationsToChangeState()
+    public long changeMachineStatesInBatch() {
+        final var countChanged = identityVerificationService.findAllIdentityVerificationsToChangeState()
                 .stream()
                 .map(stateMachineService::changeMachineState)
                 .filter(result -> result)
                 .count();
 
-        if (countFinished > 0) {
-            logger.info("Changed state of {} identity verifications", countFinished);
+        if (countChanged > 0) {
+            logger.info("Changed state of {} identity verifications", countChanged);
         }
+        return countChanged;
     }
 }

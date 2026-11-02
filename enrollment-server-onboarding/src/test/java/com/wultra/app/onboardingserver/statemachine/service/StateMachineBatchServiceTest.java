@@ -80,26 +80,42 @@ class StateMachineBatchServiceTest {
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(com.wultra.app.onboardingserver.impl.service.IdentityVerificationService.FinalVerificationResult.OK);
 
-        tested.changeMachineStatesInBatch();
+        final long countChanged = tested.changeMachineStatesInBatch();
 
+        assertEquals(1, countChanged);
         final var identityVerification = identityVerificationRepository.findById("v1").orElseThrow();
         assertEquals(IdentityVerificationPhase.COMPLETED, identityVerification.getPhase());
         assertEquals(IdentityVerificationStatus.ACCEPTED, identityVerification.getStatus());
     }
 
     @Test
+    @Sql("StateMachineBatchServiceTest.testChangeMachineStatesInBatch.sql")
+    void testChangeMachineStatesInBatch_activationNotFinished() throws Exception {
+        when(identityVerificationTargetActivationService.isTargetActivationFinished("p1")).thenReturn(false);
+
+        final long countChanged = tested.changeMachineStatesInBatch();
+
+        assertEquals(0, countChanged);
+        final var identityVerification = identityVerificationRepository.findById("v1").orElseThrow();
+        assertEquals(IdentityVerificationPhase.ACTIVATION_FINISH, identityVerification.getPhase());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerification.getStatus());
+    }
+
+    @Test
     @Sql
     void testChangeMachineStatesInBatch_submitting() {
-        tested.changeMachineStatesInBatch();
+        final long countChanged = tested.changeMachineStatesInBatch();
 
+        assertEquals(0, countChanged);
         assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v2").orElseThrow().getStatus());
     }
 
     @Test
     @Sql
     void testChangeMachineStatesInBatch_noDocuments() {
-        tested.changeMachineStatesInBatch();
+        final long countChanged = tested.changeMachineStatesInBatch();
 
+        assertEquals(0, countChanged);
         assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v3").orElseThrow().getStatus());
     }
 
@@ -113,8 +129,9 @@ class StateMachineBatchServiceTest {
                 .when(onboardingProcessRepository)
                 .findByIdWithLock("p_fail");
 
-        tested.changeMachineStatesInBatch();
+        final long countChanged = tested.changeMachineStatesInBatch();
 
+        assertEquals(0, countChanged);
         final var actualIdentityStatus = identityVerificationRepository.findById("v_fail")
                 .orElseThrow()
                 .getStatus();

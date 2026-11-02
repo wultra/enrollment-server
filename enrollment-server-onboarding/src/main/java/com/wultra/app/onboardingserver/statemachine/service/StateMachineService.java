@@ -87,10 +87,16 @@ public class StateMachineService {
         return stateMachine;
     }
 
+    /**
+     * Send {@link OnboardingEvent#EVENT_NEXT_STATE} to the state machine of the given identity verification.
+     *
+     * @param identityVerification Identity verification.
+     * @return {@code true} if the state of the identity verification actually changed, {@code false} if it remained the same or the change failed.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
         final var processId = identityVerification.getProcessId();
-        logger.info("Change machine state initiated", action("changeMachineState"), stateInitiated(), kv("processId", processId));
+        logger.debug("Change machine state initiated", action("changeMachineState"), stateInitiated(), kv("processId", processId));
 
         final var ownerId = new OwnerId();
         ownerId.setActivationId(identityVerification.getActivationId());
@@ -98,8 +104,18 @@ public class StateMachineService {
 
         try {
             lockAndVerifyProcess(processId);
-            processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-            logger.info("Change machine state succeeded", action("changeMachineState"), stateSucceeded());
+            final StateMachine<OnboardingState, OnboardingEvent> stateMachine = fetchStateMachine(ownerId, processId);
+            final OnboardingState stateBefore = stateMachine.getState().getId();
+            sendEventMessage(stateMachine, createMessage(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE));
+            final OnboardingState stateAfter = stateMachine.getState().getId();
+
+            if (stateBefore == stateAfter) {
+                logger.debug("Change machine state skipped, state not changed", action("changeMachineState"), state("unchanged"),
+                        kv("processId", processId), kv("onboardingState", stateBefore));
+                return false;
+            }
+            logger.info("Change machine state succeeded", action("changeMachineState"), stateSucceeded(),
+                    kv("processId", processId), kv("stateBefore", stateBefore), kv("stateAfter", stateAfter));
             return true;
         } catch (IdentityVerificationException e) {
             logger.warn("Change machine state failed", action("changeMachineState"), stateFailed(), kv("errorMessage", "Unable to change state for process"), e);
