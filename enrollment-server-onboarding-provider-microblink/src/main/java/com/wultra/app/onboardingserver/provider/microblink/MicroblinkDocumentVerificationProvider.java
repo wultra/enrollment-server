@@ -64,7 +64,6 @@ import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
     private static final Pattern MICROBLINK_TRACE_ID_PATTERN = Pattern.compile("\"traceId\"\\s*:\\s*\"([^\"]+)\"");
-    private static final String MICROBLINK_VALIDATION_PASS_RESULT = "Pass";
 
     private final RestClient microblinkRestClient;
     private final ObjectMapper objectMapper;
@@ -386,16 +385,26 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.getResponseWithoutImages());
 
-            final var validation = responseBody.verification();
-
-            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(validation.result())) {
-                result.setRejectReason(buildProviderRejectReason(responseBody.messages()));
+            if (isNotAccepted(responseBody.verification())) {
+                result.setRejectReason(buildProviderRejectReason(Objects.requireNonNullElse(responseBody.messages(), List.of())));
             }
 
             results.add(result);
         }
 
         return results;
+    }
+
+    /**
+     * Decide whether the Microblink verification failed. Only the recommended outcome {@code Accept} is
+     * considered successful; any other value, including a missing one, is considered a failure.
+     *
+     * @param verification Microblink verification, may be {@code null}.
+     * @return {@code true} if the document is not accepted, {@code false} otherwise.
+     */
+    private static boolean isNotAccepted(final DocumentVerificationResponse.Verification verification) {
+        return verification == null
+                || verification.recommendedOutcome() != DocumentVerificationResponse.RecommendedOutcome.ACCEPT;
     }
 
     private static String buildProviderRejectReason(final List<DocumentVerificationResponse.Message> messages) {
@@ -653,14 +662,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(DocumentVerificationResponseBundle::getParsedResponseBody)
                 .map(DocumentVerificationResponse::verification);
 
-        final var microblinkCheckResult = microblinkVerification.map(DocumentVerificationResponse.Verification::result)
-                .orElse(null);
-
         final var score = microblinkVerification.map(DocumentVerificationResponse.Verification::certaintyLevel)
                 .map(MicroblinkDocumentVerificationProvider::convertScore)
                 .orElse(0);
 
-        if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
+        if (isNotAccepted(microblinkVerification.orElse(null))) {
             final var messages = Optional.of(microblinkResponse)
                     .map(DocumentVerificationResponseBundle::getParsedResponseBody)
                     .map(DocumentVerificationResponse::messages)
