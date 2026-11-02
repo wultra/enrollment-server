@@ -378,6 +378,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         final var requestUseCase = requestBodyJson.path("useCase");
         assertEquals("Strict", requestUseCase.path("documentVerificationPolicy").asString());
+        assertEquals("Never", requestUseCase.path("manualReviewStrategy").asString());
     }
 
     @Test

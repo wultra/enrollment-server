@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.2.5] - 2026-09-30
+
+## [2.2.7] - 2026-11-02
+
+
+### Changed
+
+- Changed Microblink document verification decision to use the `verification.recommendedOutcome` response field; only `Accept` is considered successful [(#1962)](https://github.com/wultra/enrollment-server/issues/1962)
+- Changed default Microblink request `useCase.manualReviewStrategy` to `Never` [(#1962)](https://github.com/wultra/enrollment-server/issues/1962)
+- Changed the response for remote communication failures in onboarding process steps from `ERROR_GENERIC` (HTTP 500) to `REMOTE_COMMUNICATION_ERROR` (HTTP 409), consistent with other endpoints [(#1965)](https://github.com/wultra/enrollment-server/issues/1965)
+
+
+### Fixed
+
+- Fixed automatic personal-data cleanup not running with the default retention configuration [(#1934)](https://github.com/wultra/enrollment-server/issues/1934)
+- Fixed `NullPointerException` when starting onboarding repeatedly for identification data not matching any user [(#1948)](https://github.com/wultra/enrollment-server/issues/1948)
+- Fixed Microblink reject reason codes and messages in the events documentation to match the API version in use [(#1954)](https://github.com/wultra/enrollment-server/issues/1954)
+- Fixed state machine scheduler logging state changes of identity verifications whose state did not change; polling without a state change is now logged at `DEBUG` level [(#1958)](https://github.com/wultra/enrollment-server/issues/1958)
+- Fixed silently ignored failure of deleting an already existing iProov user, which led to `already_enrolled` errors in the presence check [(#1965)](https://github.com/wultra/enrollment-server/issues/1965)
+
+
+## [2.2.5] - 2026-10-01
 
 ### Changed
 
@@ -96,7 +116,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured annotationProcessorPaths for Lombok in maven-compiler-plugin [(#1781)](https://github.com/wultra/enrollment-server/issues/1781)
 - Populated message field for structured (kv) log calls [(#1819)](https://github.com/wultra/enrollment-server/issues/1819)
 
-[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.4...HEAD
+[unreleased]: https://github.com/wultra/enrollment-server/compare/2.2.7...HEAD
+[2.2.7]: https://github.com/wultra/enrollment-server/compare/2.2.6...2.2.7
 [2.2.5]: https://github.com/wultra/enrollment-server/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/wultra/enrollment-server/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/wultra/enrollment-server/compare/2.2.2...2.2.3

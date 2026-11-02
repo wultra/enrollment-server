@@ -175,6 +175,7 @@ for details how the score affects false acceptances (FAR) and false rejections (
 | `enrollment-server-onboarding.document-verification.microblink.extractedDataCheckEnabled`              | `true`  | Whether check/validation of extracted data is enabled.                                                                                                                                                                        |
 | `enrollment-server-onboarding.document-verification.microblink.request-options.*`                      |         | The `options` set in Microblink REST API request body. See [Microblink Request Configuration](./Configuration-Verification-Providers.md#request-configuration)                                                                |
 | `enrollment-server-onboarding.document-verification.microblink.request-use-case.*`                     |         | The `useCase` set in Microblink REST API request body. See [Microblink Request Configuration](./Configuration-Verification-Providers.md#request-configuration)                                                                |
+| `enrollment-server-onboarding.document-verification.microblink.request-use-case.manualReviewStrategy`  | `Never` | The `useCase.manualReviewStrategy` set in Microblink REST API request body. Manual review is not supported, keep the value `Never`.                                                                                           |
 
 
 ## Correlation HTTP Header Configuration
