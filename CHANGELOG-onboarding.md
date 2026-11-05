@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the build time in `/actuator/info` showing `1980-02-01` when built with Maven 3.10 or newer [(#1971)](https://github.com/wultra/enrollment-server/issues/1971)
 - Fixed automatic personal-data cleanup not running with the default retention configuration [(#1934)](https://github.com/wultra/enrollment-server/issues/1934)
 - Fixed `NullPointerException` when starting onboarding repeatedly for identification data not matching any user [(#1948)](https://github.com/wultra/enrollment-server/issues/1948)
 - Fixed Microblink reject reason codes and messages in the events documentation to match the API version in use [(#1954)](https://github.com/wultra/enrollment-server/issues/1954)

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the build time in `/actuator/info` showing `1980-02-01` when built with Maven 3.10 or newer [(#1971)](https://github.com/wultra/enrollment-server/issues/1971)
 - Fixed `QR_SCAN` pre-approval screens in `preApprovalScreens` not being suppressed when proximity check is disabled [(#1939)](https://github.com/wultra/enrollment-server/issues/1939)
 
 ## [2.2.5] - 2026-10-01
