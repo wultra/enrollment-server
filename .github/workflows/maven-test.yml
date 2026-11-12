@@ -18,3 +18,36 @@ jobs:
     secrets: inherit
     with:
       java_version: 21
+# enrollment-server-api-model and enrollment-server-onboarding-api do not have tests yet,
+# so no JaCoCo reports are generated for them.
+      artifacts_path: |
+        mtoken-model/target/site/jacoco/
+        enrollment-server/target/site/jacoco/
+        enrollment-server-onboarding/target/site/jacoco/
+        enrollment-server-onboarding-api-model/target/site/jacoco/
+        enrollment-server-onboarding-common/target/site/jacoco/
+        enrollment-server-onboarding-domain-model/target/site/jacoco/
+        enrollment-server-onboarding-provider-innovatrics/target/site/jacoco/
+        enrollment-server-onboarding-provider-iproov/target/site/jacoco/
+        enrollment-server-onboarding-provider-microblink/target/site/jacoco/
+        enrollment-server-onboarding-provider-zenid/target/site/jacoco/
+
+  coverage-summary:
+    needs: maven-tests
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Test coverage summary calculations
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Download coverage reports
+        uses: actions/download-artifact@v8
+        with:
+          name: maven-test-artifacts-${{ github.run_id }}
+          path: coverage-reports
+      - name: Publish coverage summary
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/coverage_summary.py coverage-reports
