@@ -18,12 +18,12 @@ jobs:
     secrets: inherit
     with:
       java_version: 21
+# enrollment-server-api-model and enrollment-server-onboarding-api do not have tests yet,
+# so no JaCoCo reports are generated for them.
       artifacts_path: |
         mtoken-model/target/site/jacoco/
         enrollment-server/target/site/jacoco/
-#        enrollment-server-api-model/target/site/jacoco/ does not have tests yet, so no coverage report is generated
         enrollment-server-onboarding/target/site/jacoco/
-#        enrollment-server-onboarding-api/target/site/jacoco/ does not have tests yet, so no coverage report is generated
         enrollment-server-onboarding-api-model/target/site/jacoco/
         enrollment-server-onboarding-common/target/site/jacoco/
         enrollment-server-onboarding-domain-model/target/site/jacoco/
