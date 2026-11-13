@@ -190,7 +190,7 @@ The document with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`)
 
 **Reject Reason Format**
 
-Possible values of the field `rejectReason`:
+Possible values of the `rejectReason` field:
 
 - `Some documents in the set were rejected by the provider`
 - `Some documents in the set were rejected by the internal configuration`
@@ -198,6 +198,7 @@ Possible values of the field `rejectReason`:
 - `Extracted document type {extractedType} does not match claimed type {claimedType}`, eg. `Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD`
 
 All `field` values are `firstName`, `lastName` and `dateOfBirth`.
+
 All `extractedType` and `claimedType` values are based on currently supported document types `ID_CARD`, `PASSPORT` and `DRIVING_LICENSE`.
 
 ### Event data for PRESENCE_CHECK_FINISHED
