@@ -115,7 +115,7 @@ An ID card where both the front and back are ACCEPTED produces a single ACCEPTED
 | `documentVerificationId`                               | String | Document Verification ID.                                                                                                                                                                                                                                                                                                          |
 | `documentId`                                           | String | Document ID.                                                                                                                                                                                                                                                                                                                       |
 | `status`                                               | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                                                                                              |
-| `rejectReason`                                         | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`.Currently supported values are `Rejected by provider` and `Rejected by internal configuration`.                                                                                                                   Value details are described under the table. |
+| `rejectReason`                                         | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`. Currently supported values are `Rejected by provider` and `Rejected by internal configuration`.                                                                                                                   Value details are described under the table. |
 | `errorDetail`                                          | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                                                                                                    |
 | `provider`                                             | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                                                                                                      |
 | `score`                                                | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                                                                                        |
@@ -188,30 +188,17 @@ Additional checks:
 The `documentVerificationId` is selected from the documents used for the verification using the same rules as for `DOCUMENT_VERIFICATION_FINISHED`.
 The document with the worst outcome (`FAILED`, then `REJECTED`, then `ACCEPTED`) is used, the front side wins a tie, and remaining ties are resolved by the document type order (`ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`, then other types).
 
-**Reject Reason Format - Microblink**
+**Reject Reason Format**
 
-The value of the field `rejectReason` for the Microblink provider has one of the following formats:
-```
-Rejected by provider [{code} {messages}, {code} {messages}...]
-or
-Extracted document type {extractedType} does not match claimed type {claimedType}
-or
-Document data crosscheck failed for fields: [{field}, {field}...]
-```
+Possible values of the field `rejectReason`:
 
-Example responses:
-```
-Rejected by provider [W002 The image quality was insufficient, please try again., I001 We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.]
-or
-Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD
-or
-Document data crosscheck failed for fields: [firstName, lastName, dateOfBirth]
-```
+- `Some documents in the set were rejected by the provider`
+- `Some documents in the set were rejected by the internal configuration`
+- `Document data crosscheck failed for fields: [{field}, {field}...]`, eg. `Document data crosscheck failed for fields: [firstName, lastName, dateOfBirth]`
+- `Extracted document type {extractedType} does not match claimed type {claimedType}`, eg. `Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD`
 
-- All `code` and `message` values are described in the section [Reject Reasons for Microblink](#Reject-reasons-for-microblink)
-- All `extractedType` and `claimedType` values are based on currently supported document types `ID_CARD`, `PASSPORT` and `DRIVING_LICENSE`
-- All `field` values are `firstName`, `lastName` and `dateOfBirth`
-
+All `field` values are `firstName`, `lastName` and `dateOfBirth`.
+All `extractedType` and `claimedType` values are based on currently supported document types `ID_CARD`, `PASSPORT` and `DRIVING_LICENSE`.
 
 ### Event data for PRESENCE_CHECK_FINISHED
 
