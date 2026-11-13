@@ -399,11 +399,12 @@ Per-document processing and decision events (pending, accepted, rejected, failed
 
 ### Event type-specific parameters
 
-| Parameter                | Description                                                       |
-|--------------------------|-------------------------------------------------------------------|
-| `identityVerificationId` | Internal identity verification ID                                 |
-| `documentVerificationId` | ID of document verification operation performed by the provider   |
-| `documentId`             | Internal document ID used in the onboarding process verification  |
+| Parameter                | Description                                                                                                            |
+|:-------------------------|:-----------------------------------------------------------------------------------------------------------------------|
+| `identityVerificationId` | Internal identity verification ID                                                                                      |
+| `documentVerificationId` | ID of document verification operation performed by the provider                                                        |
+| `documentId`             | Internal document ID used in the onboarding process verification                                                       |
+| `details`                | Evaluation details. The list of failed checks from provider's response or checks failed based on server configuration. |
 
 
 ### Message `Expired Document verification for user: {identityVerificationId}, {errorDetail}`
@@ -443,15 +444,15 @@ Event-specific parameters:
 | `detail`  | Detail of the failure  |
 
 
-### Message `Document verification rejected for user: {userId}, reason: {rejectReason}`
+### Message `{rejectReason}, user: {userId}`
 
 Document was sent to the document verification provider, but the provider rejected it. This is logged for each document type and side.
 
 Event-specific parameters:
 
-| Parameter       | Description                 |
-|-----------------|-----------------------------|
-| `rejectReason`  | Detail of the reject result |
+| Parameter      | Description                                                                                                              |
+|:---------------|:-------------------------------------------------------------------------------------------------------------------------|
+| `rejectReason` | Reason of the rejection. Currently supported values are `Rejected by provider` and `Rejected by internal configuration`. |
 
 
 ### Message `Document selfie changed status to {documentStatus} for user: {userId}`
