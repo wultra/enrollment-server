@@ -443,16 +443,15 @@ Event-specific parameters:
 |-----------|------------------------|
 | `detail`  | Detail of the failure  |
 
-
-### Message `{rejectReason}, user: {userId}`
+### Message `Document verification rejected for user: {userId}, reason: {rejectReason}`
 
 Document was rejected by the verification provider or by the internal configuration. This is logged for each document type and side.
 
 Event-specific parameters:
 
-| Parameter      | Description                                                                                                              |
-|:---------------|:-------------------------------------------------------------------------------------------------------------------------|
-| `rejectReason` | Reason of the rejection. Currently supported values are `Rejected by provider` and `Rejected by internal configuration`. |
+| Parameter      | Description                                                                                                                 |
+|:---------------|:----------------------------------------------------------------------------------------------------------------------------|
+| `rejectReason` | Detail of the reject result. Currently supported values are `Rejected by provider` and `Rejected by internal configuration` |
 
 
 ### Message `Document selfie changed status to {documentStatus} for user: {userId}`
