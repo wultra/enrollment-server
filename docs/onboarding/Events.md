@@ -110,27 +110,27 @@ An ID card where both the front and back are ACCEPTED produces a single ACCEPTED
 }
 ```
 
-| Attribute                                              | Type   | Description                                                                                                                                                                                                                                             |
-|:-------------------------------------------------------|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `documentVerificationId`                               | String | Document Verification ID.                                                                                                                                                                                                                               |
-| `documentId`                                           | String | Document ID.                                                                                                                                                                                                                                            |
-| `status`                                               | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                   |
-| `rejectReason`                                         | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`.                                                                                                                  Value details are described under the table.                      |
-| `errorDetail`                                          | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
-| `provider`                                             | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                           |
-| `score`                                                | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                             |
-| `documentVerificationResult`                           | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
-| `documentVerificationResult.documents.type`            | String | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.                                                                                                                                                                                            |
-| `documentVerificationResult.documents.country`         | String | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                                                                                      |
-| `documentVerificationResult.documents.data`            | Object | Selected normalized data extracted from the document. See `documentVerificationResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                                                     |
-| `documentVerificationResult.documents.images`          | Array  | Array of images extracted from the document.                                                                                                                                                                                                            |
-| `documentVerificationResult.documents.images.type`     | String | Image type, e.g. `FACE`.                                                                                                                                                                                                                                |
-| `documentVerificationResult.documents.images.data`     | String | JPEG binary data encoded using `base64`.                                                                                                                                                                                                                |
-| `documentVerificationResult.documents.details`         | Array  | Evaluation details. The list of failed checks from provider's response or checks failed based on server configuration.                                                                                                                                  |
-| `documentVerificationResult.documents.details.type`    | String | Detail type enum: Is `provider` for checks returned from provider's response or `internal` for checks that didn't pass `requiredChecks` configuration in [Microblink Configuration](./Configuration-Properties.md#microblink-configuration) properties. |
-| `documentVerificationResult.documents.details.code`    | String | Detail code contains check name. Complete list of supported names is below the table.                                                                                                                                                                   |
-| `documentVerificationResult.documents.details.message` | String | Detail message. Currently related to the failed checks, so it is always `Fail`.                                                                                                                                                                         |
-| `documentVerificationResult.documents.rawData`         | Object | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                                                                             |
+| Attribute                                              | Type   | Description                                                                                                                                                                                                                                                                                                                        |
+|:-------------------------------------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `documentVerificationId`                               | String | Document Verification ID.                                                                                                                                                                                                                                                                                                          |
+| `documentId`                                           | String | Document ID.                                                                                                                                                                                                                                                                                                                       |
+| `status`                                               | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                                                                                              |
+| `rejectReason`                                         | String | Reject reason when `status` is `REJECTED`.  Otherwise, it is `null`.Currently supported values are `Rejected by provider` and `Rejected by internal configuration`.                                                                                                                   Value details are described under the table. |
+| `errorDetail`                                          | String | Error detail in case `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                                                                                                    |
+| `provider`                                             | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                                                                                                      |
+| `score`                                                | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                                                                                        |
+| `documentVerificationResult`                           | Object | Contains some details about the document and extracted data. Object is present only if `status` is `ACCEPTED` or `REJECTED`. Otherwise it is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`.                                                                            |
+| `documentVerificationResult.documents.type`            | String | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.                                                                                                                                                                                                                                                                       |
+| `documentVerificationResult.documents.country`         | String | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                                                                                                                                                                 |
+| `documentVerificationResult.documents.data`            | Object | Selected normalized data extracted from the document. See `documentVerificationResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                                                                                                                                |
+| `documentVerificationResult.documents.images`          | Array  | Array of images extracted from the document.                                                                                                                                                                                                                                                                                       |
+| `documentVerificationResult.documents.images.type`     | String | Image type, e.g. `FACE`.                                                                                                                                                                                                                                                                                                           |
+| `documentVerificationResult.documents.images.data`     | String | JPEG binary data encoded using `base64`.                                                                                                                                                                                                                                                                                           |
+| `documentVerificationResult.documents.details`         | Array  | Evaluation details. The list of failed checks from provider's response or checks failed based on server configuration.                                                                                                                                                                                                             |
+| `documentVerificationResult.documents.details.type`    | String | Detail type enum: Is `provider` for checks returned from provider's response or `internal` for checks that didn't pass `requiredChecks` configuration in [Microblink Configuration](./Configuration-Properties.md#microblink-configuration) properties.                                                                            |
+| `documentVerificationResult.documents.details.code`    | String | Detail code contains check name. Complete list of supported names is below the table.                                                                                                                                                                                                                                              |
+| `documentVerificationResult.documents.details.message` | String | Detail message. Currently related to the failed checks, so it is always `Fail`.                                                                                                                                                                                                                                                    |
+| `documentVerificationResult.documents.rawData`         | Object | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                                                                                                                                                        |
 
 
 **List of failed checks:**
@@ -151,21 +151,6 @@ An ID card where both the front and back are ACCEPTED produces a single ACCEPTED
 - ExpiredCheck
 
 See the complete info about [Document Checks](https://developers.wultra.com/products/identity-verification/document-verification#document-checks).
-
-
-**Reject Reason Format - Microblink**
-
-The value of the field `rejectReason` for the Microblink provider has the following format:
-```
-Rejected by provider [{code} {messages}, {code} {messages}...] # there can be more messages
-```
-
-Example response:
-```
-Rejected by provider [W002 The image quality was insufficient, please try again., I001 We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.]
-```
-
-All `code` and `message` values are described in the section [Reject Reasons for Microblink](#reject-reasons-for-microblink)
 
 
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
@@ -286,26 +271,6 @@ This contains final process data.
 | `deviceData.fdsData`       | Object | Optional FDS data sent from the mobile device during Onboarding initialization using `/api/onboarding/start` method. |
 
 ## Verification Providers Reject Reasons
-
-### Reject Reasons for Microblink
-
-The table below shows all possible values for the `code` and `message` attributes in the `rejectReason` field.
-
-| Code  | Message                                                                                                                                                                                    |
-|:------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| E001  | Empty response. Please check your request parameters.                                                                                                                                      |
-| E003  | Unable to process due to extraction failure. Providing better-quality front and back images might solve this issue. Ensure the images are not cropped and that all edges are visible.      |
-| W001  | The front image was uncertain. Nevertheless, we managed to take some action based on it. If the result is inadequate, review the process indicators.                                       |
-| W002  | The image quality was insufficient, please try again.                                                                                                                                      |
-| W003  | Only one image has been provided for multisided document, supplying other side of the document could result in a better outcome.                                                           |
-| W004  | The barcode image is not of sufficient quality, providing a better one could lead to an improved outcome.                                                                                  |
-| W005  | Image quality was not good enough for us to make verdict.                                                                                                                                  |
-| W006  | The image lacks clarity. Supplying a clearer image could improve the outcome.                                                                                                              |
-| W007  | Document too close to the edges of the image. We weren't able to perform liveness checks and can't make an overall fraud determination. Supply a non cropped image to improve the outcome. |
-| W008  | Document too close to the edge of the image, verification will proceed but liveness check will not be performed. Supply a non cropped image to improve the outcome.                        |
-| I001  | We've extracted and completed all feasible actions. If the result is inadequate, review the process indicators.                                                                            |
-| Other | Microblink did not provide a reject reason.                                                                                                                                                |
-
 
 ### Reject Reasons for iProov
 
