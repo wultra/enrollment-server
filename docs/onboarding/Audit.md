@@ -446,7 +446,7 @@ Event-specific parameters:
 
 ### Message `{rejectReason}, user: {userId}`
 
-Document was sent to the document verification provider, but the provider rejected it. This is logged for each document type and side.
+Document was rejected by the verification provider or by the internal configuration. This is logged for each document type and side.
 
 Event-specific parameters:
 
