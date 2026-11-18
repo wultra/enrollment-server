@@ -87,16 +87,18 @@ public class IdentityVerificationLimitService {
     /**
      * Check attempt limit of failed identity verifications. Fail onboarding process in the attempt count has exceeded the limit.
      * @param ownerId Owner identification.
+     * @param processId Onboarding process identifier, only identity verifications of this process are counted.
      * @throws RemoteCommunicationException Thrown when activation flag request fails.
      * @throws IdentityVerificationException Thrown in case identity verification is invalid.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void checkIdentityVerificationLimit(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+    public void checkIdentityVerificationLimit(OwnerId ownerId, String processId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
-        final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+        // An activation can have multiple onboarding processes (e.g. re-KYC), count only attempts of the given process.
+        final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByProcessIdOrderByTimestampCreatedDesc(processId);
         if (identityVerifications.size() >= config.getVerificationMaxFailedAttempts()) {
-            final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
-                    .orElseThrow(() -> new IdentityVerificationException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
+            final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId)
+                    .orElseThrow(() -> new IdentityVerificationException("Onboarding process not found, process ID: " + processId));
 
             final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
             final String errorDetail = OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION;
@@ -144,17 +146,18 @@ public class IdentityVerificationLimitService {
     }
 
     /**
-     * Reset identity verification.
+     * Resets the latest identity verification of the onboarding process in progress.
      * <p>
-     * Set activation flag to {@code VERIFICATION_PENDING} and move the identity verification to {@code COMPLETED / FAILED}.
+     * Moves the verification to {@code COMPLETED / FAILED}, checks process and attempt limits,
+     * and updates activation flags according to the process configuration.
      *
      * @param ownerId Owner identification.
      * @param errorOrigin Error origin.
      * @param errorDetail Error detail.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     * @throws IdentityVerificationException Thrown when identity verification reset fails.
-     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
-     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws IdentityVerificationException If the process has no identity verification.
+     * @throws OnboardingProcessLimitException If the process error score or identity verification attempt limit is reached.
+     * @throws OnboardingProcessException If no onboarding process is in progress for the activation.
      */
     public void resetIdentityVerification(
             final OwnerId ownerId,
@@ -164,8 +167,9 @@ public class IdentityVerificationLimitService {
         OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
 
-        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId())
-                .orElseThrow(() -> new IdentityVerificationException("Identity verification not found, activation ID: " + ownerId.getActivationId()));
+        final String processId = process.getId();
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId)
+                .orElseThrow(() -> new IdentityVerificationException("Identity verification not found, process ID: " + processId));
         moveToFailedPhaseAndStatus(identityVerification, ownerId, errorOrigin, errorDetail);
 
         // Increase process error score
@@ -178,7 +182,7 @@ public class IdentityVerificationLimitService {
         }
 
         // Check limits on identity verifications (error handling is handled by service)
-        checkIdentityVerificationLimit(ownerId);
+        checkIdentityVerificationLimit(ownerId, processId);
 
         // Update activation flags for reset of identity verification
         activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, process.getProcessConfiguration().getConfiguration());
