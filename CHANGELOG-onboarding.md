@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed identity verification status staying `FAILED` after `/api/identity/cleanup` and a new `/api/onboarding/start` of re-KYC with an existing activation; the status is now `NOT_INITIALIZED` so the client can call `/api/identity/init` [#1983](https://github.com/wultra/enrollment-server/issues/1983)
 - Fixed automatic personal-data cleanup not running with the default retention configuration [(#1934)](https://github.com/wultra/enrollment-server/issues/1934)
 - Fixed `NullPointerException` when starting onboarding repeatedly for identification data not matching any user [(#1948)](https://github.com/wultra/enrollment-server/issues/1948)
 - Fixed Microblink reject reason codes and messages in the events documentation to match the API version in use [(#1954)](https://github.com/wultra/enrollment-server/issues/1954)

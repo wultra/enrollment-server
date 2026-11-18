@@ -19,8 +19,10 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
@@ -237,6 +239,43 @@ class IdentityVerificationStatusServiceTest {
 
         // then
         assertEquals(expectedResult, result);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "CLEANUP, VERIFICATION_IN_PROGRESS, NOT_INITIALIZED",
+            "PROCESS_LIMIT_CHECK, VERIFICATION_IN_PROGRESS, FAILED",
+            "CLEANUP, FAILED, FAILED"
+    })
+    void testCheckIdentityVerificationStatus_failedIdentityVerification_cleanupResetAllowsNewAttempt(
+            final ErrorOrigin errorOrigin,
+            final OnboardingStatus processStatus,
+            final IdentityVerificationStatus expectedStatus) throws Exception {
+
+        // given
+        final var ownerId = new OwnerId();
+        ownerId.setActivationId(ACTIVATION_ID);
+
+        final var idVerification = new IdentityVerificationEntity();
+        idVerification.setActivationId(ACTIVATION_ID);
+        idVerification.setProcessId(PROCESS_ID);
+        idVerification.setStatus(IdentityVerificationStatus.FAILED);
+        idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+        idVerification.setErrorOrigin(errorOrigin);
+
+        final var onboardingProcess = createOnboardingProcess(ACTIVATION_ID);
+        onboardingProcess.setStatus(processStatus);
+
+        when(onboardingService.findProcessByActivationId(ACTIVATION_ID)).thenReturn(onboardingProcess);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.of(idVerification));
+        when(onboardingService.hasProcessExpired(onboardingProcess)).thenReturn(false);
+        when(activationFlagService.containsActivationFlagVerificationPending(ACTIVATION_ID)).thenReturn(false);
+
+        // when
+        final var response = tested.checkIdentityVerificationStatus(new IdentityVerificationStatusRequest(), ownerId);
+
+        // then
+        assertEquals(expectedStatus, response.getIdentityVerificationStatus());
     }
 
     private static OnboardingProcessEntity createOnboardingProcess(final String activationId) {
