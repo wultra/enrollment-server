@@ -541,12 +541,13 @@ public class IdentityVerificationRestService {
         final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
-        onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final var process = onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final var identityVerification = identityVerificationService.findByProcessIdOptional(processId)
+                .orElseThrow(() -> new IdentityVerificationException("Identity verification not found, process ID: " + processId));
 
-        // Process cleanup request
-        identityVerificationService.cleanup(ownerId);
+        identityVerificationService.cleanup(ownerId, process, identityVerification);
         if (identityVerificationConfig.isPresenceCheckEnabled()) {
-            presenceCheckService.cleanup(ownerId);
+            presenceCheckService.cleanup(ownerId, identityVerification);
         } else {
             logger.debug("Skipped presence check cleanup, not enabled");
         }

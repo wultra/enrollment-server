@@ -164,28 +164,56 @@ public class IdentityVerificationLimitService {
             final ErrorOrigin errorOrigin,
             final String errorDetail) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
-        OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
 
         final String processId = process.getId();
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId)
                 .orElseThrow(() -> new IdentityVerificationException("Identity verification not found, process ID: " + processId));
+        resetIdentityVerification(ownerId, process, identityVerification, errorOrigin, errorDetail);
+    }
+
+    /**
+     * Resets the verification selected for cleanup and checks the limits of its process.
+     *
+     * @param ownerId Owner identification.
+     * @param process Verified onboarding process in progress.
+     * @param identityVerification Identity verification of the process selected for cleanup.
+     * @throws RemoteCommunicationException If updating activation flags fails.
+     * @throws IdentityVerificationException If the process cannot be loaded when the attempt limit is reached.
+     * @throws OnboardingProcessLimitException If the process error score or identity verification attempt limit is reached.
+     */
+    public void resetIdentityVerificationAfterCleanup(
+            final OwnerId ownerId,
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+
+        resetIdentityVerification(ownerId, process, identityVerification, ErrorOrigin.CLEANUP, "reset due to cleanup");
+    }
+
+    private void resetIdentityVerification(
+            final OwnerId ownerId,
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification,
+            final ErrorOrigin errorOrigin,
+            final String errorDetail) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+
         moveToFailedPhaseAndStatus(identityVerification, ownerId, errorOrigin, errorDetail);
 
         // Increase process error score
         processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_IDENTITY_VERIFICATION_RESET, ownerId);
 
         // Check process error limits
-        process = processLimitService.checkOnboardingProcessErrorLimits(process);
-        if (process.getStatus() == OnboardingStatus.FAILED && OnboardingProcessEntity.ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED.equals(process.getErrorDetail())) {
-            handleFailedProcess(process, ownerId);
+        final var checkedProcess = processLimitService.checkOnboardingProcessErrorLimits(process);
+        if (checkedProcess.getStatus() == OnboardingStatus.FAILED && OnboardingProcessEntity.ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED.equals(checkedProcess.getErrorDetail())) {
+            handleFailedProcess(checkedProcess, ownerId);
         }
 
         // Check limits on identity verifications (error handling is handled by service)
-        checkIdentityVerificationLimit(ownerId, processId);
+        checkIdentityVerificationLimit(ownerId, checkedProcess.getId());
 
         // Update activation flags for reset of identity verification
-        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, process.getProcessConfiguration().getConfiguration());
+        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId, checkedProcess.getProcessConfiguration().getConfiguration());
     }
 
     /**
