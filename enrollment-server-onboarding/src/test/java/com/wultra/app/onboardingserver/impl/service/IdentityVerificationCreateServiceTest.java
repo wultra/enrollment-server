@@ -72,7 +72,7 @@ class IdentityVerificationCreateServiceTest {
 
         tested.createIdentityVerification(ownerId, PROCESS_ID);
 
-        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId);
+        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId, PROCESS_ID);
         verify(identityVerificationService).moveToPhaseAndStatus(any(), eq(DOCUMENT_UPLOAD), eq(IN_PROGRESS), eq(ownerId));
         verify(activationFlagService).addActivationFlag(ownerId, ACTIVATION_FLAG);
         verify(activationFlagService, never()).initActivationFlagsForIdentityVerification(ownerId);
@@ -86,7 +86,7 @@ class IdentityVerificationCreateServiceTest {
 
         tested.createIdentityVerification(ownerId, PROCESS_ID);
 
-        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId);
+        verify(identityVerificationLimitService).checkIdentityVerificationLimit(ownerId, PROCESS_ID);
         verify(identityVerificationService).moveToPhaseAndStatus(any(), eq(DOCUMENT_UPLOAD), eq(IN_PROGRESS), eq(ownerId));
         verify(activationFlagService).initActivationFlagsForIdentityVerification(ownerId);
         verify(activationFlagService, never()).addActivationFlag(ownerId, ACTIVATION_FLAG);

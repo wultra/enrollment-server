@@ -47,9 +47,9 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
             "    d.usedForVerification = false, " +
             "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.activationId = :activationId " +
+            "WHERE d.identityVerification = :identityVerification " +
             "AND d.status IN :statuses")
-    int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
+    int failVerifications(IdentityVerificationEntity identityVerification, Date timestamp, List<DocumentStatus> statuses);
 
     @Query("SELECT d.id FROM DocumentVerificationEntity d " +
             "WHERE d.timestampCreated < :cleanupDate " +
@@ -140,9 +140,9 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Query("""
             SELECT d.id AS id, d.uploadId AS uploadId, d.photoId AS photoId
             FROM DocumentVerificationEntity d
-            WHERE d.activationId = :activationId
+            WHERE d.identityVerification = :identityVerification
     """)
-    List<DocumentVerificationIdsView> findAllUploadIdPhotoIdByActivationId(final String activationId);
+    List<DocumentVerificationIdsView> findAllUploadIdPhotoIdByIdentityVerification(IdentityVerificationEntity identityVerification);
 
     @Query("""
             SELECT d

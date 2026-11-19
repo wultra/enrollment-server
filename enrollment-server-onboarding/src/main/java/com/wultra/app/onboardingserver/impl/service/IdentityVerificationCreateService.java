@@ -58,7 +58,7 @@ public class IdentityVerificationCreateService {
     @Transactional
     public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
         // Check limits on identity verifications
-        identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
+        identityVerificationLimitService.checkIdentityVerificationLimit(ownerId, processId);
 
         assignActivationFlags(ownerId, processId);
 

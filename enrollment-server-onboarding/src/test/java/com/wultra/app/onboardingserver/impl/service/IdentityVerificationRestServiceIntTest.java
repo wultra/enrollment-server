@@ -187,6 +187,12 @@ class IdentityVerificationRestServiceIntTest {
 
         // then
         assertDocumentVerificationAndPresenceCheckCleanup();
+        final var untouchedDocumentCount = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM es_document_verification
+                WHERE id = '53650a08-476f-4d3a-834f-89a8ddc59d4e'
+                  AND status = 'VERIFICATION_IN_PROGRESS'
+                  AND used_for_verification = true""", Integer.class);
+        assertEquals(1, untouchedDocumentCount);
     }
 
     @Test
@@ -280,7 +286,7 @@ class IdentityVerificationRestServiceIntTest {
 
         verify(documentVerificationProvider).cleanupDocuments(
                 any(OwnerId.class),
-                argThat(it -> it.containsAll(List.of("c8bf612b-6718-4614-b150-ce17bc39221c", "03a2785a-a563-4feb-bde4-3ce0367e4e9d", "62338ec9-ff2f-4751-9762-e09d34c62796"))));
+                argThat(it -> it.size() == 3 && it.containsAll(List.of("c8bf612b-6718-4614-b150-ce17bc39221c", "03a2785a-a563-4feb-bde4-3ce0367e4e9d", "62338ec9-ff2f-4751-9762-e09d34c62796"))));
 
         final var sessionInfo = new SessionInfo();
         sessionInfo.setSessionAttributes(Map.of(
