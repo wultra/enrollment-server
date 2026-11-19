@@ -438,29 +438,31 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Cleanup documents related to identity verification.
+     * Cleans up documents for the selected identity verification and resets that verification.
      * @param ownerId Owner identification.
+     * @param process Verified and locked onboarding process in progress.
+     * @param identityVerification Latest identity verification of the locked process.
      * @throws DocumentVerificationException Thrown when document cleanup fails
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification reset fails.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
-     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @Transactional
-    public void cleanup(OwnerId ownerId)
-            throws DocumentVerificationException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
-        final var idsViews = documentVerificationRepository.findAllUploadIdPhotoIdByActivationId(ownerId.getActivationId());
+    public void cleanup(
+            final OwnerId ownerId,
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification) throws DocumentVerificationException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
         if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
-            deleteDocumentData(ownerId, idsViews);
+            deleteDocumentData(ownerId, identityVerification);
         } else {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
 
-        documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
+        documentVerificationRepository.failVerifications(identityVerification, ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
 
         // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification
-        identityVerificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.CLEANUP, "reset due to cleanup");
+        identityVerificationLimitService.resetIdentityVerificationAfterCleanup(ownerId, process, identityVerification);
     }
 
     /**
@@ -535,7 +537,12 @@ public class IdentityVerificationService {
         return docMetadata;
     }
 
-    private void deleteDocumentData(final OwnerId ownerId, final List<DocumentVerificationIdsView> idsViews) throws RemoteCommunicationException, DocumentVerificationException, IdentityVerificationNotFoundException {
+    private void deleteDocumentData(final OwnerId ownerId, final IdentityVerificationEntity identityVerification) throws RemoteCommunicationException, DocumentVerificationException {
+        final var idsViews = documentVerificationRepository.findAllUploadIdPhotoIdByIdentityVerification(identityVerification);
+        if (idsViews.isEmpty()) {
+            return;
+        }
+
         final var uploadIds = idsViews.stream()
                 .map(DocumentVerificationIdsView::getUploadId)
                 .filter(Objects::nonNull)
@@ -561,7 +568,6 @@ public class IdentityVerificationService {
         logger.info("Cleaning DocumentResult documentVerificationIds: {}", documentVerificationIds);
         documentResultRepository.clean(documentVerificationIds);
 
-        final IdentityVerificationEntity identityVerification = findBy(ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Cleaned up documents for user: {}", ownerId.getUserId());
         logger.info("All document data successfully deleted");
     }

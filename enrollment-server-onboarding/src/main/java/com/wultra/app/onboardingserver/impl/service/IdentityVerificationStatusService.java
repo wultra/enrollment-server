@@ -19,9 +19,12 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -101,10 +104,29 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
+        // Identity verification reset by cleanup while the process allows another attempt (e.g. re-KYC with
+        // an existing activation, where VERIFICATION_PENDING flag is not set), the client is expected to call init
+        if (isResetByCleanup(onboardingProcess, identityVerification)) {
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
+            return response;
+        }
+
         response.setIdentityVerificationStatus(identityVerification.getStatus());
         response.setIdentityVerificationPhase(identityVerification.getPhase());
         response.setRejectReason(identityVerification.getRejectReason());
         return response;
+    }
+
+    /**
+     * Checks whether the identity verification has been reset by cleanup and the process still allows a new attempt.
+     * Terminal failures (limits, rejection, expiration) have a different error origin or fail the whole process.
+     */
+    private static boolean isResetByCleanup(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification) {
+        return process.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS
+                && identityVerification.getStatus() == FAILED
+                && identityVerification.getPhase() == IdentityVerificationPhase.COMPLETED
+                && identityVerification.getErrorOrigin() == ErrorOrigin.CLEANUP;
     }
 
     private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {

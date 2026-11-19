@@ -64,7 +64,7 @@ public class IdentityVerificationConfig {
     private int documentUploadMaxFailedAttempts;
 
     /**
-     * Maximum number of identity verification records for which {@link com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent.EVENT_NEXT_STATE} is sent in a single scheduled task.
+     * Maximum number of identity verification records for which {@link com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent#EVENT_NEXT_STATE} is sent in a single scheduled task.
      */
     @Value("${enrollment-server-onboarding.identity-verification.next-state-batch-size:10000}")
     private int nextStateBatchSize;

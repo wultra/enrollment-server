@@ -22,6 +22,15 @@ values ('bc8b0f4a-8a6f-4dc7-ae2b-05d6ca059e33', '8e4a0b0a-84f3-4c71-9cc0-c9ac7b3
        ('8f3a3887-6f7a-4d84-b907-3bdf257cbb46', '8e4a0b0a-84f3-4c71-9cc0-c9ac7b3f6593', '1f9f3d7c-5c41-4f62-8c18-97af2df6bd62', 'ID_CARD', 'BACK', 'UPLOAD_IN_PROGRESS', 'id_card_back.jpg', '79ae47a3-40c3-42a2-b722-1282ff2d7679', now(), true);
 
 -- testCleanup_fullDocumentVerificationAndPresenceCheckCleanup_allDataAreCleaned
+INSERT INTO es_onboarding_process (id, identification_data, user_id, activation_id, status, activation_removed, error_score, custom_data, timestamp_created, process_config_id)
+VALUES ('b6c62535-c378-4dca-bfe6-d48831b33a8d', '{}', 'mockuser_264962080414477774', '5d1fbb02-94b9-4a49-a0fd-7cda061ca655', 'FAILED', false, 0, '{}', '2026-03-03 12:00:00', 101);
+
+INSERT INTO es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created)
+VALUES ('c0f42ab0-d8c3-44a7-9e54-442c7a61fadc', '5d1fbb02-94b9-4a49-a0fd-7cda061ca655', 'mockuser_264962080414477774', 'b6c62535-c378-4dca-bfe6-d48831b33a8d', 'IN_PROGRESS', 'DOCUMENT_UPLOAD', '2026-03-03 12:00:00');
+
+INSERT INTO es_document_verification (id, activation_id, identity_verification_id, type, side, status, filename, upload_id, timestamp_created, used_for_verification)
+VALUES ('53650a08-476f-4d3a-834f-89a8ddc59d4e', '5d1fbb02-94b9-4a49-a0fd-7cda061ca655', 'c0f42ab0-d8c3-44a7-9e54-442c7a61fadc', 'ID_CARD', 'FRONT', 'VERIFICATION_IN_PROGRESS', 'other_process.jpg', 'b550c6e8-05c2-48f6-8bad-b6439dc61b28', '2026-03-03 12:00:00', true);
+
 INSERT INTO es_onboarding_process (id, identification_data, user_id, activation_id, status, activation_removed, error_score, custom_data, timestamp_created, timestamp_last_updated, timestamp_finished, process_config_id)
 VALUES ('0c47c3cf-6f77-4f52-93f2-934efc6322dd', e'{
   "birthDate" : "1970-03-21",
@@ -74,4 +83,3 @@ values ('f1a2b3c4-5678-4abc-9012-a3b4c5d6e7f8', '{}', 'd2f1a3b4-5678-4abc-9012-e
 
 insert into es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created)
 values ('b1c2d3e4-5678-4abc-9012-c3d4e5f6a7b8', 'd2f1a3b4-5678-4abc-9012-e3f4a5b6c7d8', 'rekyc-test-user', 'f1a2b3c4-5678-4abc-9012-a3b4c5d6e7f8', 'IN_PROGRESS', 'DOCUMENT_UPLOAD', '2027-01-01 10:00:00');
-

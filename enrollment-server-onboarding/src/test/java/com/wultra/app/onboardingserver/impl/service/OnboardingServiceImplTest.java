@@ -348,6 +348,32 @@ class OnboardingServiceImplTest {
     }
 
     @Test
+    void testStartProcess_nullUser_resume() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("reactivation")
+                .build();
+        final StartOnboardingContext startContext = StartOnboardingContext.builder()
+                .request(request)
+                .requestContext(RequestContext.builder().build())
+                .encryptionContext(new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null))
+                .apiAuthentication(null)
+                .build();
+
+        when(onboardingProvider.lookupUser(any())).thenThrow(new OnboardingProviderException("User not found."));
+
+        final OnboardingStartResponse first = tested.startOnboarding(startContext);
+        final OnboardingStartResponse second = tested.startOnboarding(startContext);
+
+        verify(powerAuthClient, never()).initActivation(any(), any(), any());
+
+        assertEquals(first.processId(), second.processId());
+        assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, second.onboardingStatus());
+        assertTrue(second.activationCode().matches("([A-Z0-9]{5}-){3}[A-Z0-9]{5}"),
+                "Activation code should match pattern: XXXXX-XXXXX-XXXXX-XXXXX");
+    }
+
+    @Test
     void testStartProcess_invalidProcessType() {
         final OnboardingStartRequest request = OnboardingStartRequest.builder()
                 .identification(Map.of("username", "john.doe"))

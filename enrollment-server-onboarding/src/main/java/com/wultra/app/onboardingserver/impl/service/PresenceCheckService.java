@@ -195,17 +195,15 @@ public class PresenceCheckService {
     }
 
     /**
-     * Cleans identity data used in the presence check process.
+     * Cleans presence check data for the selected identity verification.
      *
      * @param ownerId Owner identification.
+     * @param identityVerification Identity verification whose presence check data is removed.
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
-    public void cleanup(OwnerId ownerId) throws PresenceCheckException, RemoteCommunicationException {
+    public void cleanup(final OwnerId ownerId, final IdentityVerificationEntity identityVerification) throws PresenceCheckException, RemoteCommunicationException {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
-            final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
-                    new PresenceCheckException("Unable to find identity verification for " + ownerId));
-
             selfieRepository.deleteAllByIdentityVerificationId(identityVerification.getId());
 
             presenceCheckProvider.cleanupIdentityData(ownerId, deserializeSessionInfo(identityVerification, ownerId));

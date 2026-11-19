@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.statemachine.interceptor;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
@@ -73,6 +74,10 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
             logger.warn("Document verification failed", e);
             response = new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
             status = HttpStatus.BAD_REQUEST;
+        } else if (e instanceof RemoteCommunicationException) {
+            logger.warn("Communication with remote system failed", e);
+            response = new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
+            status = HttpStatus.CONFLICT;
         } else {
             logger.error("Error occurred in a state machine.", e);
             response = new ErrorResponse("ERROR_GENERIC", "Unknown error occurred while processing a request.");
