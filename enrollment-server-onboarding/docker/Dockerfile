@@ -1,4 +1,4 @@
-FROM ibm-semeru-runtimes:open-jdk-25.0.3.0-jre-noble
+FROM ibm-semeru-runtimes:open-jdk-25.0.5.0-jre-noble@sha256:31b272aa015c00b6dee126e5cbb06a820fead132b50c7bfa41bc3096f909e64d
 
 LABEL maintainer="Wultra <hello@wultra.com>"
 
