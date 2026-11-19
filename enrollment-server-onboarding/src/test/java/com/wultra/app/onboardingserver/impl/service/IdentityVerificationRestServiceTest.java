@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationCleanupRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationInitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
@@ -57,9 +58,11 @@ import org.springframework.statemachine.StateMachine;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -117,6 +120,30 @@ class IdentityVerificationRestServiceTest {
 
     @InjectMocks
     private IdentityVerificationRestService tested;
+
+    @Test
+    void testCleanup_processWithoutVerificationDoesNotStartCleanup() throws Exception {
+        final var request = new IdentityVerificationCleanupRequest();
+        request.setProcessId(PROCESS_ID);
+        final var authentication = mock(PowerAuthApiAuthentication.class);
+        final var activation = mock(PowerAuthActivation.class);
+        when(authentication.getActivationContext()).thenReturn(activation);
+        when(activation.getActivationId()).thenReturn(ACTIVATION_ID);
+        when(activation.getUserId()).thenReturn(USER_ID);
+        final var process = new OnboardingProcessEntity();
+        process.setId(PROCESS_ID);
+        when(onboardingService.verifyProcessIdAndLock(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingStatus.VERIFICATION_IN_PROGRESS)))
+                .thenReturn(process);
+        when(identityVerificationService.findByProcessIdOptional(PROCESS_ID)).thenReturn(Optional.empty());
+
+        assertThrows(IdentityVerificationException.class, () -> tested.cleanup(request, authentication));
+
+        final var order = inOrder(onboardingService, identityVerificationService);
+        order.verify(onboardingService).verifyProcessIdAndLock(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingStatus.VERIFICATION_IN_PROGRESS));
+        order.verify(identityVerificationService).findByProcessIdOptional(PROCESS_ID);
+        verifyNoMoreInteractions(identityVerificationService);
+        verifyNoInteractions(presenceCheckService);
+    }
 
     @Test
     void testSubmitDocuments_validRequest_identityVerificationServiceCalled() throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException, DocumentVerificationException {

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed the build time in `/actuator/info` showing `1980-02-01` when built with Maven 3.10 or newer [(#1971)](https://github.com/wultra/enrollment-server/issues/1971)
 - Fixed identity verification status staying `FAILED` after `/api/identity/cleanup` and a new `/api/onboarding/start` of re-KYC with an existing activation; the status is now `NOT_INITIALIZED` so the client can call `/api/identity/init` [#1983](https://github.com/wultra/enrollment-server/issues/1983)
+- Fixed identity verification attempt limits, resets, and cleanup affecting other processes on the same activation. A new re-KYC process no longer inherits attempts from previous processes, and cleanup only affects the latest verification of the requested process. Added a database index for verification lookups by process ID [(#1983)](https://github.com/wultra/enrollment-server/issues/1983)
 - Fixed automatic personal-data cleanup not running with the default retention configuration [(#1934)](https://github.com/wultra/enrollment-server/issues/1934)
 - Fixed `NullPointerException` when starting onboarding repeatedly for identification data not matching any user [(#1948)](https://github.com/wultra/enrollment-server/issues/1948)
 - Fixed Microblink reject reason codes and messages in the events documentation to match the API version in use [(#1954)](https://github.com/wultra/enrollment-server/issues/1954)
