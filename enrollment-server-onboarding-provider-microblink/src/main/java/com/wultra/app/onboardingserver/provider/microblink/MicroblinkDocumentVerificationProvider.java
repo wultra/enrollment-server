@@ -436,7 +436,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     /**
      * Flatten the 2nd level of the Microblink response {@code checks} tree, i.e. the immediate sub-checks of
-     * each top-level ("group"/"category") check. Deeper levels (sub-checks) are not needed and ignored.
+     * each top-level ("group"/"category") check. Deeper levels (sub-checks) are not needed and ignored. A
+     * missing {@code result} is treated as {@link DocumentVerificationResponse.CheckResult#UNKNOWN} (i.e. not
+     * passing) rather than aborting the evaluation of the other checks.
      *
      * @param checks top-level ("1st level") checks from the Microblink response, may be {@code null}.
      * @return map of 2nd level check name to its result.
@@ -447,10 +449,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
 
         return checks.stream()
-                .flatMap(firstLevelCheck -> Objects.requireNonNullElse(firstLevelCheck.checks(), List.<DocumentVerificationResponse.Check>of()).stream())
+                .flatMap(firstLevelCheck -> Objects.requireNonNullElse(firstLevelCheck.checks(), List.<DocumentVerificationResponse.SecondLevelCheck>of()).stream())
                 .collect(Collectors.toMap(
-                        DocumentVerificationResponse.Check::name,
-                        DocumentVerificationResponse.Check::result,
+                        DocumentVerificationResponse.SecondLevelCheck::name,
+                        secondLevelCheck -> Objects.requireNonNullElse(secondLevelCheck.result(), DocumentVerificationResponse.CheckResult.UNKNOWN),
                         (existing, current) -> current));
     }
 

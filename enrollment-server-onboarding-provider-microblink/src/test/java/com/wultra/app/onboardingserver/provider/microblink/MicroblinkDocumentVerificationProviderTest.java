@@ -58,6 +58,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -554,6 +555,78 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(2, result.getResults().size());
         result.getResults().forEach(documentResult ->
                 assertEquals(expectedRejected, documentResult.getRejectReason() != null));
+    }
+
+    @Test
+    void testSubmitDocuments_requiredChecks_passingSecondLevelChecksAcrossTwoGroups_notRejected() throws Exception {
+        // given, required checks spread across two different 1st level groups, both passing
+        final var checksJson = buildChecksJson(List.of(
+                Map.of("DataIntegrityCheck", "Pass"),
+                Map.of("GenerativeAiCheck", "Pass")
+        ));
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck", "GenerativeAiCheck"), checksJson);
+
+        // then
+        assertNull(rejectReason);
+    }
+
+    @Test
+    void testSubmitDocuments_requiredChecks_passingGroupNotCountedAsSecondLevelCheck_rejected() throws Exception {
+        // given, the 1st level group itself is named and passing like a required check, but it has no 2nd
+        // level check of that name - a required check missing from the 2nd level must still fail
+        final var checksJson = """
+                [{"name": "DataIntegrityCheck", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "OtherCheck", "result": "Pass", "type": "Check"}]}]
+                """;
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck"), checksJson);
+
+        // then
+        assertNotNull(rejectReason);
+    }
+
+    @Test
+    void testSubmitDocuments_requiredChecks_passingThirdLevelCheckNotCountedAsSecondLevelCheck_rejected() throws Exception {
+        // given, a 3rd level sub-check is named and passing like a required check, but the required check
+        // itself is not present at the 2nd level - deeper levels must not be inspected
+        final var checksJson = """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "MatchCheck", "result": "Fail", "type": "TieredCheck",
+                              "checks": [{"name": "DataIntegrityCheck", "result": "Pass", "type": "FieldCheck"}]}]}]
+                """;
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck"), checksJson);
+
+        // then
+        assertNotNull(rejectReason);
+    }
+
+    private String submitWithChecks(final List<String> requiredChecks, final String checksJson) throws Exception {
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
+        );
+        final var responseJson = buildMicroblinkResponseJson(
+                RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]", null, checksJson
+        );
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(requiredChecks);
+
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        assertEquals(2, result.getResults().size());
+        final var rejectReasons = result.getResults().stream().map(DocumentSubmitResult::getRejectReason).distinct().toList();
+        assertEquals(1, rejectReasons.size(), "all documents in the response are expected to share the same reject reason");
+        return rejectReasons.get(0);
     }
 
     @Test
@@ -1247,15 +1320,28 @@ class MicroblinkDocumentVerificationProviderTest {
      * each as {@code {"name": "<name>", "result": "<result>", "type": "Check"}}.
      */
     private static String buildChecksJson(final Map<String, String> resultByCheckName) {
-        final var secondLevelChecks = resultByCheckName.entrySet().stream()
-                .map(entry -> """
-                        {"name": "%s", "result": "%s", "type": "Check"}
-                        """.formatted(entry.getKey(), entry.getValue()))
+        return buildChecksJson(List.of(resultByCheckName));
+    }
+
+    /**
+     * Builds a {@code checks} tree with one 1st level group per given map, each group containing the given
+     * 2nd level checks, each as {@code {"name": "<name>", "result": "<result>", "type": "Check"}}.
+     */
+    private static String buildChecksJson(final List<Map<String, String>> resultByCheckNamePerGroup) {
+        final var groups = IntStream.range(0, resultByCheckNamePerGroup.size())
+                .mapToObj(groupIndex -> {
+                    final var secondLevelChecks = resultByCheckNamePerGroup.get(groupIndex).entrySet().stream()
+                            .map(entry -> """
+                                    {"name": "%s", "result": "%s", "type": "Check"}
+                                    """.formatted(entry.getKey(), entry.getValue()))
+                            .collect(Collectors.joining(","));
+                    return """
+                            {"name": "Group%d", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}
+                            """.formatted(groupIndex, secondLevelChecks);
+                })
                 .collect(Collectors.joining(","));
 
-        return """
-                [{"name": "Group", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}]
-                """.formatted(secondLevelChecks);
+        return "[%s]".formatted(groups);
     }
 
     private static String buildVerificationResultJson(final String firstName) {

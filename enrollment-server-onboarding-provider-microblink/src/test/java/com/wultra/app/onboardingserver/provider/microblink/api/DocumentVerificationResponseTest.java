@@ -142,8 +142,8 @@ class DocumentVerificationResponseTest {
         final var matchCheck = extractedDataCheck.checks().get(0);
         assertEquals("MatchCheck", matchCheck.name());
         assertEquals(CheckResult.FAIL, matchCheck.result());
-        // 3rd level sub-checks are parsed but not inspected further by the provider logic
-        assertEquals(1, matchCheck.checks().size());
+        // 3rd level sub-checks are not bound to a type and are therefore dropped, e.g. matchCheck has
+        // no checks() accessor at all - SecondLevelCheck intentionally has no nested checks field
 
         final var dataIntegrityCheck = extractedDataCheck.checks().get(1);
         assertEquals("DataIntegrityCheck", dataIntegrityCheck.name());

@@ -91,25 +91,39 @@ public record DocumentVerificationResponse(
     ) {}
 
     /**
-     * A single node in the Microblink {@code checks} tree. The tree has multiple levels - the 1st level is a
-     * "group"/"category", the 2nd level are the actual checks we evaluate, and the 3rd level or more are
-     * sub-checks with too much granularity to be used for evaluation.
+     * A 1st level node ("group"/"category") in the Microblink {@code checks} tree.
      *
-     * @param name name of the check, e.g. {@code DataIntegrityCheck}
-     * @param result result of the check, unrecognized values are mapped to {@link CheckResult#UNKNOWN}
+     * @param name name of the check group, e.g. {@code ExtractedDataCheck}
+     * @param result result of the check group, unrecognized values are mapped to {@link CheckResult#UNKNOWN}
      * @param type type of the check node, e.g. {@code Check}, {@code DetailedCheck}, {@code TieredCheck}
-     * @param checks nested sub-checks, if any
+     * @param checks 2nd level checks we evaluate; any 3rd level or deeper sub-checks are not needed for
+     *               evaluation and intentionally not bound to a type, so they are ignored on parsing
      */
     public record Check(
             String name,
             @JsonFormat(with = JsonFormat.Feature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
             CheckResult result,
             String type,
-            List<Check> checks
+            List<SecondLevelCheck> checks
     ) {}
 
     /**
-     * Result of a Microblink {@link Check}. Unrecognized values are mapped to {@link #UNKNOWN}.
+     * A 2nd level node in the Microblink {@code checks} tree, i.e. the actual check we evaluate. Any nested
+     * {@code checks} (3rd level or deeper) are intentionally not declared here, so they are ignored on parsing.
+     *
+     * @param name name of the check, e.g. {@code DataIntegrityCheck}
+     * @param result result of the check, unrecognized values are mapped to {@link CheckResult#UNKNOWN}
+     * @param type type of the check node, e.g. {@code Check}, {@code DetailedCheck}, {@code TieredCheck}
+     */
+    public record SecondLevelCheck(
+            String name,
+            @JsonFormat(with = JsonFormat.Feature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
+            CheckResult result,
+            String type
+    ) {}
+
+    /**
+     * Result of a Microblink check. Unrecognized values are mapped to {@link #UNKNOWN}.
      */
     public enum CheckResult {
         @JsonEnumDefaultValue
