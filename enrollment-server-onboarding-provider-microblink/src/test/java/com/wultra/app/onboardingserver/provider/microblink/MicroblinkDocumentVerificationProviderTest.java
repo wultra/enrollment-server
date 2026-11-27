@@ -58,7 +58,6 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1433,20 +1432,27 @@ class MicroblinkDocumentVerificationProviderTest {
      * 2nd level checks, each as {@code {"name": "<name>", "result": "<result>", "type": "Check"}}.
      */
     private static String buildChecksJson(final List<Map<String, String>> resultByCheckNamePerGroup) {
-        final var groups = IntStream.range(0, resultByCheckNamePerGroup.size())
-                .mapToObj(groupIndex -> {
-                    final var secondLevelChecks = resultByCheckNamePerGroup.get(groupIndex).entrySet().stream()
-                            .map(entry -> """
-                                    {"name": "%s", "result": "%s", "type": "Check"}
-                                    """.formatted(entry.getKey(), entry.getValue()))
-                            .collect(Collectors.joining(","));
-                    return """
-                            {"name": "Group%d", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}
-                            """.formatted(groupIndex, secondLevelChecks);
-                })
-                .collect(Collectors.joining(","));
+        final var groups = new ArrayList<String>();
+        for (int groupIndex = 0; groupIndex < resultByCheckNamePerGroup.size(); groupIndex++) {
+            groups.add(buildGroupJson(groupIndex, resultByCheckNamePerGroup.get(groupIndex)));
+        }
 
-        return "[%s]".formatted(groups);
+        return "[%s]".formatted(String.join(",", groups));
+    }
+
+    private static String buildGroupJson(final int groupIndex, final Map<String, String> resultByCheckName) {
+        final var secondLevelChecks = resultByCheckName.entrySet().stream()
+                .map(entry -> buildCheckJson(entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining(","));
+        return """
+                {"name": "Group%d", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}
+                """.formatted(groupIndex, secondLevelChecks);
+    }
+
+    private static String buildCheckJson(final String name, final String result) {
+        return """
+                {"name": "%s", "result": "%s", "type": "Check"}
+                """.formatted(name, result);
     }
 
     private static String buildVerificationResultJson(final String firstName) {
