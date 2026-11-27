@@ -605,6 +605,54 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNotNull(rejectReason);
     }
 
+    @Test
+    void testSubmitDocuments_requiredChecks_requiredCheckWithOmittedResult_rejectedWithoutThrowing() throws Exception {
+        // given, the required check is present at the 2nd level but has no "result" field at all
+        final var checksJson = """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "DataIntegrityCheck", "type": "Check"}]}]
+                """;
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck"), checksJson);
+
+        // then
+        assertNotNull(rejectReason);
+    }
+
+    @Test
+    void testSubmitDocuments_requiredChecks_requiredCheckWithNullResult_rejectedWithoutThrowing() throws Exception {
+        // given, the required check is present at the 2nd level but has an explicit JSON null "result"
+        final var checksJson = """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "DataIntegrityCheck", "result": null, "type": "Check"}]}]
+                """;
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck"), checksJson);
+
+        // then
+        assertNotNull(rejectReason);
+    }
+
+    @Test
+    void testSubmitDocuments_requiredChecks_unrelatedCheckWithOmittedResult_doesNotPreventAcceptance() throws Exception {
+        // given, an unrelated (not required) 2nd level check has no "result" field, the required check passes
+        final var checksJson = """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [
+                      {"name": "DataIntegrityCheck", "result": "Pass", "type": "Check"},
+                      {"name": "GenerativeAiCheck", "type": "Check"}
+                  ]}]
+                """;
+
+        // when
+        final var rejectReason = submitWithChecks(List.of("DataIntegrityCheck"), checksJson);
+
+        // then
+        assertNull(rejectReason);
+    }
+
     private String submitWithChecks(final List<String> requiredChecks, final String checksJson) throws Exception {
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
         final var apiRequest = buildMicroblinkRequest(
@@ -1035,6 +1083,32 @@ class MicroblinkDocumentVerificationProviderTest {
 
         // then
         assertEquals(expectedRejected ? DocumentVerificationStatus.REJECTED : DocumentVerificationStatus.ACCEPTED, result.getStatus());
+    }
+
+    @Test
+    void testVerifyDocuments_requiredCheckWithOmittedResult_rejectedWithoutThrowing() {
+        // given, the required check is present at the 2nd level but has no "result" field at all
+        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(
+                        RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", "[]", buildMessage(), null, """
+                                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                                  "checks": [{"name": "DataIntegrityCheck", "type": "Check"}]}]
+                                """
+                )
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
+        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
+        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(List.of("DataIntegrityCheck"));
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
     }
 
     static Stream<Arguments> requiredChecksScenarios() {

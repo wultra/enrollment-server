@@ -83,6 +83,28 @@ class DocumentVerificationResponseTest {
     }
 
     @Test
+    void testParseCheckResult_missing() {
+        final var json = """
+                {"checks": [{"name": "VisualCheck", "checks": [{"name": "DataIntegrityCheck", "type": "Check"}]}]}
+                """;
+
+        final var response = mapper.readValue(json, DocumentVerificationResponse.class);
+
+        assertNull(response.checks().iterator().next().checks().iterator().next().result());
+    }
+
+    @Test
+    void testParseCheckResult_null() {
+        final var json = """
+                {"checks": [{"name": "VisualCheck", "checks": [{"name": "DataIntegrityCheck", "result": null, "type": "Check"}]}]}
+                """;
+
+        final var response = mapper.readValue(json, DocumentVerificationResponse.class);
+
+        assertNull(response.checks().iterator().next().checks().iterator().next().result());
+    }
+
+    @Test
     void testParseChecksTree() {
         final var json = """
               {
