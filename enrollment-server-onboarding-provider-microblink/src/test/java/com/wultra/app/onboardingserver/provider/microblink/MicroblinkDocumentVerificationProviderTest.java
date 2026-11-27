@@ -1442,17 +1442,17 @@ class MicroblinkDocumentVerificationProviderTest {
 
     private static String buildGroupJson(final int groupIndex, final Map<String, String> resultByCheckName) {
         final var secondLevelChecks = resultByCheckName.entrySet().stream()
-                .map(entry -> buildCheckJson(entry.getKey(), entry.getValue()))
+                .map(MicroblinkDocumentVerificationProviderTest::buildCheckJson)
                 .collect(Collectors.joining(","));
         return """
                 {"name": "Group%d", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}
                 """.formatted(groupIndex, secondLevelChecks);
     }
 
-    private static String buildCheckJson(final String name, final String result) {
+    private static String buildCheckJson(final Map.Entry<String, String> entry) {
         return """
                 {"name": "%s", "result": "%s", "type": "Check"}
-                """.formatted(name, result);
+                """.formatted(entry.getKey(), entry.getValue());
     }
 
     private static String buildVerificationResultJson(final String firstName) {
