@@ -406,8 +406,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
      * @return {@code true} if the document is not accepted, {@code false} otherwise.
      */
     private boolean isNotAccepted(final DocumentVerificationResponse responseBody) {
-        final var verification = responseBody == null ? null : responseBody.verification();
-        if (verification == null || verification.recommendedOutcome() != DocumentVerificationResponse.RecommendedOutcome.ACCEPT) {
+        final var isAccepted = Optional.ofNullable(responseBody)
+                .map(DocumentVerificationResponse::verification)
+                .map(DocumentVerificationResponse.Verification::recommendedOutcome)
+                .filter(DocumentVerificationResponse.RecommendedOutcome.ACCEPT::equals)
+                .isPresent();
+        if (!isAccepted) {
             return true;
         }
         return !findFailedRequiredChecks(responseBody).isEmpty();
@@ -426,7 +430,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return List.of();
         }
 
-        final var checks = responseBody == null ? null : responseBody.checks();
+        final var checks = Optional.ofNullable(responseBody)
+                .map(DocumentVerificationResponse::checks)
+                .orElse(null);
         final var secondLevelCheckResults = flattenSecondLevelChecks(checks);
 
         return requiredChecks.stream()
