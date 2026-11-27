@@ -115,6 +115,24 @@ PR, not after merge. If a change touches both products, update both files.
 > documentation, **not** the changelog. Do not put changelog entries there.
 
 
+### Migration notes
+
+In addition to the changelog, update the migration note for the **next unreleased** onboarding
+version (`docs/onboarding/PowerAuth-Enrollment-Onboarding-Server-X.Y.Z.md`, where `X.Y.Z` matches
+the `<version>` in the root `pom.xml`) whenever a change requires or benefits from operator
+awareness on upgrade:
+
+- new, changed, removed, or renamed configuration properties (even optional ones with a safe default)
+- Liquibase/manual SQL database changes
+- changed event payloads/formats
+- any other breaking or behavior change relevant to upgrading
+
+If the file for the target version doesn't exist yet, create it (see existing files for the
+expected structure: `## Database Changes`, `## Configuration`, etc.) and add it to
+`docs/onboarding/Migration-Instructions.md`. Skip this for internal-only changes, bug fixes with
+no operator action needed, or doc/test/tooling-only changes.
+
+
 ### Format
 
 Each product changelog **strictly** follows
