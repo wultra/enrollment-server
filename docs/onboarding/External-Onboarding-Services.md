@@ -252,6 +252,19 @@ NOTE: Currently triggered only in positive result.
                         "data": "String"
                     }
                 ],
+
+                "details" : [
+                    {
+                        "type": "provider",
+                        "code": "DataIntegrityCheck",
+                        "message": "Fail"
+                    },
+                    {
+                        "type": "provider",
+                        "code": "GenerativeAiCheck",
+                        "message": "Fail"
+                    }
+                ],
                 "rawData": Object
             }
         ]
@@ -261,25 +274,48 @@ NOTE: Currently triggered only in positive result.
 
 ##### Request Params
 
-| Attribute                                   | Type     | Description                                                                                                                                                                                  |
-|:--------------------------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`                                 | `String` | ID of an onboarding process.                                                                                                                                                                 |
-| `processType`                               | `String` | Type of the onboarding process.                                                                                                                                                              |
-| `userId`                                    | `String` | ID of a user stored on onboarding process.                                                                                                                                                   |
-| `identityVerificationId`                    | `String` | ID of the identity verification subprocess.                                                                                                                                                  |
-| `provider`                                  | `String` | Name of the configured external document provider: ZenID or Microblink.                                                                                                                      |
-| `status`                                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
-| `documentCheckResult.person`                | `Object` | Selected normalized data extracted from the documents. Data are cross-checked between the documents. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                    |
-| `documentCheckResult.documents`             | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
-| `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.                                                                                                                                 |
-| `documentCheckResult.documents.country`     | `String` | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                           |
-| `documentCheckResult.documents.status`      | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
-| `documentCheckResult.documents.score`       | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
-| `documentCheckResult.documents.data`        | `Object` | Selected normalized data extracted from the document. See `documentCheckResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`). |
-| `documentCheckResult.documents.images`      | `Array`  | Array of images extracted from the document.                                                                                                                                                 |
-| `documentCheckResult.documents.images.type` | `String` | Image type, e.g. `FACE`.                                                                                                                                                                     |
-| `documentCheckResult.documents.images.data` | `String` | JPEG binary data encoded using `base64`.                                                                                                                                                     |
-| `documentCheckResult.documents.rawData`     | `Object` | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                  |
+| Attribute                                       | Type     | Description                                                                                                                                                                                  |
+|:------------------------------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `processId`                                     | `String` | ID of an onboarding process.                                                                                                                                                                 |
+| `processType`                                   | `String` | Type of the onboarding process.                                                                                                                                                              |
+| `userId`                                        | `String` | ID of a user stored on onboarding process.                                                                                                                                                   |
+| `identityVerificationId`                        | `String` | ID of the identity verification subprocess.                                                                                                                                                  |
+| `provider`                                      | `String` | Name of the configured external document provider: ZenID or Microblink.                                                                                                                      |
+| `status`                                        | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
+| `documentCheckResult.person`                    | `Object` | Selected normalized data extracted from the documents. Data are cross-checked between the documents. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                    |
+| `documentCheckResult.documents`                 | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
+| `documentCheckResult.documents.type`            | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.                                                                                                                                 |
+| `documentCheckResult.documents.country`         | `String` | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                           |
+| `documentCheckResult.documents.status`          | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
+| `documentCheckResult.documents.score`           | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
+| `documentCheckResult.documents.data`            | `Object` | Selected normalized data extracted from the document. See `documentCheckResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`). |
+| `documentCheckResult.documents.images`          | `Array`  | Array of images extracted from the document.                                                                                                                                                 |
+| `documentCheckResult.documents.images.type`     | `String` | Image type, e.g. `FACE`.                                                                                                                                                                     |
+| `documentCheckResult.documents.images.data`     | `String` | JPEG binary data encoded using `base64`.                                                                                                                                                     |
+| `documentCheckResult.documents.details`         | `Array`  | Evaluation details. Currently the list of failed checks from provider's response.                                                                                                            |
+| `documentCheckResult.documents.details.type`    | `String` | Detail type enum: `provider`.                                                                                                                                                                |
+| `documentCheckResult.documents.details.code`    | `String` | Detail code contains check name. Complete list of supported names is below the table.                                                                                                        |
+| `documentCheckResult.documents.details.message` | `String` | Detail message. Currently related to the failed checks, so it is always `Fail`.                                                                                                              |
+| `documentCheckResult.documents.rawData`         | `Object` | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                  |
+
+**List of failed checks:**
+
+- MatchCheck
+- LogicCheck
+- FieldFormatCheck
+- BarcodeAuthenticity
+- SuspiciousDataCheck
+- DataIntegrityCheck
+- MRZCheck
+- ScreenCheck
+- PhotocopyCheck
+- PhotoForgeryCheck
+- SecurityFeatures
+- GenerativeAICheck
+- VersionCheck
+- ExpiredCheck
+
+See the complete info about [Document Checks](https://developers.wultra.com/products/identity-verification/document-verification#document-checks).
 
 #### Response 200
 
