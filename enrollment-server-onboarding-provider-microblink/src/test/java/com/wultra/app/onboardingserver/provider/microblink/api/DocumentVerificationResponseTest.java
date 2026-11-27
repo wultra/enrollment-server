@@ -18,6 +18,7 @@
 
 package com.wultra.app.onboardingserver.provider.microblink.api;
 
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse.CheckResult;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse.RecommendedOutcome;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -61,5 +62,99 @@ class DocumentVerificationResponseTest {
         final var response = mapper.readValue("{\"verification\": {\"result\": \"Pass\"}}", DocumentVerificationResponse.class);
 
         assertNull(response.verification().recommendedOutcome());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "Unknown,UNKNOWN",
+            "NotPerformed,NOT_PERFORMED",
+            "Pass,PASS",
+            "Fail,FAIL",
+            "SomethingNew,UNKNOWN"
+    })
+    void testParseCheckResult(final String value, final CheckResult expected) {
+        final var json = """
+                {"checks": [{"name": "VisualCheck", "result": "%s", "type": "Check"}]}
+                """.formatted(value);
+
+        final var response = mapper.readValue(json, DocumentVerificationResponse.class);
+
+        assertEquals(expected, response.checks().iterator().next().result());
+    }
+
+    @Test
+    void testParseChecksTree() {
+        final var json = """
+              {
+                "checks": [
+                  {
+                    "name": "ExtractedDataCheck",
+                    "result": "Fail",
+                    "certaintyLevel": "High",
+                    "type": "DetailedCheck",
+                    "checks": [
+                      {
+                        "name": "MatchCheck",
+                        "result": "Fail",
+                        "matchLevel": "Level1",
+                        "type": "TieredCheck",
+                        "checks": [
+                          {
+                            "field": "FirstName",
+                            "result": "Fail",
+                            "type": "FieldCheck"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "DataIntegrityCheck",
+                        "result": "Pass",
+                        "type": "Check"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "VisualCheck",
+                    "result": "Pass",
+                    "type": "Check",
+                    "checks": [
+                      {
+                        "name": "GenerativeAiCheck",
+                        "result": "Pass",
+                        "matchLevel": "Level6",
+                        "type": "TieredCheck"
+                      }
+                    ]
+                  }
+                ]
+              }
+              """;
+
+        final var response = mapper.readValue(json, DocumentVerificationResponse.class);
+
+        assertEquals(2, response.checks().size());
+
+        final var extractedDataCheck = response.checks().get(0);
+        assertEquals("ExtractedDataCheck", extractedDataCheck.name());
+        assertEquals(CheckResult.FAIL, extractedDataCheck.result());
+        assertEquals(2, extractedDataCheck.checks().size());
+
+        final var matchCheck = extractedDataCheck.checks().get(0);
+        assertEquals("MatchCheck", matchCheck.name());
+        assertEquals(CheckResult.FAIL, matchCheck.result());
+        // 3rd level sub-checks are parsed but not inspected further by the provider logic
+        assertEquals(1, matchCheck.checks().size());
+
+        final var dataIntegrityCheck = extractedDataCheck.checks().get(1);
+        assertEquals("DataIntegrityCheck", dataIntegrityCheck.name());
+        assertEquals(CheckResult.PASS, dataIntegrityCheck.result());
+
+        final var visualCheck = response.checks().get(1);
+        assertEquals("VisualCheck", visualCheck.name());
+        assertEquals(CheckResult.PASS, visualCheck.result());
+
+        final var generativeAiCheck = visualCheck.checks().iterator().next();
+        assertEquals("GenerativeAiCheck", generativeAiCheck.name());
+        assertEquals(CheckResult.PASS, generativeAiCheck.result());
     }
 }

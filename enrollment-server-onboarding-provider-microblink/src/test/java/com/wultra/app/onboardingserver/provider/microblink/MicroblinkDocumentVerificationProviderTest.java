@@ -41,7 +41,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -71,8 +73,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MicroblinkDocumentVerificationProviderTest {
 
-    private static final Pattern MICROBLINK_RESPONSE_IMAGE_PATTERN = Pattern.compile(
-            "\"images\"\\s*:\\s*\\[.*?\\]\\s*,?",
+    private static final Pattern MICROBLINK_RESPONSE_IMAGE_PATTERN = Pattern.compile("""
+                    "images"\\s*:\\s*\\[.*?]\\s*,?""",
             Pattern.DOTALL
     );
 
@@ -522,6 +524,38 @@ class MicroblinkDocumentVerificationProviderTest {
                 assertEquals(expectedRejected, documentResult.getRejectReason() != null));
     }
 
+    @ParameterizedTest
+    @MethodSource("requiredChecksScenarios")
+    void testSubmitDocuments_decisionByRequiredChecks(
+            final List<String> requiredChecks,
+            final Map<String, String> secondLevelCheckResults,
+            final boolean expectedRejected) throws Exception {
+
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
+        );
+        final var responseJson = buildMicroblinkResponseJson(
+                RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]", null, buildChecksJson(secondLevelCheckResults)
+        );
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(requiredChecks);
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals(2, result.getResults().size());
+        result.getResults().forEach(documentResult ->
+                assertEquals(expectedRejected, documentResult.getRejectReason() != null));
+    }
+
     @Test
     void testSubmitDocuments_notAcceptedResponseWithoutMessages_fallbackRejectReason() throws Exception {
         // given
@@ -903,6 +937,66 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @ParameterizedTest
+    @MethodSource("requiredChecksScenarios")
+    void testVerifyDocuments_decisionByRequiredChecks(
+            final List<String> requiredChecks,
+            final Map<String, String> secondLevelCheckResults,
+            final boolean expectedRejected) {
+
+        // given
+        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(
+                        RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", "[]", buildMessage(), null, buildChecksJson(secondLevelCheckResults)
+                )
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
+        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
+        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(requiredChecks);
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals(expectedRejected ? DocumentVerificationStatus.REJECTED : DocumentVerificationStatus.ACCEPTED, result.getStatus());
+    }
+
+    static Stream<Arguments> requiredChecksScenarios() {
+        return Stream.of(
+                // no requiredChecks configured -> only recommendedOutcome matters
+                Arguments.of(List.of(), Map.of(), false),
+                Arguments.of(null, Map.of("DataIntegrityCheck", "Fail"), false),
+                // one required check configured
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of("DataIntegrityCheck", "Pass"), false),
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of("DataIntegrityCheck", "Fail"), true),
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of("DataIntegrityCheck", "Unknown"), true),
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of("DataIntegrityCheck", "NotPerformed"), true),
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of(), true),
+                // not-required check failing does not affect the decision
+                Arguments.of(List.of("DataIntegrityCheck"), Map.of("DataIntegrityCheck", "Pass", "GenerativeAiCheck", "Fail"), false),
+                // multiple required checks configured
+                Arguments.of(
+                        List.of("DataIntegrityCheck", "GenerativeAiCheck"),
+                        Map.of("DataIntegrityCheck", "Pass", "GenerativeAiCheck", "Pass"),
+                        false
+                ),
+                Arguments.of(
+                        List.of("DataIntegrityCheck", "GenerativeAiCheck"),
+                        Map.of("DataIntegrityCheck", "Pass", "GenerativeAiCheck", "Fail"),
+                        true
+                ),
+                Arguments.of(
+                        List.of("DataIntegrityCheck", "GenerativeAiCheck"),
+                        Map.of("DataIntegrityCheck", "Pass"),
+                        true
+                )
+        );
+    }
+
+    @ParameterizedTest
     @CsvSource({
             ",0",
             "\"Low\",1",
@@ -1102,6 +1196,19 @@ class MicroblinkDocumentVerificationProviderTest {
             final String messages,
             final String certaintyLevel
     ) {
+        return buildMicroblinkResponseJson(recommendedOutcome, checkResult, extractedType, overallExtractionJson, imagesJson, messages, certaintyLevel, "[]");
+    }
+
+    private static String buildMicroblinkResponseJson(
+            final RecommendedOutcome recommendedOutcome,
+            final CheckResult checkResult,
+            final Type extractedType,
+            final String overallExtractionJson,
+            final String imagesJson,
+            final String messages,
+            final String certaintyLevel,
+            final String checksJson) {
+
         final var recommendedOutcomeJson = JSON_MAPPER.writeValueAsString(recommendedOutcome);
         final var checkResultJson = JSON_MAPPER.writeValueAsString(checkResult);
         return """
@@ -1129,9 +1236,26 @@ class MicroblinkDocumentVerificationProviderTest {
                         "traceId": "00-0ffe7a27e6129c701d980635456f220f-001de07a3723b393-01"
                     },
                     "images": %s,
-                    "messages": %s
+                    "messages": %s,
+                    "checks": %s
                 }
-                """.formatted(recommendedOutcomeJson, checkResultJson, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
+                """.formatted(recommendedOutcomeJson, checkResultJson, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages, checksJson);
+    }
+
+    /**
+     * Builds a {@code checks} tree with a single 1st level group containing the given 2nd level checks,
+     * each as {@code {"name": "<name>", "result": "<result>", "type": "Check"}}.
+     */
+    private static String buildChecksJson(final Map<String, String> resultByCheckName) {
+        final var secondLevelChecks = resultByCheckName.entrySet().stream()
+                .map(entry -> """
+                        {"name": "%s", "result": "%s", "type": "Check"}
+                        """.formatted(entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining(","));
+
+        return """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck", "checks": [%s]}]
+                """.formatted(secondLevelChecks);
     }
 
     private static String buildVerificationResultJson(final String firstName) {

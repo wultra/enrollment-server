@@ -34,7 +34,8 @@ public record DocumentVerificationResponse(
         Extraction extraction,
         Runtime runtime,
         List<Image> images,
-        List<Message> messages
+        List<Message> messages,
+        List<Check> checks
 ){
     public record Verification(
             String result,
@@ -88,4 +89,33 @@ public record DocumentVerificationResponse(
             String message,
             String status
     ) {}
+
+    /**
+     * A single node in the Microblink {@code checks} tree. The tree has multiple levels - the 1st level is a
+     * "group"/"category", the 2nd level are the actual checks we evaluate, and the 3rd level or more are
+     * sub-checks with too much granularity to be used for evaluation.
+     *
+     * @param name name of the check, e.g. {@code DataIntegrityCheck}
+     * @param result result of the check, unrecognized values are mapped to {@link CheckResult#UNKNOWN}
+     * @param type type of the check node, e.g. {@code Check}, {@code DetailedCheck}, {@code TieredCheck}
+     * @param checks nested sub-checks, if any
+     */
+    public record Check(
+            String name,
+            @JsonFormat(with = JsonFormat.Feature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
+            CheckResult result,
+            String type,
+            List<Check> checks
+    ) {}
+
+    /**
+     * Result of a Microblink {@link Check}. Unrecognized values are mapped to {@link #UNKNOWN}.
+     */
+    public enum CheckResult {
+        @JsonEnumDefaultValue
+        @JsonProperty("Unknown") UNKNOWN,
+        @JsonProperty("NotPerformed") NOT_PERFORMED,
+        @JsonProperty("Pass") PASS,
+        @JsonProperty("Fail") FAIL
+    }
 }
