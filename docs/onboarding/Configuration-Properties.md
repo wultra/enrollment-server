@@ -247,4 +247,4 @@ The WAR file includes the `micrometer-registry-prometheus` dependency.
 Discuss its configuration with
 the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).
 
-[Document Checks](https://developers.wultra.com/products/identity-verification/document-verification#document-checks)
+[Document Checks]: https://developers.wultra.com/products/identity-verification/document-verification#document-checks
