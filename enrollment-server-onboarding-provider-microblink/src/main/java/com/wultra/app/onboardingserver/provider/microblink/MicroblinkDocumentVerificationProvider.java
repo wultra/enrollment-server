@@ -385,8 +385,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.getResponseWithoutImages());
 
-            if (isNotAccepted(responseBody.verification())) {
-                result.setRejectReason(buildProviderRejectReason(Objects.requireNonNullElse(responseBody.messages(), List.of())));
+            if (isNotAccepted(responseBody)) {
+                final var failedRequiredChecks = findFailedRequiredChecks(responseBody);
+                result.setRejectReason(buildProviderRejectReason(Objects.requireNonNullElse(responseBody.messages(), List.of()), failedRequiredChecks));
             }
 
             results.add(result);
@@ -397,20 +398,78 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     /**
      * Decide whether the Microblink verification failed. Only the recommended outcome {@code Accept} is
-     * considered successful; any other value, including a missing one, is considered a failure.
+     * considered successful; any other value, including a missing one, is considered a failure. When
+     * {@code requiredChecks} is configured, all configured 2nd level checks must additionally have
+     * {@code result=Pass}.
      *
-     * @param verification Microblink verification, may be {@code null}.
+     * @param responseBody Microblink response body, may be {@code null}.
      * @return {@code true} if the document is not accepted, {@code false} otherwise.
      */
-    private static boolean isNotAccepted(final DocumentVerificationResponse.Verification verification) {
-        return verification == null
-                || verification.recommendedOutcome() != DocumentVerificationResponse.RecommendedOutcome.ACCEPT;
+    private boolean isNotAccepted(final DocumentVerificationResponse responseBody) {
+        final var isAccepted = Optional.ofNullable(responseBody)
+                .map(DocumentVerificationResponse::verification)
+                .map(DocumentVerificationResponse.Verification::recommendedOutcome)
+                .filter(DocumentVerificationResponse.RecommendedOutcome.ACCEPT::equals)
+                .isPresent();
+        if (!isAccepted) {
+            return true;
+        }
+        return !findFailedRequiredChecks(responseBody).isEmpty();
     }
 
-    private static String buildProviderRejectReason(final List<DocumentVerificationResponse.Message> messages) {
-        final var rejectReasons = messages.stream()
-                .map(message -> "%s %s".formatted(message.code(), message.message()))
+    /**
+     * Find names of configured {@code requiredChecks} that are missing or do not have {@code result=Pass}
+     * among the 2nd level of the Microblink response {@code checks} tree.
+     *
+     * @param responseBody Microblink response body, may be {@code null}.
+     * @return names of failed required checks, empty when no {@code requiredChecks} are configured.
+     */
+    private List<String> findFailedRequiredChecks(final DocumentVerificationResponse responseBody) {
+        final var requiredChecks = properties.getRequiredChecks();
+        if (CollectionUtils.isEmpty(requiredChecks)) {
+            return List.of();
+        }
+
+        final var checks = Optional.ofNullable(responseBody)
+                .map(DocumentVerificationResponse::checks)
+                .orElse(null);
+        final var secondLevelCheckResults = flattenSecondLevelChecks(checks);
+
+        return requiredChecks.stream()
+                .filter(name -> secondLevelCheckResults.get(name) != DocumentVerificationResponse.CheckResult.PASS)
                 .toList();
+    }
+
+    /**
+     * Flatten the 2nd level of the Microblink response {@code checks} tree, i.e. the immediate sub-checks of
+     * each top-level ("group"/"category") check. Deeper levels (sub-checks) are not needed and ignored. A
+     * missing {@code result} is treated as {@link DocumentVerificationResponse.CheckResult#UNKNOWN} (i.e. not
+     * passing) rather than aborting the evaluation of the other checks.
+     *
+     * @param checks top-level ("1st level") checks from the Microblink response, may be {@code null}.
+     * @return map of 2nd level check name to its result.
+     */
+    private static Map<String, DocumentVerificationResponse.CheckResult> flattenSecondLevelChecks(final List<DocumentVerificationResponse.Check> checks) {
+        if (CollectionUtils.isEmpty(checks)) {
+            return Map.of();
+        }
+
+        return checks.stream()
+                .flatMap(firstLevelCheck -> Objects.requireNonNullElse(firstLevelCheck.checks(), List.<DocumentVerificationResponse.SecondLevelCheck>of()).stream())
+                .collect(Collectors.toMap(
+                        DocumentVerificationResponse.SecondLevelCheck::name,
+                        secondLevelCheck -> Objects.requireNonNullElse(secondLevelCheck.result(), DocumentVerificationResponse.CheckResult.UNKNOWN),
+                        (existing, current) -> current));
+    }
+
+    private static String buildProviderRejectReason(final List<DocumentVerificationResponse.Message> messages, final List<String> failedRequiredChecks) {
+        final var rejectReasons = new ArrayList<String>(messages.stream()
+                .map(message -> "%s %s".formatted(message.code(), message.message()))
+                .toList());
+
+        if (!failedRequiredChecks.isEmpty()) {
+            rejectReasons.add("Required checks not passed: %s".formatted(failedRequiredChecks));
+        }
 
         return rejectReasons.isEmpty()
                 ? DocumentVerificationEntity.DEFAULT_REJECT_REASON
@@ -658,21 +717,21 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult())
                 .orElseThrow(() -> new DocumentVerificationException("Failed to parse provider response for uploadId=%s".formatted(uploadId)));
 
-        final var microblinkVerification = Optional.of(microblinkResponse)
-                .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+        final var microblinkResponseBody = microblinkResponse.getParsedResponseBody();
+        final var microblinkVerification = Optional.ofNullable(microblinkResponseBody)
                 .map(DocumentVerificationResponse::verification);
 
         final var score = microblinkVerification.map(DocumentVerificationResponse.Verification::certaintyLevel)
                 .map(MicroblinkDocumentVerificationProvider::convertScore)
                 .orElse(0);
 
-        if (isNotAccepted(microblinkVerification.orElse(null))) {
-            final var messages = Optional.of(microblinkResponse)
-                    .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+        if (isNotAccepted(microblinkResponseBody)) {
+            final var messages = Optional.ofNullable(microblinkResponseBody)
                     .map(DocumentVerificationResponse::messages)
                     .orElse(List.of());
+            final var failedRequiredChecks = findFailedRequiredChecks(microblinkResponseBody);
 
-            documentVerificationResultBuilder.rejectReason(buildProviderRejectReason(messages));
+            documentVerificationResultBuilder.rejectReason(buildProviderRejectReason(messages, failedRequiredChecks));
             documentVerificationResultBuilder.verificationResult(documentResult.getVerificationResult());
             documentVerificationResultBuilder.extractedData(documentResult.getExtractedData());
             documentVerificationResultBuilder.verificationScore(score);

@@ -68,6 +68,14 @@ public class MicroblinkConfigProperties {
     private DocumentVerificationUseCaseOptions requestUseCase;
 
     /**
+     * Optional list of 2nd level check names (from the response {@code checks} tree) that must all have
+     * {@code result=Pass} for the document to be considered accepted, in addition to
+     * {@code verification.recommendedOutcome=Accept}. Empty by default, i.e. only {@code recommendedOutcome}
+     * is evaluated.
+     */
+    private List<String> requiredChecks = new ArrayList<>();
+
+    /**
      * Microblink mobile SDK configuration.
      *
      * @param origin Bundle ID / App ID

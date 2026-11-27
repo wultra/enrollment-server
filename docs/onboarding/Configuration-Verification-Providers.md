@@ -81,6 +81,14 @@ in the `es_processed_document_data` database table. See the [Request configurati
 The document is considered successfully verified only when the Microblink response field `verification.recommendedOutcome` is `Accept`. Any other value
 (see [RecommendedOutcome](https://docs.microblink.com/verify/api/ref/v2#models/RecommendedOutcome)) or a missing value results in rejection of the document.
 
+Optionally, an additional, stricter condition can be configured via `enrollment-server-onboarding.document-verification.microblink.requiredChecks`
+(comma-separated list of check names, e.g. `DataIntegrityCheck,GenerativeAiCheck`). When set, the document is accepted only when `recommendedOutcome` is
+`Accept` **and** every configured check has `result=Pass`. The checks are looked up in the response `checks` tree, which has multiple levels: the 1st level
+is a "group"/"category" (e.g. `ExtractedDataCheck`, `VisualCheck`), the 2nd level are the actual checks (e.g. `DataIntegrityCheck`, `GenerativeAiCheck`) -
+these are the ones matched against `requiredChecks` - and the 3rd level or more are sub-checks with too much granularity, which are ignored. A configured
+check missing from the response is treated the same as a failed check. See the list of available
+[Document Checks](https://developers.wultra.com/products/identity-verification/document-verification#document-checks).
+
 
 #### Mobile SDK license
 
