@@ -1088,27 +1088,58 @@ class MicroblinkDocumentVerificationProviderTest {
     @Test
     void testVerifyDocuments_requiredCheckWithOmittedResult_rejectedWithoutThrowing() {
         // given, the required check is present at the 2nd level but has no "result" field at all
+        final var status = verifyWithChecks(List.of("DataIntegrityCheck"), """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "DataIntegrityCheck", "type": "Check"}]}]
+                """);
+
+        // then
+        assertEquals(DocumentVerificationStatus.REJECTED, status);
+    }
+
+    @Test
+    void testVerifyDocuments_requiredCheckWithNullResult_rejectedWithoutThrowing() {
+        // given, the required check is present at the 2nd level but has an explicit JSON null "result"
+        final var status = verifyWithChecks(List.of("DataIntegrityCheck"), """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [{"name": "DataIntegrityCheck", "result": null, "type": "Check"}]}]
+                """);
+
+        // then
+        assertEquals(DocumentVerificationStatus.REJECTED, status);
+    }
+
+    @Test
+    void testVerifyDocuments_unrelatedCheckWithNullResult_doesNotPreventAcceptance() {
+        // given, an unrelated (not required) 2nd level check has an explicit JSON null "result", the required check passes
+        final var status = verifyWithChecks(List.of("DataIntegrityCheck"), """
+                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
+                  "checks": [
+                      {"name": "DataIntegrityCheck", "result": "Pass", "type": "Check"},
+                      {"name": "GenerativeAiCheck", "result": null, "type": "Check"}
+                  ]}]
+                """);
+
+        // then
+        assertEquals(DocumentVerificationStatus.ACCEPTED, status);
+    }
+
+    private DocumentVerificationStatus verifyWithChecks(final List<String> requiredChecks, final String checksJson) {
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
                 buildMicroblinkResponseJson(
-                        RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", "[]", buildMessage(), null, """
-                                [{"name": "Group", "result": "Pass", "type": "DetailedCheck",
-                                  "checks": [{"name": "DataIntegrityCheck", "type": "Check"}]}]
-                                """
+                        RecommendedOutcome.ACCEPT, CheckResult.PASS, Type.ID, "[]", "[]", buildMessage(), null, checksJson
                 )
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
         when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
-        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(List.of("DataIntegrityCheck"));
+        when(microblinkConfigProperties.getRequiredChecks()).thenReturn(requiredChecks);
 
-        // when
         final var result = provider.verifyDocuments(ownerId, uploadIds);
-
-        // then
-        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
+        return result.getStatus();
     }
 
     static Stream<Arguments> requiredChecksScenarios() {
